@@ -1,0 +1,39 @@
+{
+	"author": {
+		"name": "Oscar Palmér",
+		"url": "https://oscarpalmer.se"
+	},
+	"description": "Styles, components, and utilities for building websites and applications.",
+	"devDependencies": {
+		"@biomejs/biome": "^1.9",
+		"sass": "^1.80",
+		"stylelint": "^16.10"
+	},
+	"exports": {
+		"./css/a11y": "./dist/css/a11y.css",
+		"./css/flex": "./dist/css/flex.css",
+		"./css/reset": "./dist/css/reset.css"
+	},
+	"files": ["dist", "src"],
+	"keywords": [
+		"css",
+		"scss",
+		"design",
+		"framework",
+		"library",
+		"style",
+		"stylesheet",
+		"utility"
+	],
+	"license": "MIT",
+	"name": "@oscarpalmer/oui",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/oscarpalmer/oui.git"
+	},
+	"scripts": {
+		"build": "npx sass ./src/css:./dist/css --no-source-map"
+	},
+	"type": "module",
+	"version": "0.1.0"
+}
