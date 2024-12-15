@@ -32,8 +32,9 @@
 		"url": "git+https://github.com/oscarpalmer/oui.git"
 	},
 	"scripts": {
-		"build": "npx sass ./src/css:./dist/css --no-source-map"
+		"build": "npx sass ./src/css:./dist/css --no-source-map",
+		"watch": "npx sass ./src/css:./dist/css --no-source-map --watch"
 	},
 	"type": "module",
-	"version": "0.1.0"
+	"version": "0.2.0"
 }

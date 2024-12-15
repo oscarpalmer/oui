@@ -1,0 +1,13 @@
+@use './mixins' as mixins;
+
+:root {
+	@include mixins.colour('blue',   '#f8fafd', '#8ad',    '#123', '#012', '#47a', '#d8dadd');
+	@include mixins.colour('green',  '#f8fbf6', '#8b6',    '#231', '#0a1a0a', '#794', '#d8dbd6');
+	@include mixins.colour('grey',   '#f8f8f8', '#888',    '#222', '#111', '#555', '#d8d8d8');
+	@include mixins.colour('orange', '#fef7f5', '#e85',    '#420', '#2a1500', '#950', '#ded7d5');
+	@include mixins.colour('purple', '#fbf7fa', '#b8a',    '#313', '#1a0a1a', '#858', '#dbd7da');
+	@include mixins.colour('slate',  '#f6f7f8', '#708090', '#242f2f', '#011', '#405060', '#d6d7d8');
+	@include mixins.colour('stone',  '#f8f8f6', '#928e85', '#2f2f24', '#110', '#625e55', '#d8d8d6');
+	@include mixins.colour('red',    '#fdf5f6', '#d56',    '#422', '#200', '#823', '#ddd5d6');
+	@include mixins.colour('yellow', '#fcfaf4', '#eb5',    '#320', '#281f00', '#b93', '#dcdad4');
+}
