@@ -36,5 +36,5 @@
 		"watch": "npx sass ./src/css:./dist/css --no-source-map --watch"
 	},
 	"type": "module",
-	"version": "0.2.0"
+	"version": "0.3.0"
 }

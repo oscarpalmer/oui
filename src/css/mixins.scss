@@ -1,3 +1,5 @@
+/*! https://github.com/oscarpalmer/oui */
+
 @mixin colour($name, $zero, $six, $ten, $dark-zero, $dark-six, $dark-ten) {
 	& {
 		--oui-#{$name}-0: #{$zero};
