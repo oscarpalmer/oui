@@ -31,7 +31,8 @@
 	margin: 0;
 }
 
-:where(*) ::after,
+:where(*),
+::after,
 ::before {
 	box-sizing: border-box;
 }
