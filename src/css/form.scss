@@ -1,0 +1,230 @@
+@use 'colours.scss' as colours;
+@use 'mixins.scss' as mixins;
+
+:where(.oui-fieldset) {
+	padding: 1em;
+	border: 1px solid var(--oui-grey-3);
+	border-radius: 0.25em;
+}
+
+.oui-input {
+	:where(&) {
+		padding: 0.5em 0.75em;
+		outline: 3px solid transparent;
+		outline-offset: 0;
+		border-color: var(--oui-grey-4);
+		border-radius: 0.25em;
+		box-shadow: inset 0 1px 2px 0
+			color-mix(in srgb, var(--oui-grey-10), transparent 75%);
+		transition: 0.125s ease-in-out;
+	}
+
+	:where(&:not(textarea)) {
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	:where(
+			&:is(
+					[type='date'],
+					[type='datetime-local'],
+					[type='month'],
+					[type='number'],
+					[type='tel'],
+					[type='time'],
+					[type='url'],
+					[type='week']
+				)
+		) {
+		font-variant-numeric: tabular-nums;
+	}
+
+	:where(
+			&.oui-validateable:not([disabled], [aria-disabled='true']):is(
+					:user-invalid,
+					[aria-invalid='true']
+				)
+		) {
+		outline-color: color-mix(in srgb, var(--oui-red-4), transparent 75%);
+		border-color: var(--oui-red-6);
+	}
+
+	:where(
+			&.oui-validateable:not([disabled], [aria-disabled='true']):is(
+					:user-valid,
+					[aria-invalid='false']
+				)
+		) {
+		outline-color: color-mix(in srgb, var(--oui-green-4), transparent 75%);
+		border-color: var(--oui-green-6);
+	}
+
+	:where(&:not([disabled], [aria-disabled='true']):focus) {
+		outline-color: var(--oui-blue-4);
+		border-color: var(--oui-blue-6);
+	}
+
+	@media (hover: hover) {
+		:where(&:not([disabled], [aria-disabled='true']):hover) {
+			border-color: var(--oui-blue-6);
+		}
+	}
+
+	:where(&[readonly]) {
+		color: color-mix(in srgb, currentColor, transparent 12.5%);
+	}
+
+	:where(&[disabled], &[aria-disabled='true']) {
+		background-color: color-mix(in srgb, var(--oui-grey-0), transparent 50%);
+		color: color-mix(in srgb, currentColor, transparent 25%);
+	}
+}
+
+:where(select.oui-input) {
+	padding-right: 2em;
+	background-position: right 0.5em center;
+}
+
+:where(textarea.oui-input) {
+	min-height: 4em;
+	resize: vertical;
+	transition: all 0.125s ease-in-out, height 0s;
+}
+
+:where(.oui-label, .oui-legend) {
+	font-size: 0.875rem;
+	font-weight: bold;
+}
+
+:where(.oui-label) {
+	cursor: pointer;
+}
+
+:where(.oui-legend) {
+	padding: 0.5em;
+	border: 1px solid var(--oui-grey-3);
+	border-radius: 0.25em;
+}
+
+.oui-toggle {
+	:where(&) {
+		padding: 0 0 0 2em;
+		position: relative;
+		cursor: pointer;
+
+		&::before,
+		&::after {
+			position: absolute;
+			transition: 0.125s ease-in-out;
+		}
+
+		&::before {
+			content: '';
+			width: 1.5em;
+			height: 1.5em;
+			display: inline-block;
+			background-color: transparent;
+			outline: 3px solid transparent;
+			outline-offset: 0;
+			border: 1px solid var(--oui-grey-4);
+			inset: 0 auto auto 0;
+			pointer-events: none;
+		}
+
+		&::after {
+			opacity: 0;
+		}
+	}
+
+	:where(&:has(input[type='checkbox'])) {
+		&::before {
+			border-radius: 0.25em;
+		}
+
+		&::after {
+			content: '\2713';
+			width: 1.5em;
+			height: 1.5em;
+			color: white;
+			text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+			font-weight: bold;
+			line-height: 1.5em;
+			text-align: center;
+			inset: 0 auto auto 0;
+		}
+	}
+
+	:where(&:has(input[type='radio'])) {
+		&::before,
+		&::after {
+			border-radius: 50%;
+		}
+
+		&::after {
+			content: '';
+			width: 0.75em;
+			height: 0.75em;
+			background-color: white;
+			box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+			inset: 0.375em auto auto 0.375em;
+		}
+	}
+
+	:where(&:has(input:checked)) {
+		&::before {
+			background-color: var(--oui-blue-6);
+			border-color: transparent;
+		}
+
+		&::after {
+			opacity: 1;
+		}
+	}
+
+	:where(
+			&:has(input:not([disabled], [aria-disabled='true'])):focus-within
+		)::before {
+		outline-color: var(--oui-blue-4);
+		border-color: white;
+	}
+
+	@media (hover: hover) {
+		:where(&:has(input:not([disabled], [aria-disabled='true'])):hover)::before {
+			border-color: var(--oui-blue-6);
+		}
+
+		:where(
+				&:has(input:not([disabled], [aria-disabled='true']):is(:checked)):hover
+			)::before {
+			background-color: color-mix(in srgb, var(--oui-blue-6), transparent 50%);
+		}
+	}
+
+	:where(&:has(input[disabled], input[aria-disabled='true'])) {
+		cursor: default;
+
+		&,
+		&::after {
+			color: color-mix(in srgb, currentColor, transparent 25%);
+		}
+
+		&::before {
+			background-color: color-mix(in srgb, var(--oui-grey-0), transparent 50%);
+			border-color: var(--oui-grey-4);
+		}
+
+		&::after {
+			text-shadow: none;
+		}
+	}
+}
+
+:where(label.oui-toggle) {
+	display: inline-block;
+	line-height: 1.5;
+}
+
+:where(.oui-toggle input) {
+	@include mixins.visuallyHidden;
+}

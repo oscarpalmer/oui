@@ -26,13 +26,12 @@
  * Catch-alls
  */
 
-* {
+:where(*) {
 	padding: 0;
 	margin: 0;
 }
 
-*,
-::after,
+:where(*) ::after,
 ::before {
 	box-sizing: border-box;
 }
