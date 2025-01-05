@@ -1,0 +1,80 @@
+.oui-table {
+	:where(&) {
+		width: 100%;
+	}
+
+	:where(&-wrapper) {
+		max-height: 32em;
+		overflow: auto;
+		border: 1px solid var(--border, var(--oui-grey-3, #ccc));
+		border-radius: .25em;
+		position: relative;
+		overscroll-behavior-y: none;
+	}
+
+	:where(& caption) {
+		height: 2rem;
+		align-content: center;
+		background-color: var(--header, var(--oui-grey-1, #eee));
+		border: solid var(--border, var(--oui-grey-3, #ccc));
+		border-width: 0 0 1px 0;
+		font-size: .875rem;
+		text-align: left;
+		text-indent: .5rem;
+		position: sticky;
+		top: 0;
+		z-index: 2;
+	}
+
+	:where(& tbody tr:nth-child(2n)) {
+		background-color: var(--alternate, var(--oui-blue-0, #fafcff));
+	}
+
+	:where(& th, & tfoot td) {
+		background-color: var(--header, var(--oui-grey-1, #eee));
+		border: solid var(--border, var(--oui-grey-3, #ccc));
+		border-width: 0 1px 0 0;
+		position: sticky;
+		left: 0;
+		z-index: 1;
+
+		&::after {
+			content: '';
+			border-bottom: 1px solid var(--border, var(--oui-grey-3, #ccc));
+			position: absolute;
+		}
+	}
+
+	:where(& th, & td) {
+		padding: .5em;
+	}
+
+	:where(& th) {
+		top: 2em;
+
+		&::after {
+			inset: auto 0 0 0;
+		}
+	}
+
+	:where(& tfoot td) {
+		bottom: 0;
+
+		&::after {
+			inset: 0 0 auto 0;
+		}
+	}
+
+	:where(& tbody td) {
+		border: solid var(--border, var(--oui-grey-3, #ccc));
+		border-width: 0 1px 1px 0;
+	}
+
+	:where(& tbody tr:last-child td) {
+		border-bottom-width: 0;
+	}
+
+	:where(& tr th:last-child, & tr td:last-child) {
+		border-right-width: 0;
+	}
+}

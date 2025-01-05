@@ -1,0 +1,67 @@
+.oui-message {
+	:where(&) {
+		padding: 1em;
+		display: inline-flex;
+		flex-flow: column nowrap;
+		gap: 1em;
+		background-color: var(--background, var(--oui-grey-0, #eee));
+		border: 1px solid var(--border, var(--oui-grey-2, #ccc));
+		border-radius: .5em;
+		color: var(--foreground, var(--oui-grey-8, #333));
+		line-height: 1.25;
+	}
+
+	:where(& h2, & h3, & h4, & h5, & h6) {
+		font-size: 1em;
+		font-weight: bold;
+	}
+
+	:where(& hr) {
+		height: 1px;
+		margin: 0 -1em;
+		background-color: var(--border, var(--oui-grey-2));
+		border: none;
+	}
+
+	:where(& p) {
+		display: inline-flex;
+		flex-flow: row wrap;
+		gap: 1em;
+	}
+
+	:where(&-blue, &-info) {
+		--background: var(--oui-blue-0);
+		--border: var(--oui-blue-2);
+		--foreground: var(--oui-blue-8);
+	}
+
+	:where(&-green, &-success) {
+		--background: var(--oui-green-0);
+		--border: var(--oui-green-2);
+		--foreground: var(--oui-green-8);
+	}
+
+	:where(&-orange, &-warning) {
+		--background: var(--oui-orange-0);
+		--border: var(--oui-orange-2);
+		--foreground: var(--oui-orange-8);
+	}
+
+	:where(&-purple, &-special) {
+		--background: var(--oui-purple-0);
+		--border: var(--oui-purple-2);
+		--foreground: var(--oui-purple-8);
+	}
+
+	:where(&-red, &-error) {
+		--background: var(--oui-red-0);
+		--border: var(--oui-red-2);
+		--foreground: var(--oui-red-8);
+	}
+
+	:where(&-yellow, &-notice) {
+		--background: var(--oui-yellow-0);
+		--border: var(--oui-yellow-2);
+		--foreground: var(--oui-yellow-8);
+	}
+}

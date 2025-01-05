@@ -1,0 +1,68 @@
+.oui {
+	:where(&-pill, &-tag) {
+		display: inline-flex;
+		flex-flow: row nowrap;
+		gap: .5em;
+		background-color: var(--background, var(--oui-grey-1, #eee));
+		border: 1px solid var(--border, var(--oui-grey-3, #ccc));
+		color: var(--foreground, var(--oui-grey-8, #333));
+		line-height: 1.125;
+	}
+
+	:where(&-pill) {
+		border-radius: 3em;
+		padding: .5em 1em;
+	}
+
+	:where(&-tag) {
+		border-radius: .25em;
+		padding: .5em .75em;
+	}
+
+	:where(&-pill-small, &-tag-small) {
+		font-size: .875em;
+	}
+
+	:where(&-pill-tiny, &-tag-tiny) {
+		font-size: .75em;
+		font-weight: bold;
+		letter-spacing: .1em;
+		text-transform: uppercase;
+	}
+
+	:where(&-pill-blue, &-tag-blue) {
+		--background: var(--oui-blue-1);
+		--border: var(--oui-blue-3);
+		--foreground: var(--oui-blue-9);
+	}
+
+	:where(&-pill-green, &-tag-green) {
+		--background: var(--oui-green-1);
+		--border: var(--oui-green-3);
+		--foreground: var(--oui-green-9);
+	}
+
+	:where(&-pill-orange, &-tag-orange) {
+		--background: var(--oui-orange-1);
+		--border: var(--oui-orange-3);
+		--foreground: var(--oui-orange-9);
+	}
+
+	:where(&-pill-purple, &-tag-purple) {
+		--background: var(--oui-purple-1);
+		--border: var(--oui-purple-3);
+		--foreground: var(--oui-purple-9);
+	}
+
+	:where(&-pill-red, &-tag-red) {
+		--background: var(--oui-red-1);
+		--border: var(--oui-red-3);
+		--foreground: var(--oui-red-9);
+	}
+
+	:where(&-pill-yellow, &-tag-yellow) {
+		--background: var(--oui-yellow-1);
+		--border: var(--oui-yellow-3);
+		--foreground: var(--oui-yellow-9);
+	}
+}
