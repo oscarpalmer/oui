@@ -1,6 +1,8 @@
 @use './mixins' as mixins;
 
 :root {
+	--oui-absolute: white;
+
 	@include mixins.colour('blue',   '#f4f8fd', '#48d',    '#123',    '#012',    '#15a',    '#d1d5da');
 	@include mixins.colour('green',  '#f4fbf5', '#4b5',    '#231',    '#0a1a0a', '#182',    '#d1d8d2');
 	@include mixins.colour('grey',   '#f8f8f8', '#888',    '#222',    '#111',    '#555',    '#d8d8d8');
@@ -10,4 +12,8 @@
 	@include mixins.colour('stone',  '#f8f8f6', '#928e85', '#2f2f24', '#110',    '#625e55', '#d8d8d6');
 	@include mixins.colour('red',    '#fdf4f4', '#d44',    '#422',    '#200',    '#a11',    '#dad1d1');
 	@include mixins.colour('yellow', '#fefbf0', '#eb0',    '#320',    '#281f00', '#b80',    '#dbd8d0');
+
+	@media (prefers-color-scheme: dark) {
+		--oui-absolute: black;
+	}
 }

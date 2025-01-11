@@ -6,7 +6,7 @@
 	:where(&-wrapper) {
 		max-height: 32em;
 		overflow: auto;
-		border: 1px solid var(--border, var(--oui-grey-3, #ccc));
+		border: 1px solid var(--oui-grey-3);
 		border-radius: .25em;
 		position: relative;
 		overscroll-behavior-y: none;
@@ -15,8 +15,8 @@
 	:where(& caption) {
 		height: 2rem;
 		align-content: center;
-		background-color: var(--header, var(--oui-grey-1, #eee));
-		border: solid var(--border, var(--oui-grey-3, #ccc));
+		background-color: var(--oui-grey-1);
+		border: solid var(--oui-grey-3);
 		border-width: 0 0 1px 0;
 		font-size: .875rem;
 		text-align: left;
@@ -27,12 +27,12 @@
 	}
 
 	:where(& tbody tr:nth-child(2n)) {
-		background-color: var(--alternate, var(--oui-blue-0, #fafcff));
+		background-color: var(--oui-blue-0);
 	}
 
 	:where(& th, & tfoot td) {
-		background-color: var(--header, var(--oui-grey-1, #eee));
-		border: solid var(--border, var(--oui-grey-3, #ccc));
+		background-color: var(--oui-grey-1);
+		border: solid var(--oui-grey-3);
 		border-width: 0 1px 0 0;
 		position: sticky;
 		left: 0;
@@ -40,7 +40,7 @@
 
 		&::after {
 			content: '';
-			border-bottom: 1px solid var(--border, var(--oui-grey-3, #ccc));
+			border-bottom: 1px solid var(--oui-grey-3);
 			position: absolute;
 		}
 	}
@@ -66,7 +66,7 @@
 	}
 
 	:where(& tbody td) {
-		border: solid var(--border, var(--oui-grey-3, #ccc));
+		border: solid var(--oui-grey-3);
 		border-width: 0 1px 1px 0;
 	}
 
