@@ -7,7 +7,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "^1.9",
 		"sass": "^1.83",
-		"stylelint": "^16.12"
+		"stylelint": "^16.14"
 	},
 	"exports": {
 		"./css/a11y": "./dist/css/a11y.css",
@@ -36,5 +36,5 @@
 		"watch": "npx sass ./src/css:./dist/css --no-source-map --watch"
 	},
 	"type": "module",
-	"version": "0.6.0"
+	"version": "0.7.0"
 }
