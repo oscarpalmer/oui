@@ -3,9 +3,9 @@
 		display: inline-flex;
 		flex-flow: row nowrap;
 		gap: .5em;
-		background-color: var(--background, var(--oui-grey-1, #eee));
-		border: 1px solid var(--border, var(--oui-grey-3, #ccc));
-		color: var(--foreground, var(--oui-grey-8, #333));
+		background-color: var(--background, var(--oui-gray-1));
+		border: 1px solid var(--border, var(--oui-gray-3));
+		color: var(--foreground, var(--oui-gray-8));
 		line-height: 1.125;
 	}
 
@@ -33,36 +33,36 @@
 	:where(&-pill-blue, &-tag-blue) {
 		--background: var(--oui-blue-1);
 		--border: var(--oui-blue-3);
-		--foreground: var(--oui-blue-9);
+		--foreground: var(--oui-blue-8);
 	}
 
 	:where(&-pill-green, &-tag-green) {
 		--background: var(--oui-green-1);
 		--border: var(--oui-green-3);
-		--foreground: var(--oui-green-9);
+		--foreground: var(--oui-green-8);
 	}
 
 	:where(&-pill-orange, &-tag-orange) {
 		--background: var(--oui-orange-1);
 		--border: var(--oui-orange-3);
-		--foreground: var(--oui-orange-9);
+		--foreground: var(--oui-orange-8);
 	}
 
 	:where(&-pill-purple, &-tag-purple) {
 		--background: var(--oui-purple-1);
 		--border: var(--oui-purple-3);
-		--foreground: var(--oui-purple-9);
+		--foreground: var(--oui-purple-8);
 	}
 
 	:where(&-pill-red, &-tag-red) {
 		--background: var(--oui-red-1);
 		--border: var(--oui-red-3);
-		--foreground: var(--oui-red-9);
+		--foreground: var(--oui-red-8);
 	}
 
 	:where(&-pill-yellow, &-tag-yellow) {
 		--background: var(--oui-yellow-1);
 		--border: var(--oui-yellow-3);
-		--foreground: var(--oui-yellow-9);
+		--foreground: var(--oui-yellow-8);
 	}
 }

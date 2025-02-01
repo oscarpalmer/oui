@@ -4,10 +4,10 @@
 		display: inline-flex;
 		flex-flow: column nowrap;
 		gap: 1em;
-		background-color: var(--background, var(--oui-grey-0, #eee));
-		border: 1px solid var(--border, var(--oui-grey-2, #ccc));
+		background-color: var(--background, var(--oui-gray-0));
+		border: 1px solid var(--border, var(--oui-gray-2));
 		border-radius: .5em;
-		color: var(--foreground, var(--oui-grey-8, #333));
+		color: var(--foreground, var(--oui-gray-8));
 		line-height: 1.25;
 	}
 
@@ -19,7 +19,7 @@
 	:where(& hr) {
 		height: 1px;
 		margin: 0 -1em;
-		background-color: var(--border, var(--oui-grey-2));
+		background-color: var(--border, var(--oui-gray-2));
 		border: none;
 	}
 
