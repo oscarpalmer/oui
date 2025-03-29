@@ -6,10 +6,45 @@
 	"description": "Styles, components, and utilities for building websites and applications.",
 	"devDependencies": {
 		"@biomejs/biome": "^1.9",
-		"sass": "^1.83",
-		"stylelint": "^16.14"
+		"@oscarpalmer/atoms": "^0.89.1",
+		"@oscarpalmer/toretto": "^0.18",
+		"@rollup/plugin-node-resolve": "^16",
+		"@rollup/plugin-typescript": "^12.1",
+		"@types/node": "^22.13",
+		"@vitest/coverage-istanbul": "^3",
+		"dts-bundle-generator": "^9.5",
+		"glob": "^11",
+		"happy-dom": "^17.4",
+		"sass": "^1.86",
+		"stylelint": "^16.17",
+		"tslib": "^2.8",
+		"typescript": "^5.8",
+		"vite": "^6.2",
+		"vitest": "^3"
 	},
-	"files": ["dist", "src"],
+	"exports": {
+		".": {
+			"import": {
+				"types": "./types/index.d.ts",
+				"default": "./dist/js/index.js"
+			},
+			"require": {
+				"types": "./types/index.d.cts",
+				"default": "./dist/js/index.cjs"
+			}
+		},
+		"./focus-trap": {
+			"import": {
+				"types": "./types/focus-trap.d.ts",
+				"default": "./dist/js/focus-trap.js"
+			},
+			"require": {
+				"types": "./types/focus-trap.d.cts",
+				"default": "./dist/js/focus-trap.cjs"
+			}
+		}
+	},
+	"files": ["dist", "src", "types"],
 	"keywords": [
 		"css",
 		"scss",
@@ -21,15 +56,25 @@
 		"utility"
 	],
 	"license": "MIT",
+	"main": "dist/js/index.cjs",
+	"module": "dist/js/index.js",
 	"name": "@oscarpalmer/oui",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/oscarpalmer/oui.git"
 	},
 	"scripts": {
-		"build": "npx sass ./src/css:./dist/css --no-source-map",
-		"watch": "npx sass ./src/css:./dist/css --no-source-map --watch"
+		"build": "npm run clean && npm run build:css && npm run build:js",
+		"build:css": "npx sass ./src/css:./dist/css --no-source-map",
+		"build:js": "npx vite build && npm run types",
+		"clean": "rm -rf ./dist && rm -rf ./types && rm -f ./tsconfig.tsbuildinfo",
+		"rollup": "npx rollup -c --watch",
+		"test": "npx vitest --coverage",
+		"types": "npx tsc && npx dts-bundle-generator --config ./dts.config.cts --silent",
+		"watch:css": "npx sass ./src/css:./dist/css --no-source-map --watch",
+		"watch:js": "npx vite build --watch"
 	},
 	"type": "module",
-	"version": "0.8.0"
+	"types": "types/index.d.cts",
+	"version": "0.9.0"
 }
