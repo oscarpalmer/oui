@@ -1,4 +1,14 @@
+/*! https://github.com/oscarpalmer/oui */
+
 @use 'mixins.scss' as mixins;
+
+@mixin input {
+	outline: 4px solid transparent;
+	outline-offset: 0;
+	background-color: var(--oui-absolute);
+	box-shadow: inset 0 1px 2px 0 color-mix(in oklab, var(--oui-gray-10), transparent 80%);
+	transition: 0.125s ease-in-out;
+}
 
 :where(.oui-fieldset) {
 	padding: 1em;
@@ -7,68 +17,180 @@
 }
 
 .oui-input {
-	:where(&) {
+	:where(&:not([type='range' i])) {
+		@include input;
+
 		padding: 0.5em 0.75em;
-		outline: 3px solid transparent;
-		outline-offset: 0;
-		background-color: var(--oui-absolute);
 		border-color: var(--oui-gray-3);
 		border-radius: 0.25em;
-		box-shadow: inset 0 1px 2px 0
-			color-mix(in oklab, var(--oui-gray-10), transparent 80%);
-		transition: 0.125s ease-in-out;
 	}
 
-	:where(&:not(textarea)) {
+	:where(&:not([type='range' i], select[multiple], textarea)) {
 		overflow: hidden;
 		white-space: nowrap;
 		text-overflow: ellipsis;
 	}
 
-	:where(
-			&:is(
-					[type='date'],
-					[type='datetime-local'],
-					[type='month'],
-					[type='number'],
-					[type='tel'],
-					[type='time'],
-					[type='url'],
-					[type='week']
-				)
-		) {
+	:where(&:is([list])) {
+		&::-webkit-calendar-picker-indicator {
+			display: none !important;
+		}
+	}
+
+	:where(&:is([type='color' i])) {
+		padding: 0;
+	}
+
+	:where(&:is([type='date' i],
+			[type='datetime-local' i],
+			[type='month' i],
+			[type='number' i],
+			[type='tel' i],
+			[type='time' i],
+			[type='url' i],
+			[type='week' i])) {
 		font-variant-numeric: tabular-nums;
 	}
 
-	:where(
-			&.oui-validateable:not([disabled], [aria-disabled='true']):is(
-					:user-invalid,
-					[aria-invalid='true']
-				)
-		) {
-		outline-color: color-mix(in oklab, var(--oui-red-6), transparent 60%);
-		border-color: var(--oui-red-6);
+	:where(&:is([type='file' i])) {
+		padding-left: .5em;
+
+		&::file-selector-button {
+			padding: .5em .75em;
+			margin: 0 .75em 0 0;
+			background-color: var(--oui-gray-1);
+			border: 1px solid var(--oui-gray-3);
+			border-radius: .25em;
+			box-shadow: inset 0 1px 0 0 var(--oui-gray-0), 0 1px 2px 0 rgba(0, 0, 0, 0.125);
+			color: var(--oui-gray-8);
+			font-size: .75em;
+			line-height: 1;
+			transition: .125s ease-in-out;
+			cursor: pointer;
+		}
 	}
 
-	:where(
-			&.oui-validateable:not([disabled], [aria-disabled='true']):is(
-					:user-valid,
-					[aria-invalid='false']
-				)
-		) {
-		outline-color: color-mix(in oklab, var(--oui-green-6), transparent 60%);
-		border-color: var(--oui-green-6);
+	:where(&:is([type='range' i])) {
+		appearance: none;
+		outline: none;
+
+		&::range-track {
+			@include input;
+
+			appearance: none;
+			width: 100%;
+			height: 0.75em;
+			border: 1px solid var(--oui-gray-3);
+			border-radius: .75em;
+			position: relative;
+		}
+
+		&::range-thumb {
+			appearance: none;
+			width: 1.25em;
+			height: 1.25em;
+			background-color: var(--oui-blue-6);
+			outline: 4px solid transparent;
+			border: 2px solid var(--oui-absolute);
+			border-radius: 1.25em;
+			box-shadow: 0 1px 2px 2px rgba(0, 0, 0, 0.125);
+			transition: .125s ease-in-out;
+			cursor: pointer;
+		}
 	}
 
-	:where(&:not([disabled], [aria-disabled='true']):focus) {
+	:where(&.oui-validatable:not([disabled], [aria-disabled='true' i]):is(:user-invalid,
+			[aria-invalid='true' i])) {
+		& {
+			outline-color: color-mix(in oklab, var(--oui-red-6), transparent 60%);
+			border-color: var(--oui-red-6);
+		}
+
+		&::range-track {
+			outline-color: color-mix(in oklab, var(--oui-red-6), transparent 60%);
+			border-color: var(--oui-red-6);
+		}
+
+		&::file-selector-button {
+			background-color: var(--oui-red-0);
+			border-color: var(--oui-red-2);
+			color: var(--oui-red-9);
+		}
+
+		&::range-thumb {
+			background-color: var(--oui-red-6);
+		}
+	}
+
+	:where(&.oui-validatable:not([disabled], [aria-disabled='true' i]):is(:user-valid,
+			[aria-invalid='false' i])) {
+		& {
+			outline-color: color-mix(in oklab, var(--oui-green-6), transparent 60%);
+			border-color: var(--oui-green-6);
+		}
+
+		&::range-track {
+			outline-color: color-mix(in oklab, var(--oui-green-6), transparent 60%);
+			border-color: var(--oui-green-6);
+		}
+
+		&::file-selector-button {
+			background-color: var(--oui-green-0);
+			border-color: var(--oui-green-3);
+			color: var(--oui-green-9);
+		}
+
+		&::range-thumb {
+			background-color: var(--oui-green-6);
+		}
+	}
+
+	:where(&:not([disabled], [aria-disabled='true' i]):focus) {
 		outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 60%);
 		border-color: var(--oui-blue-6);
+
+		&::file-selector-button {
+			background-color: var(--oui-blue-0);
+			border-color: var(--oui-blue-3);
+			color: var(--oui-blue-9);
+		}
+
+		&::range-track,
+		&::range-thumb {
+			outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 60%);
+		}
+
+		&::range-track {
+			border-color: var(--oui-blue-6);
+		}
+
+		&::range-thumb {
+			background-color: var(--oui-blue-6);
+			box-shadow: 0 1px 2px 2px rgba(0, 0, 0, 0.25);
+		}
 	}
 
 	@media (hover: hover) {
-		:where(&:not([disabled], [aria-disabled='true']):hover) {
-			outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 80%);
-			border-color: var(--oui-blue-6);
+		:where(&:not([disabled], [aria-disabled='true' i]):hover) {
+			& {
+				outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 80%);
+				border-color: var(--oui-blue-6);
+			}
+
+			&::range-track {
+				outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 80%);
+				border-color: var(--oui-blue-6);
+			}
+
+			&::file-selector-button {
+				background-color: var(--oui-blue-0);
+				border-color: var(--oui-blue-3);
+				color: var(--oui-blue-9);
+			}
+
+			&::range-thumb {
+				background-color: var(--oui-blue-5);
+			}
 		}
 	}
 
@@ -76,15 +198,63 @@
 		color: color-mix(in oklab, currentColor, transparent 12.5%);
 	}
 
-	:where(&[disabled], &[aria-disabled='true']) {
-		background-color: color-mix(in oklab, var(--oui-gray-0), transparent 50%);
-		color: color-mix(in oklab, currentColor, transparent 25%);
+	:where(&[disabled], &[aria-disabled='true' i]) {
+		& {
+			background-color: color-mix(in oklab, var(--oui-gray-0), transparent 50%);
+			color: color-mix(in oklab, currentColor, transparent 25%);
+			font-style: italic;
+		}
+
+		&::range-track {
+			background-color: color-mix(in oklab, var(--oui-gray-0), transparent 50%);
+			color: color-mix(in oklab, currentColor, transparent 25%);
+			font-style: italic;
+		}
+
+		&::file-selector-button,
+		&::range-thumb {
+			background-color: var(--oui-gray-1);
+		}
 	}
 }
 
-:where(select.oui-input) {
+:where(select.oui-input, .oui-input[list]) {
 	padding-right: 2em;
 	background-position: right 0.5em center;
+}
+
+select.oui-input:is([multiple]) {
+	:where(&) {
+		--oui-off: attr(oui-off);
+		--oui-on: attr(oui-on, '\2713');
+
+		padding: 0;
+	}
+
+	:where(& > option) {
+		padding: 0.5em 0.75em;
+	}
+
+	:where(&[oui-off] > option) {
+		&::before {
+			content: var(--oui-off);
+			margin: 0 0.75em 0 0;
+		}
+	}
+
+	:where(& > option:nth-of-type(2n)) {
+		background-color: color-mix(in oklab, var(--oui-blue-0), transparent 67%)
+	}
+
+	:where(& > option:checked) {
+		background-color: var(--oui-blue-1);
+		color: var(--oui-blue-9);
+
+		&::before {
+			content: var(--oui-on);
+			margin: 0 .75em 0 0;
+		}
+	}
 }
 
 :where(textarea.oui-input) {
@@ -100,6 +270,13 @@
 
 :where(.oui-label) {
 	cursor: pointer;
+	transition: .125s ease-in-out;
+
+	@media (hover: hover) {
+		:where(&:hover) {
+			color: var(--oui-blue-8);
+		}
+	}
 }
 
 :where(.oui-legend) {
@@ -121,7 +298,7 @@
 	}
 
 	&::before {
-		outline: 3px solid transparent;
+		outline: 4px solid transparent;
 		outline-offset: 0;
 	}
 }
@@ -142,7 +319,7 @@
 		}
 
 		&::after {
-			content: '\2715';
+			content: attr(oui-off, '\2715');
 			width: 1.5em;
 			height: 1.5em;
 			background-color: var(--oui-absolute);
@@ -160,7 +337,7 @@
 
 	:where(&:has(input:checked)) {
 		&::after {
-			content: '\2713';
+			content: attr(oui-on, '\2713');
 			box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.25);
 			color: var(--oui-blue-8);
 			right: 0.25em;
@@ -187,13 +364,13 @@
 		}
 	}
 
-	:where(&:has(input[type='checkbox'])) {
+	:where(&:has(input[type='checkbox' i])) {
 		&::before {
 			border-radius: 0.25em;
 		}
 
 		&::after {
-			content: '\2713';
+			content: attr(oui-on, '\2713');
 			width: 1.5em;
 			height: 1.5em;
 			color: white;
@@ -205,7 +382,8 @@
 		}
 	}
 
-	:where(&:has(input[type='radio'])) {
+	:where(&:has(input[type='radio' i])) {
+
 		&::before,
 		&::after {
 			border-radius: 50%;
@@ -237,7 +415,7 @@
 		}
 	}
 
-	:where(&:has(input:not([disabled], [aria-disabled='true'])):focus-within) {
+	:where(&:has(input:not([disabled], [aria-disabled='true' i])):focus-within) {
 		color: var(--oui-blue-8);
 
 		&::before {
@@ -247,7 +425,7 @@
 	}
 
 	@media (hover: hover) {
-		:where(&:has(input:not([disabled], [aria-disabled='true'])):hover) {
+		:where(&:has(input:not([disabled], [aria-disabled='true' i])):hover) {
 			color: var(--oui-blue-8);
 
 			&::before {
@@ -256,19 +434,14 @@
 			}
 		}
 
-		:where(
-				&:has(input:not([disabled], [aria-disabled='true']):is(:checked)):hover
-			)::before {
+		:where(&:has(input:not([disabled], [aria-disabled='true' i]):is(:checked)):hover)::before {
 			background-color: color-mix(in oklab, var(--oui-blue-6), transparent 40%);
 		}
 	}
 
-	:where(&:has(input[disabled], input[aria-disabled='true'])) {
+	:where(&:has(input[disabled], input[aria-disabled='true' i])) {
+		color: color-mix(in oklab, currentColor, transparent 25%);
 		cursor: default;
-
-		& {
-			color: color-mix(in oklab, currentColor, transparent 25%);
-		}
 
 		&::after {
 			color: color-mix(in oklab, currentColor, transparent);

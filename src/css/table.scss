@@ -1,3 +1,5 @@
+/*! https://github.com/oscarpalmer/oui */
+
 .oui-table {
 	:where(&) {
 		width: 100%;
@@ -26,7 +28,7 @@
 		z-index: 2;
 	}
 
-	:where(& tbody tr:nth-child(2n)) {
+	:where(& tbody tr:nth-of-type(2n)) {
 		background-color: color-mix(in oklab, var(--oui-blue-0), transparent 67%);
 	}
 

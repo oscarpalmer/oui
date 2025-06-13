@@ -45,10 +45,7 @@
 	font-family: system-ui, sans-serif;
 	font-size: 100%;
 	line-height: 1.5;
-	-moz-text-size-adjust: none; // Prevent text size inflation (e.g., after orientation change) [AB][RE][SE]
-	-webkit-text-size-adjust: none; // ditto
-	text-size-adjust: none; // ditto
-	-moz-tab-size: 4;
+	text-size-adjust: none; // Prevent text size inflation (e.g., after orientation change) [AB][RE][SE]
 	tab-size: 4;
 }
 
@@ -80,7 +77,7 @@
 }
 
 :where(button, [type='button' i], [type='reset' i], [type='submit' i]) {
-	-webkit-appearance: button; // Correct the inability to style clickable types in iOS [RS][SE]
+	appearance: button; // Correct the inability to style clickable types in iOS [RS][SE]
 	cursor: pointer;
 }
 
@@ -178,10 +175,8 @@
 	vertical-align: baseline; // Add the correct vertical alignment in Chrome, Edge, and Firefox [RS][SE]
 }
 
-:where(select) {
-	-moz-appearance: none; // Change the inconsistent appearance in all browsers [SE]
-	-webkit-appearance: none; // ditto
-	appearance: none; // ditto
+:where(select, input[list]) {
+	appearance: none; // Change the inconsistent appearance in all browsers [SE]
 	padding-right: 1em; // ditto
 	background: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='4'%3E%3Cpath d='M4 0h6L7 4'/%3E%3C/svg%3E")
 		no-repeat right center / 1em; // ditto
@@ -202,25 +197,25 @@
 }
 
 :where([type='search' i]) {
-	-webkit-appearance: textfield; // Correct the odd appearance in Chrome, Edge, and Safari [RS][SE]
+	appearance: textfield; // Correct the odd appearance in Chrome, Edge, and Safari [RS][SE]
 	outline-offset: -2px; // Correct the outline style in Safari [RS][SE]
 }
 
-::-webkit-file-upload-button {
-	-webkit-appearance: button; // Correct the inability to style upload buttons in iOS and Safari [RS][SE]
+::file-selector-button {
+	appearance: button; // Correct the inability to style upload buttons in iOS and Safari [RS][SE]
 	color: inherit;
 	font: inherit;
 	line-height: 1.25;
 }
 
+::placeholder {
+	opacity: 0.54; // Correct the text style of placeholders in Chrome, Edge, and Safari. [SE]
+	color: inherit; // Correct the text style of placeholders in Chrome, Edge, and Safari. [SE]
+}
+
 ::-webkit-inner-spin-button,
 ::-webkit-outer-spin-button {
 	height: auto; // Correct the cursor style of increment and decrement buttons in Safari [RS][SE]
-}
-
-::-webkit-input-placeholder {
-	opacity: 0.54; // Correct the text style of placeholders in Chrome, Edge, and Safari. [SE]
-	color: inherit; // Correct the text style of placeholders in Chrome, Edge, and Safari. [SE]
 }
 
 ::-webkit-search-decoration {
