@@ -3,11 +3,13 @@
 		"name": "Oscar Palmér",
 		"url": "https://oscarpalmer.se"
 	},
+	"dependencies": {
+		"@oscarpalmer/atoms": "^0.102",
+		"@oscarpalmer/toretto": "^0.20"
+	},
 	"description": "Styles, components, and utilities for building websites and applications.",
 	"devDependencies": {
 		"@biomejs/biome": "^1.9",
-		"@oscarpalmer/atoms": "^0.102",
-		"@oscarpalmer/toretto": "^0.20",
 		"@rollup/plugin-node-resolve": "^16",
 		"@rollup/plugin-typescript": "^12.1",
 		"@types/node": "^24",
@@ -69,14 +71,15 @@
 	},
 	"scripts": {
 		"build": "npm run clean && npm run build:css && npm run build:js",
-		"build:css": "npm run postcss && npx sass ./postcss:./dist/css --no-source-map",
+		"build:css": "npm run build:postcss && npx sass ./postcss:./dist/css --no-source-map",
+		"build:postcss": "npx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss",
 		"build:js": "npx vite build && npm run types",
 		"clean": "rm -rf ./dist && rm -rf ./types && rm -f ./tsconfig.tsbuildinfo",
-		"postcss": "npx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss",
 		"rollup": "npx rollup -c --watch",
 		"test": "npx vitest --coverage",
 		"types": "npx tsc && npx dts-bundle-generator --config ./dts.config.cts --silent",
 		"watch:css": "npx sass ./src/css:./dist/css --no-source-map --watch",
+		"watch:postcss": "npx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss --watch",
 		"watch:js": "npx vite build --watch"
 	},
 	"type": "module",

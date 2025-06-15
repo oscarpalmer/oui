@@ -65,7 +65,7 @@ function onFocusOut(): void {
 		return;
 	}
 
-	setTimeout(() => {
+	requestAnimationFrame(() => {
 		const element = findAncestor(
 			document.activeElement as never,
 			`[${selector}]`,
@@ -76,7 +76,7 @@ function onFocusOut(): void {
 				focusTrap.activate();
 			}
 		}
-	}, 0);
+	});
 }
 
 function onTab(event: KeyboardEvent): void {
@@ -163,7 +163,7 @@ observer.observe(document, {
 	subtree: true,
 });
 
-setTimeout(() => {
+requestAnimationFrame(() => {
 	addFocusTraps(document.querySelectorAll(`[${selector}]`));
 
 	on(document, 'focusout', onFocusOut, {
@@ -178,4 +178,4 @@ setTimeout(() => {
 	on(document, 'keydown', onEscape, {
 		passive: false,
 	});
-}, 0);
+});

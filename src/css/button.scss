@@ -1,0 +1,121 @@
+.oui-button {
+	:where(&) {
+		--oui-background-percentage: 25%;
+		--oui-foreground-percentage: 0%;
+		--oui-outline-percentage: 100%;
+		--oui-shadow-percentage: 90%;
+
+		--oui-shadow-value: color-mix(
+			in oklch,
+			var(--oui-shadow, var(--oui-gray-6)),
+			transparent var(--oui-shadow-percentage)
+		);
+
+		padding: 0.5em 0.75em;
+		display: inline-flex;
+		flex-flow: row wrap;
+		gap: 0.75em;
+		border-radius: 0.25em;
+		background-color: color-mix(
+			in oklab,
+			var(--oui-background, var(--oui-gray-2)),
+			transparent var(--oui-background-percentage)
+		);
+		outline: 4px solid
+			color-mix(
+				in oklab,
+				var(--oui-shadow, var(--oui-gray-6)),
+				transparent var(--oui-outline-percentage)
+			);
+		border: none;
+		box-shadow: 0 0 0 1px var(--oui-shadow-value),
+			0 1px 2px 0 var(--oui-shadow-value), 0 2px 4px 0 var(--oui-shadow-value);
+		color: color-mix(
+			in oklab,
+			var(--oui-foreground, var(--oui-gray-8)),
+			transparent var(--oui-foreground-percentage)
+		);
+		line-height: 1.25;
+		transition: 0.125s ease-in-out;
+	}
+
+	:where(&-blue) {
+		--oui-background: var(--oui-blue-2);
+		--oui-foreground: var(--oui-blue-8);
+		--oui-shadow: var(--oui-blue-6);
+	}
+
+	:where(&-green) {
+		--oui-background: var(--oui-green-2);
+		--oui-foreground: var(--oui-green-8);
+		--oui-shadow: var(--oui-green-6);
+	}
+
+	:where(&-orange) {
+		--oui-background: var(--oui-orange-2);
+		--oui-foreground: var(--oui-orange-8);
+		--oui-shadow: var(--oui-orange-6);
+	}
+
+	:where(&-purple) {
+		--oui-background: var(--oui-purple-2);
+		--oui-foreground: var(--oui-purple-8);
+		--oui-shadow: var(--oui-purple-6);
+	}
+
+	:where(&-red) {
+		--oui-background: var(--oui-red-2);
+		--oui-foreground: var(--oui-red-8);
+		--oui-shadow: var(--oui-red-6);
+	}
+
+	:where(&-yellow) {
+		--oui-background: var(--oui-yellow-2);
+		--oui-foreground: var(--oui-yellow-8);
+		--oui-shadow: var(--oui-yellow-6);
+	}
+
+	:where(&-rounded) {
+		padding: 0.5em 1em;
+		flex-wrap: nowrap;
+		border-radius: 5em;
+		white-space: nowrap;
+	}
+
+	:where(&-small) {
+		font-size: 0.875em;
+	}
+
+	:where(&-tiny) {
+		font-size: 0.75em;
+		font-weight: bold;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	:where(&:focus-visible) {
+		--oui-outline-percentage: 75%;
+	}
+
+	@media (hover: hover) {
+		:where(&:not([disabled], [aria-disabled='true' i]):hover) {
+			--oui-background-percentage: 50%;
+			--oui-foreground-percentage: 25%;
+			--oui-shadow-percentage: 92.5%;
+		}
+	}
+
+	:where(&:not([disabled], [aria-disabled='true' i]):active) {
+		box-shadow: 0 0 0 1px var(--oui-shadow-value),
+			inset 0 1px 2px 0 var(--oui-shadow-value),
+			inset 0 2px 4px 0 var(--oui-shadow-value);
+	}
+
+	:where(&[disabled], &[aria-disabled='true' i]) {
+		--oui-background-percentage: 80%;
+		--oui-foreground-percentage: 20%;
+		--oui-shadow-percentage: 95%;
+
+		font-style: italic;
+	}
+}

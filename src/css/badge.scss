@@ -2,12 +2,21 @@
 
 .oui {
 	:where(&-pill, &-tag) {
+		--oui-shadow-value: color-mix(
+			in oklch,
+			var(--oui-shadow, var(--oui-gray-6)),
+			transparent 95%
+		);
+
 		display: inline-flex;
 		flex-flow: row nowrap;
 		gap: .5em;
-		background-color: var(--background, var(--oui-gray-1));
-		border: 1px solid var(--border, var(--oui-gray-3));
-		color: var(--foreground, var(--oui-gray-8));
+		background-color: color-mix(in oklab, var(--oui-background, var(--oui-gray-0)), transparent 25%);
+		box-shadow:
+			0 0 0 1px var(--oui-shadow-value),
+			0 1px 2px 0 var(--oui-shadow-value),
+			0 2px 4px 0 var(--oui-shadow-value);
+		color: var(--oui-foreground, var(--oui-gray-8));
 		line-height: 1.25;
 	}
 
@@ -33,38 +42,38 @@
 	}
 
 	:where(&-pill-blue, &-tag-blue) {
-		--background: var(--oui-blue-1);
-		--border: var(--oui-blue-3);
-		--foreground: var(--oui-blue-8);
+		--oui-background: var(--oui-blue-0);
+		--oui-foreground: var(--oui-blue-8);
+		--oui-shadow: var(--oui-blue-6);
 	}
 
 	:where(&-pill-green, &-tag-green) {
-		--background: var(--oui-green-1);
-		--border: var(--oui-green-3);
-		--foreground: var(--oui-green-8);
+		--oui-background: var(--oui-green-0);
+		--oui-foreground: var(--oui-green-8);
+		--oui-shadow: var(--oui-green-6);
 	}
 
 	:where(&-pill-orange, &-tag-orange) {
-		--background: var(--oui-orange-1);
-		--border: var(--oui-orange-3);
-		--foreground: var(--oui-orange-8);
+		--oui-background: var(--oui-orange-0);
+		--oui-foreground: var(--oui-orange-8);
+		--oui-shadow: var(--oui-orange-6);
 	}
 
 	:where(&-pill-purple, &-tag-purple) {
-		--background: var(--oui-purple-1);
-		--border: var(--oui-purple-3);
-		--foreground: var(--oui-purple-8);
+		--oui-background: var(--oui-purple-0);
+		--oui-foreground: var(--oui-purple-8);
+		--oui-shadow: var(--oui-purple-6);
 	}
 
 	:where(&-pill-red, &-tag-red) {
-		--background: var(--oui-red-1);
-		--border: var(--oui-red-3);
-		--foreground: var(--oui-red-8);
+		--oui-background: var(--oui-red-0);
+		--oui-foreground: var(--oui-red-8);
+		--oui-shadow: var(--oui-red-6);
 	}
 
 	:where(&-pill-yellow, &-tag-yellow) {
-		--background: var(--oui-yellow-1);
-		--border: var(--oui-yellow-3);
-		--foreground: var(--oui-yellow-8);
+		--oui-background: var(--oui-yellow-0);
+		--oui-foreground: var(--oui-yellow-8);
+		--oui-shadow: var(--oui-yellow-6);
 	}
 }
