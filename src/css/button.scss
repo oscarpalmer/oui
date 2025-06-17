@@ -1,78 +1,44 @@
+@use './mixins' as mixins;
+
 .oui-button {
 	:where(&) {
-		--oui-background-percentage: 25%;
-		--oui-foreground-percentage: 0%;
-		--oui-outline-percentage: 100%;
-		--oui-shadow-percentage: 90%;
-
-		--oui-shadow-value: color-mix(
-			in oklch,
-			var(--oui-shadow, var(--oui-gray-6)),
-			transparent var(--oui-shadow-percentage)
-		);
-
-		padding: 0.5em 0.75em;
-		display: inline-flex;
-		flex-flow: row wrap;
-		gap: 0.75em;
-		border-radius: 0.25em;
-		background-color: color-mix(
-			in oklab,
-			var(--oui-background, var(--oui-gray-2)),
-			transparent var(--oui-background-percentage)
-		);
-		outline: 4px solid
-			color-mix(
-				in oklab,
-				var(--oui-shadow, var(--oui-gray-6)),
-				transparent var(--oui-outline-percentage)
-			);
-		border: none;
-		box-shadow: 0 0 0 1px var(--oui-shadow-value),
-			0 1px 2px 0 var(--oui-shadow-value), 0 2px 4px 0 var(--oui-shadow-value);
-		color: color-mix(
-			in oklab,
-			var(--oui-foreground, var(--oui-gray-8)),
-			transparent var(--oui-foreground-percentage)
-		);
-		line-height: 1.25;
-		transition: 0.125s ease-in-out;
+		@include mixins.button;
 	}
 
 	:where(&-blue) {
-		--oui-background: var(--oui-blue-2);
-		--oui-foreground: var(--oui-blue-8);
-		--oui-shadow: var(--oui-blue-6);
+		--oui-background-value: var(--oui-blue-2);
+		--oui-foreground-value: var(--oui-blue-8);
+		--oui-outline-value: var(--oui-blue-6);
 	}
 
 	:where(&-green) {
-		--oui-background: var(--oui-green-2);
-		--oui-foreground: var(--oui-green-8);
-		--oui-shadow: var(--oui-green-6);
+		--oui-background-value: var(--oui-green-2);
+		--oui-foreground-value: var(--oui-green-8);
+		--oui-outline-value: var(--oui-green-6);
 	}
 
 	:where(&-orange) {
-		--oui-background: var(--oui-orange-2);
-		--oui-foreground: var(--oui-orange-8);
-		--oui-shadow: var(--oui-orange-6);
+		--oui-background-value: var(--oui-orange-2);
+		--oui-foreground-value: var(--oui-orange-8);
+		--oui-outline-value: var(--oui-orange-6);
 	}
 
 	:where(&-purple) {
-		--oui-background: var(--oui-purple-2);
-		--oui-foreground: var(--oui-purple-8);
-		--oui-shadow: var(--oui-purple-6);
+		--oui-background-value: var(--oui-purple-2);
+		--oui-foreground-value: var(--oui-purple-8);
+		--oui-outline-value: var(--oui-purple-6);
 	}
 
 	:where(&-red) {
-		--oui-background: var(--oui-red-2);
-		--oui-foreground: var(--oui-red-8);
-		--oui-shadow: var(--oui-red-6);
+		--oui-background-value: var(--oui-red-2);
+		--oui-foreground-value: var(--oui-red-8);
+		--oui-outline-value: var(--oui-red-6);
 	}
 
 	:where(&-yellow) {
-		--oui-background: var(--oui-yellow-2);
-		--oui-foreground: var(--oui-yellow-8);
-		--oui-shadow: var(--oui-yellow-6);
+		--oui-background-value: var(--oui-yellow-2);
+		--oui-foreground-value: var(--oui-yellow-8);
+		--oui-outline-value: var(--oui-yellow-6);
 	}
 
 	:where(&-rounded) {
@@ -87,6 +53,8 @@
 	}
 
 	:where(&-tiny) {
+		--oui-foreground-percentage: 12.5%;
+
 		font-size: 0.75em;
 		font-weight: bold;
 		letter-spacing: 0.1em;
@@ -101,14 +69,15 @@
 		:where(&:not([disabled], [aria-disabled='true' i]):hover) {
 			--oui-background-percentage: 50%;
 			--oui-foreground-percentage: 25%;
-			--oui-shadow-percentage: 92.5%;
+			--oui-shadow-percentage: 90%;
 		}
 	}
 
 	:where(&:not([disabled], [aria-disabled='true' i]):active) {
-		box-shadow: 0 0 0 1px var(--oui-shadow-value),
-			inset 0 1px 2px 0 var(--oui-shadow-value),
-			inset 0 2px 4px 0 var(--oui-shadow-value);
+		box-shadow:
+			0 0 0 1px var(--oui-shadow-mixed),
+			inset 0 1px 2px 0 var(--oui-shadow-mixed),
+			inset 0 2px 4px 0 var(--oui-shadow-mixed);
 	}
 
 	:where(&[disabled], &[aria-disabled='true' i]) {

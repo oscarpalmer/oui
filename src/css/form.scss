@@ -2,12 +2,63 @@
 
 @use 'mixins.scss' as mixins;
 
+@mixin focus() {
+	--oui-border-value: var(--oui-blue-6);
+	--oui-foreground-value: inherit;
+	--oui-outline-percentage: 75%;
+	--oui-outline-value: var(--oui-blue-6);
+}
+
+@mixin hover() {
+	--oui-border-value: var(--oui-blue-4);
+	--oui-foreground-percentage: 50%;
+	--oui-foreground-value: inherit;
+	--oui-outline-percentage: 90%;
+	--oui-outline-value: var(--oui-blue-6);
+}
+
 @mixin input {
-	outline: 4px solid transparent;
+	--oui-background-percentage: 0%;
+	--oui-foreground-percentage: 0%;
+
+	@include outlined;
+
+	background-color: color-mix(in oklab, var(--oui-background-value), transparent var(--oui-background-percentage));
+	border: 1px solid var(--oui-border-value, var(--oui-gray-3));
+	box-shadow: inset 0 1px 2px 0 color-mix(in oklab, var(--oui-gray-10), transparent 75%);
+	color: color-mix(
+			in oklab,
+			var(--oui-foreground-value, inherit),
+			transparent var(--oui-foreground-percentage)
+		);
+}
+
+@mixin invalid() {
+	--oui-border-value: var(--oui-red-6);
+	--oui-foreground-value: var(--oui-red-9);
+	--oui-outline-percentage: 75%;
+	--oui-outline-value: var(--oui-red-6);
+}
+
+@mixin outlined {
+	--oui-outline-percentage: 100%;
+	--oui-outline-value: var(--oui-blue-6);
+
+	outline: 4px solid
+		color-mix(
+			in oklab,
+			var(--oui-outline-value),
+			transparent var(--oui-outline-percentage)
+		);
 	outline-offset: 0;
-	background-color: var(--oui-absolute);
-	box-shadow: inset 0 1px 2px 0 color-mix(in oklab, var(--oui-gray-10), transparent 80%);
 	transition: 0.125s ease-in-out;
+}
+
+@mixin valid() {
+	--oui-border-value: var(--oui-green-6);
+	--oui-foreground-value: var(--oui-green-9);
+	--oui-outline-percentage: 75%;
+	--oui-outline-value: var(--oui-green-6);
 }
 
 :where(.oui-fieldset) {
@@ -18,10 +69,11 @@
 
 .oui-input {
 	:where(&:not([type='range' i])) {
+		--oui-background-value: var(--oui-absolute);
+
 		@include input;
 
 		padding: 0.5em 0.75em;
-		border-color: var(--oui-gray-3);
 		border-radius: 0.25em;
 	}
 
@@ -56,16 +108,12 @@
 		padding-left: .5em;
 
 		&::file-selector-button {
-			padding: .5em .75em;
+			@include mixins.button;
+
+			--oui-outline-value: var(--oui-grey-6);
+
 			margin: 0 .75em 0 0;
-			background-color: var(--oui-gray-1);
-			border: 1px solid var(--oui-gray-3);
-			border-radius: .25em;
-			box-shadow: inset 0 1px 0 0 var(--oui-gray-0), 0 1px 2px 0 rgba(0, 0, 0, 0.125);
-			color: var(--oui-gray-8);
 			font-size: .75em;
-			line-height: 1;
-			transition: .125s ease-in-out;
 			cursor: pointer;
 		}
 	}
@@ -80,140 +128,164 @@
 			appearance: none;
 			width: 100%;
 			height: 0.75em;
-			border: 1px solid var(--oui-gray-3);
 			border-radius: .75em;
 			position: relative;
 		}
 
 		&::range-thumb {
+			--oui-background-percentage: 0%;
+			--oui-background-value: var(--oui-blue-6);
+
+			@include outlined;
+
 			appearance: none;
 			width: 1.25em;
 			height: 1.25em;
-			background-color: var(--oui-blue-6);
-			outline: 4px solid transparent;
+			background-color:
+				color-mix(
+					in oklab,
+					var(--oui-background-value),
+					transparent var(--oui-background-percentage)
+				);
 			border: 2px solid var(--oui-absolute);
 			border-radius: 1.25em;
 			box-shadow: 0 1px 2px 2px rgba(0, 0, 0, 0.125);
-			transition: .125s ease-in-out;
 			cursor: pointer;
 		}
-	}
 
-	:where(&.oui-validatable:not([disabled], [aria-disabled='true' i]):is(:user-invalid,
-			[aria-invalid='true' i])) {
-		& {
-			outline-color: color-mix(in oklab, var(--oui-red-6), transparent 60%);
-			border-color: var(--oui-red-6);
-		}
-
-		&::range-track {
-			outline-color: color-mix(in oklab, var(--oui-red-6), transparent 60%);
-			border-color: var(--oui-red-6);
-		}
-
-		&::file-selector-button {
-			background-color: var(--oui-red-0);
-			border-color: var(--oui-red-2);
-			color: var(--oui-red-9);
-		}
-
-		&::range-thumb {
-			background-color: var(--oui-red-6);
+		&::-webkit-slider-thumb {
+			position: relative;
+			top: 50%;
+			transform: translateY(-50%);
 		}
 	}
 
-	:where(&.oui-validatable:not([disabled], [aria-disabled='true' i]):is(:user-valid,
-			[aria-invalid='false' i])) {
-		& {
-			outline-color: color-mix(in oklab, var(--oui-green-6), transparent 60%);
-			border-color: var(--oui-green-6);
-		}
-
-		&::range-track {
-			outline-color: color-mix(in oklab, var(--oui-green-6), transparent 60%);
-			border-color: var(--oui-green-6);
-		}
+	:where(&.oui-validatable:not([disabled], [readonly], [aria-disabled='true' i]):is(:user-invalid, [aria-invalid='true' i])) {
+		@include invalid;
 
 		&::file-selector-button {
-			background-color: var(--oui-green-0);
-			border-color: var(--oui-green-3);
-			color: var(--oui-green-9);
+			--oui-background-value: var(--oui-red-1);
+			--oui-foreground-value: var(--oui-red-8);
+			--oui-outline-value: var(--oui-red-6);
 		}
 
 		&::range-thumb {
-			background-color: var(--oui-green-6);
+			--oui-background-value: var(--oui-red-6);
+		}
+
+		&::range-track {
+			@include invalid;
 		}
 	}
 
-	:where(&:not([disabled], [aria-disabled='true' i]):focus) {
-		outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 60%);
-		border-color: var(--oui-blue-6);
+	:where(&.oui-validatable:not([disabled], [readonly], [aria-disabled='true' i]):is(:user-valid, [aria-invalid='false' i])) {
+		@include valid;
 
 		&::file-selector-button {
-			background-color: var(--oui-blue-0);
-			border-color: var(--oui-blue-3);
-			color: var(--oui-blue-9);
-		}
-
-		&::range-track,
-		&::range-thumb {
-			outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 60%);
+			--oui-background-value: var(--oui-green-1);
+			--oui-foreground-value: var(--oui-green-8);
+			--oui-outline-value: var(--oui-green-6);
 		}
 
 		&::range-track {
-			border-color: var(--oui-blue-6);
+			@include valid;
 		}
 
 		&::range-thumb {
-			background-color: var(--oui-blue-6);
+			--oui-background-value: var(--oui-green-6);
+		}
+	}
+
+	:where(&:not([disabled], [readonly], [aria-disabled="true" i])) {
+		&::-webkit-calendar-picker-indicator {
+			outline: 4px solid transparent;
+			outline-offset: 2px;
+			border-radius: 2em;
+			transition: .125s ease-in-out;
+			cursor: pointer;
+
+			@media (hover: hover) {
+				&:hover {
+					outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 75%);
+				}
+			}
+
+			&:focus {
+				outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 75%);
+			}
+		}
+	}
+
+	:where(&:not([disabled], [readonly], [aria-disabled="true" i]):focus),
+	:where(&:not([disabled], [readonly], [aria-disabled="true" i]):focus-within) {
+		@include focus;
+
+		&::file-selector-button {
+			--oui-background-value: var(--oui-blue-1);
+			--oui-foreground-value: var(--oui-blue-8);
+			--oui-outline-value: var(--oui-blue-6);
+		}
+
+		&::range-thumb,
+		&::range-track {
+			@include focus;
+		}
+
+		&::range-thumb {
+			--oui-background-value: var(--oui-blue-6);
+
 			box-shadow: 0 1px 2px 2px rgba(0, 0, 0, 0.25);
 		}
 	}
 
 	@media (hover: hover) {
 		:where(&:not([disabled], [aria-disabled='true' i]):hover) {
-			& {
-				outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 80%);
-				border-color: var(--oui-blue-6);
-			}
-
-			&::range-track {
-				outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 80%);
-				border-color: var(--oui-blue-6);
-			}
+			@include hover;
 
 			&::file-selector-button {
-				background-color: var(--oui-blue-0);
-				border-color: var(--oui-blue-3);
-				color: var(--oui-blue-9);
+				--oui-background-value: var(--oui-blue-1);
+				--oui-foreground-value: var(--oui-blue-8);
+				--oui-outline-value: var(--oui-blue-6);
 			}
 
 			&::range-thumb {
-				background-color: var(--oui-blue-5);
+				--oui-background-value: var(--oui-blue-5);
+			}
+
+			&::range-track {
+				@include hover;
 			}
 		}
 	}
 
-	:where(&[readonly]) {
-		color: color-mix(in oklab, currentColor, transparent 12.5%);
+	:where(&[disabled], &[readonly], &[aria-disabled='true' i]) {
+		--oui-foreground-percentage: 25%;
+
+		font-style: italic;
+	}
+
+	:where(&:is([disabled], [readonly], [aria-disabled='true' i]):focus) {
+		--oui-outline-percentage: 75%;
 	}
 
 	:where(&[disabled], &[aria-disabled='true' i]) {
-		& {
-			background-color: color-mix(in oklab, var(--oui-gray-0), transparent 50%);
-			color: color-mix(in oklab, currentColor, transparent 25%);
-			font-style: italic;
-		}
-
-		&::range-track {
-			background-color: color-mix(in oklab, var(--oui-gray-0), transparent 50%);
-			color: color-mix(in oklab, currentColor, transparent 25%);
-			font-style: italic;
-		}
+		--oui-background-percentage: 50%;
 
 		&::file-selector-button,
 		&::range-thumb {
-			background-color: var(--oui-gray-1);
+			--oui-background-value: var(--oui-gray-1);
+
+			cursor: default;
+		}
+
+		&::range-track {
+			--oui-background-percentage: 50%;
+			--oui-background-value: var(--oui-gray-0);
+		}
+
+		&::-webkit-calendar-picker-indicator {
+			color: red;
+			stroke: red;
 		}
 	}
 }
@@ -243,11 +315,11 @@ select.oui-input:is([multiple]) {
 	}
 
 	:where(& > option:nth-of-type(2n)) {
-		background-color: color-mix(in oklab, var(--oui-blue-0), transparent 67%)
+		background-color: color-mix(in oklab, var(--oui-blue-0), transparent 33%);
 	}
 
 	:where(& > option:checked) {
-		background-color: var(--oui-blue-1);
+		background-color: var(--oui-blue-2);
 		color: var(--oui-blue-9);
 
 		&::before {
@@ -273,7 +345,7 @@ select.oui-input:is([multiple]) {
 	transition: .125s ease-in-out;
 
 	@media (hover: hover) {
-		:where(&:hover) {
+		:where(&[for]:hover) {
 			color: var(--oui-blue-8);
 		}
 	}
@@ -286,11 +358,22 @@ select.oui-input:is([multiple]) {
 }
 
 :where(.oui-switch, .oui-toggle) {
+	--oui-background-percentage: 50%;
+	--oui-background-value: var(--oui-gray-1);
+	--oui-border-value: var(--oui-gray-3);
+	--oui-foreground-percentage: 0%;
+	--oui-foreground-value: var(--oui-gray-8);
+	--oui-outline-percentage: 100%;
+	--oui-outline-value: var(--oui-blue-6);
+	--oui-shadow-percentage: 85%;
+	--oui-shadow-value: var(--oui-gray-10);
+
 	position: relative;
 	cursor: pointer;
 
 	&::before,
 	&::after {
+		display: inline-block;
 		font-family: system-ui, sans-serif;
 		position: absolute;
 		transition: 0.125s ease-in-out;
@@ -298,8 +381,19 @@ select.oui-input:is([multiple]) {
 	}
 
 	&::before {
-		outline: 4px solid transparent;
+		background-color: color-mix(in oklab, var(--oui-background-value), transparent var(--oui-background-percentage));
+		box-shadow: inset 0 1px 2px 0 color-mix(in oklab, var(--oui-shadow-value), transparent var(--oui-shadow-percentage));
+		outline: 4px solid color-mix(
+			in oklab,
+			var(--oui-outline-value),
+			transparent var(--oui-outline-percentage)
+		);
 		outline-offset: 0;
+		border: 1px solid var(--oui-border-value);
+	}
+
+	&::after {
+		color: color-mix(in oklab, var(--oui-foreground-value), transparent var(--oui-foreground-percentage));
 	}
 }
 
@@ -311,9 +405,6 @@ select.oui-input:is([multiple]) {
 			content: '';
 			width: 2.5em;
 			height: 1.5em;
-			display: inline-block;
-			background-color: var(--oui-gray-0);
-			border: 1px solid var(--oui-gray-3);
 			border-radius: 3em;
 			right: 0;
 		}
@@ -325,7 +416,6 @@ select.oui-input:is([multiple]) {
 			background-color: var(--oui-absolute);
 			border-radius: 1.5em;
 			box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.125);
-			color: var(--oui-gray-8);
 			font-size: 0.75em;
 			font-weight: bold;
 			line-height: 1.5em;
@@ -336,10 +426,12 @@ select.oui-input:is([multiple]) {
 	}
 
 	:where(&:has(input:checked)) {
+		--oui-foreground-percentage: 0%;
+		--oui-foreground-value: var(--oui-blue-8);
+
 		&::after {
 			content: attr(oui-on, '\2713');
 			box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.25);
-			color: var(--oui-blue-8);
 			right: 0.25em;
 		}
 	}
@@ -347,15 +439,15 @@ select.oui-input:is([multiple]) {
 
 .oui-toggle {
 	:where(&) {
+		--oui-background-percentage: 100%;
+		--oui-border-value: var(--oui-gray-4);
+
 		padding: 0 0 0 2em;
 
 		&::before {
 			content: '';
 			width: 1.5em;
 			height: 1.5em;
-			display: inline-block;
-			background-color: transparent;
-			border: 1px solid var(--oui-gray-4);
 			inset: 0 auto auto 0;
 		}
 
@@ -365,6 +457,9 @@ select.oui-input:is([multiple]) {
 	}
 
 	:where(&:has(input[type='checkbox' i])) {
+		--oui-foreground-percentage: 0%;
+		--oui-foreground-value: white;
+
 		&::before {
 			border-radius: 0.25em;
 		}
@@ -373,7 +468,6 @@ select.oui-input:is([multiple]) {
 			content: attr(oui-on, '\2713');
 			width: 1.5em;
 			height: 1.5em;
-			color: white;
 			text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 			font-weight: bold;
 			line-height: 1.5em;
@@ -383,6 +477,7 @@ select.oui-input:is([multiple]) {
 	}
 
 	:where(&:has(input[type='radio' i])) {
+		position: relative;
 
 		&::before,
 		&::after {
@@ -409,47 +504,53 @@ select.oui-input:is([multiple]) {
 .oui-switch,
 .oui-toggle {
 	:where(&:has(input:checked)) {
-		&::before {
-			background-color: var(--oui-blue-6);
-			border-color: transparent;
-		}
+		--oui-background-percentage: 25%;
+		--oui-background-value: var(--oui-blue-6);
+		--oui-border-value: var(--oui-blue-6);
+		--oui-shadow-percentage: 50%;
+		--oui-shadow-value: var(--oui-blue-8);
+	}
+
+	:where(&:focus-within) {
+		--oui-border-value: var(--oui-blue-6);
+		--oui-outline-percentage: 75%;
+
+		color: var(--oui-blue-8);
 	}
 
 	:where(&:has(input:not([disabled], [aria-disabled='true' i])):focus-within) {
-		color: var(--oui-blue-8);
-
-		&::before {
-			outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 60%);
-			border-color: var(--oui-absolute);
-		}
+		--oui-background-percentage: 50%;
 	}
 
 	@media (hover: hover) {
 		:where(&:has(input:not([disabled], [aria-disabled='true' i])):hover) {
-			color: var(--oui-blue-8);
+			--oui-border-value: var(--oui-blue-4);
+			--oui-outline-percentage: 90%;
+			--oui-outline-value: var(--oui-blue-6);
 
-			&::before {
-				outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 80%);
-				border-color: var(--oui-blue-6);
-			}
+			color: var(--oui-blue-8);
 		}
 
-		:where(&:has(input:not([disabled], [aria-disabled='true' i]):is(:checked)):hover)::before {
-			background-color: color-mix(in oklab, var(--oui-blue-6), transparent 40%);
+		:where(&:has(input:not([disabled], [aria-disabled='true' i]):is(:checked)):hover) {
+			--oui-background-percentage: 50%;
+			--oui-background-value: var(--oui-blue-6);
 		}
 	}
 
 	:where(&:has(input[disabled], input[aria-disabled='true' i])) {
-		color: color-mix(in oklab, currentColor, transparent 25%);
+		--oui-background-percentage: 50%;
+		--oui-background-value: var(--oui-gray-0);
+		--oui-border-value: var(--oui-gray-3);
+		--oui-foreground-percentage: 25%;
+		--oui-foreground-value: currentColor;
+
+		color: color-mix(in oklab, var(--oui-foreground-value), transparent var(--oui-foreground-percentage));
+		font-style: italic;
 		cursor: default;
 
-		&::after {
-			color: color-mix(in oklab, currentColor, transparent);
-		}
-
+		&::after,
 		&::before {
-			background-color: color-mix(in oklab, var(--oui-gray-0), transparent 50%);
-			border-color: var(--oui-gray-3);
+			font-style: normal;
 		}
 
 		&::after {

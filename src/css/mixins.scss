@@ -1,3 +1,46 @@
+@mixin button() {
+	--oui-background-percentage: 25%;
+	--oui-foreground-percentage: 0%;
+	--oui-outline-percentage: 100%;
+	--oui-shadow-percentage: 85%;
+
+	--oui-shadow-value: color-mix(
+		in oklch,
+		var(--oui-outline-value, var(--oui-gray-6)),
+		transparent var(--oui-shadow-percentage)
+	);
+
+	padding: 0.5em 0.75em;
+	display: inline-flex;
+	flex-flow: row wrap;
+	gap: 0.75em;
+	align-items: center;
+	border-radius: 0.25em;
+	background-color: color-mix(
+		in oklab,
+		var(--oui-background-value, var(--oui-gray-2)),
+		transparent var(--oui-background-percentage)
+	);
+	outline: 4px solid
+		color-mix(
+			in oklab,
+			var(--oui-outline-value, var(--oui-gray-6)),
+			transparent var(--oui-outline-percentage)
+		);
+	border: none;
+	box-shadow:
+		0 0 0 1px var(--oui-shadow-value),
+		0 1px 2px 0 var(--oui-shadow-value),
+		0 2px 4px 0 var(--oui-shadow-value);
+	color: color-mix(
+		in oklab,
+		var(--oui-foreground-value, var(--oui-gray-8)),
+		transparent var(--oui-foreground-percentage)
+	);
+	line-height: 1.25;
+	transition: 0.125s ease-in-out;
+}
+
 @mixin visuallyHidden() {
 	width: 1px !important;
 	height: 1px !important;
