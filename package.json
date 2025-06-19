@@ -78,7 +78,7 @@
 		"rollup": "npx rollup -c --watch",
 		"test": "npx vitest --coverage",
 		"types": "npx tsc && npx dts-bundle-generator --config ./dts.config.cts --silent",
-		"watch:css": "npx sass ./src/css:./dist/css --no-source-map --watch",
+		"watch:css": "npx sass ./postcss:./dist/css --no-source-map --watch",
 		"watch:postcss": "npx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss --watch",
 		"watch:js": "npx vite build --watch"
 	},

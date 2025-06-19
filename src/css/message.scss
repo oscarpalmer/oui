@@ -1,25 +1,27 @@
 /*! https://github.com/oscarpalmer/oui */
 
+@use './mixins.scss' as mixins;
+
 .oui-message {
 	:where(&) {
-		--oui-shadow-value: color-mix(
-			in oklch,
-			var(--oui-shadow, var(--oui-gray-6)),
-			transparent 95%
+		--oui-shadow-mixed: color-mix(
+			in oklab,
+			var(--oui-shadow-value, var(--oui-gray-6)),
+			transparent 92.5%
 		);
 
-		padding: 1em;
+		@include mixins.card(
+			color-mix(
+				in oklab,
+				var(--oui-background, var(--oui-gray-0)),
+				transparent 25%
+			),
+			var(--oui-shadow-mixed),
+		);
+
 		display: inline-flex;
 		flex-flow: column nowrap;
 		gap: 1em;
-		background-color: color-mix(
-			in oklab,
-			var(--oui-background, var(--oui-gray-0)),
-			transparent 25%
-		);
-		border-radius: 0.5em;
-		box-shadow: 0 0 0 1px var(--oui-shadow-value),
-			0 1px 2px 0 var(--oui-shadow-value), 0 2px 4px 0 var(--oui-shadow-value);
 		color: var(--oui-foreground, var(--oui-gray-8));
 		line-height: 1.25;
 	}
@@ -32,7 +34,7 @@
 	:where(& hr) {
 		height: 1px;
 		margin: 0 -1em;
-		background-color: var(--oui-shadow-value, var(--oui-gray-2));
+		background-color: var(--oui-border, var(--oui-gray-2));
 		border: none;
 	}
 
@@ -44,37 +46,43 @@
 
 	:where(&-blue, &-info) {
 		--oui-background: var(--oui-blue-0);
+		--oui-border: var(--oui-blue-2);
 		--oui-foreground: var(--oui-blue-8);
-		--oui-shadow: var(--oui-blue-6);
+		--oui-shadow-value: var(--oui-blue-6);
 	}
 
 	:where(&-green, &-success) {
 		--oui-background: var(--oui-green-0);
+		--oui-border: var(--oui-green-2);
 		--oui-foreground: var(--oui-green-8);
-		--oui-shadow: var(--oui-green-6);
+		--oui-shadow-value: var(--oui-green-6);
 	}
 
 	:where(&-orange, &-warning) {
 		--oui-background: var(--oui-orange-0);
+		--oui-border: var(--oui-orange-2);
 		--oui-foreground: var(--oui-orange-8);
-		--oui-shadow: var(--oui-orange-6);
+		--oui-shadow-value: var(--oui-orange-6);
 	}
 
 	:where(&-purple, &-special) {
 		--oui-background: var(--oui-purple-0);
+		--oui-border: var(--oui-purple-2);
 		--oui-foreground: var(--oui-purple-8);
-		--oui-shadow: var(--oui-purple-6);
+		--oui-shadow-value: var(--oui-purple-6);
 	}
 
 	:where(&-red, &-error) {
 		--oui-background: var(--oui-red-0);
+		--oui-border: var(--oui-red-2);
 		--oui-foreground: var(--oui-red-8);
-		--oui-shadow: var(--oui-red-6);
+		--oui-shadow-value: var(--oui-red-6);
 	}
 
 	:where(&-yellow, &-notice) {
 		--oui-background: var(--oui-yellow-0);
+		--oui-border: var(--oui-yellow-2);
 		--oui-foreground: var(--oui-yellow-8);
-		--oui-shadow: var(--oui-yellow-6);
+		--oui-shadow-value: var(--oui-yellow-6);
 	}
 }

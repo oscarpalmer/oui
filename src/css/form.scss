@@ -24,6 +24,7 @@
 	@include outlined;
 
 	background-color: color-mix(in oklab, var(--oui-background-value), transparent var(--oui-background-percentage));
+	border: none;
 	border: 1px solid var(--oui-border-value, var(--oui-gray-3));
 	box-shadow: inset 0 1px 2px 0 color-mix(in oklab, var(--oui-gray-10), transparent 75%);
 	color: color-mix(
@@ -44,7 +45,7 @@
 	--oui-outline-percentage: 100%;
 	--oui-outline-value: var(--oui-blue-6);
 
-	outline: 4px solid
+	outline: 5px solid
 		color-mix(
 			in oklab,
 			var(--oui-outline-value),
@@ -87,6 +88,15 @@
 		&::-webkit-calendar-picker-indicator {
 			display: none !important;
 		}
+	}
+
+	:where(&:is(
+		select,
+		[type='color' i],
+		[type='file' i],
+		[type='range' i]
+	)[readonly]) {
+		pointer-events: none;
 	}
 
 	:where(&:is([type='color' i])) {
@@ -160,7 +170,7 @@
 		}
 	}
 
-	:where(&.oui-validatable:not([disabled], [readonly], [aria-disabled='true' i]):is(:user-invalid, [aria-invalid='true' i])) {
+	:where(&.oui-validatable:not([disabled], [readonly], [aria-disabled='true' i]):is(:user-invalid:not([aria-invalid='false' i]), [aria-invalid='true' i])) {
 		@include invalid;
 
 		&::file-selector-button {
@@ -176,9 +186,14 @@
 		&::range-track {
 			@include invalid;
 		}
+
+		& > option:checked {
+			background-color: var(--oui-red-2);
+			color: var(--oui-red-9);
+		}
 	}
 
-	:where(&.oui-validatable:not([disabled], [readonly], [aria-disabled='true' i]):is(:user-valid, [aria-invalid='false' i])) {
+	:where(&.oui-validatable:not([disabled], [readonly], [aria-disabled='true' i]):is(:user-valid:not([aria-invalid='true' i]), [aria-invalid='false' i])) {
 		@include valid;
 
 		&::file-selector-button {
@@ -193,6 +208,11 @@
 
 		&::range-thumb {
 			--oui-background-value: var(--oui-green-6);
+		}
+
+		& > option:checked {
+			background-color: var(--oui-green-2);
+			color: var(--oui-green-9);
 		}
 	}
 
@@ -271,6 +291,8 @@
 	:where(&[disabled], &[aria-disabled='true' i]) {
 		--oui-background-percentage: 50%;
 
+		pointer-events: none;
+
 		&::file-selector-button,
 		&::range-thumb {
 			--oui-background-value: var(--oui-gray-1);
@@ -284,8 +306,7 @@
 		}
 
 		&::-webkit-calendar-picker-indicator {
-			color: red;
-			stroke: red;
+			opacity: .5;
 		}
 	}
 }
@@ -315,7 +336,7 @@ select.oui-input:is([multiple]) {
 	}
 
 	:where(& > option:nth-of-type(2n)) {
-		background-color: color-mix(in oklab, var(--oui-blue-0), transparent 33%);
+		background-color: color-mix(in oklab, var(--oui-blue-0), transparent 50%);
 	}
 
 	:where(& > option:checked) {
@@ -382,7 +403,6 @@ select.oui-input:is([multiple]) {
 
 	&::before {
 		background-color: color-mix(in oklab, var(--oui-background-value), transparent var(--oui-background-percentage));
-		box-shadow: inset 0 1px 2px 0 color-mix(in oklab, var(--oui-shadow-value), transparent var(--oui-shadow-percentage));
 		outline: 4px solid color-mix(
 			in oklab,
 			var(--oui-outline-value),
@@ -390,6 +410,7 @@ select.oui-input:is([multiple]) {
 		);
 		outline-offset: 0;
 		border: 1px solid var(--oui-border-value);
+		box-shadow: inset 0 1px 2px 0 color-mix(in oklab, var(--oui-shadow-value), transparent var(--oui-shadow-percentage));
 	}
 
 	&::after {
@@ -546,6 +567,7 @@ select.oui-input:is([multiple]) {
 
 		color: color-mix(in oklab, var(--oui-foreground-value), transparent var(--oui-foreground-percentage));
 		font-style: italic;
+		pointer-events: none;
 		cursor: default;
 
 		&::after,

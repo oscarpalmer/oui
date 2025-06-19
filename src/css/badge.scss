@@ -1,21 +1,21 @@
 /*! https://github.com/oscarpalmer/oui */
 
+@use './mixins.scss' as mixins;
+
 .oui {
 	:where(&-pill, &-tag) {
-		--oui-shadow-value: color-mix(
-			in oklch,
+		--oui-shadow-mixed: color-mix(
+			in oklab,
 			var(--oui-shadow, var(--oui-gray-6)),
-			transparent 95%
+			transparent 92.5%
 		);
+
+		@include mixins.shadow(var(--oui-shadow-mixed));
 
 		display: inline-flex;
 		flex-flow: row nowrap;
 		gap: .5em;
 		background-color: color-mix(in oklab, var(--oui-background, var(--oui-gray-0)), transparent 25%);
-		box-shadow:
-			0 0 0 1px var(--oui-shadow-value),
-			0 1px 2px 0 var(--oui-shadow-value),
-			0 2px 4px 0 var(--oui-shadow-value);
 		color: var(--oui-foreground, var(--oui-gray-8));
 		line-height: 1.25;
 	}

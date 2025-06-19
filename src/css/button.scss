@@ -75,9 +75,9 @@
 
 	:where(&:not([disabled], [aria-disabled='true' i]):active) {
 		box-shadow:
-			0 0 0 1px var(--oui-shadow-mixed),
-			inset 0 1px 2px 0 var(--oui-shadow-mixed),
-			inset 0 2px 4px 0 var(--oui-shadow-mixed);
+			0 0 0 1px var(--oui-shadow-value),
+			inset 0 1px 2px 0 var(--oui-shadow-value),
+			inset 0 2px 4px 0 var(--oui-shadow-value);
 	}
 
 	:where(&[disabled], &[aria-disabled='true' i]) {

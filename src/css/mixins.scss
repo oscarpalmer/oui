@@ -2,13 +2,15 @@
 	--oui-background-percentage: 25%;
 	--oui-foreground-percentage: 0%;
 	--oui-outline-percentage: 100%;
-	--oui-shadow-percentage: 85%;
+	--oui-shadow-percentage: 82.5%;
 
 	--oui-shadow-value: color-mix(
-		in oklch,
+		in oklab,
 		var(--oui-outline-value, var(--oui-gray-6)),
 		transparent var(--oui-shadow-percentage)
 	);
+
+	@include shadow(var(--oui-shadow-value));
 
 	padding: 0.5em 0.75em;
 	display: inline-flex;
@@ -28,10 +30,6 @@
 			transparent var(--oui-outline-percentage)
 		);
 	border: none;
-	box-shadow:
-		0 0 0 1px var(--oui-shadow-value),
-		0 1px 2px 0 var(--oui-shadow-value),
-		0 2px 4px 0 var(--oui-shadow-value);
 	color: color-mix(
 		in oklab,
 		var(--oui-foreground-value, var(--oui-gray-8)),
@@ -39,6 +37,25 @@
 	);
 	line-height: 1.25;
 	transition: 0.125s ease-in-out;
+}
+
+@mixin card($backgroundColor: var(--oui-absolute), $boxShadowColor: color-mix(
+		in oklab,
+		var(--oui-gray-6),
+		transparent 92.5%
+	)) {
+	@include shadow($boxShadowColor);
+
+	padding: 1em 1.25em;
+	background-color: $backgroundColor;
+	border-radius: 0.5em;
+}
+
+@mixin shadow($color: rgba(0, 0, 0, 0.05)) {
+	box-shadow:
+		0 0 0 1px $color,
+		0 1px 2px -.5px $color,
+		0 2px 4px -1px $color,
 }
 
 @mixin visuallyHidden() {

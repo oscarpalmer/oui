@@ -3,6 +3,7 @@
 .oui-table {
 	:where(&) {
 		width: 100%;
+		background-color: var(--oui-absolute);
 	}
 
 	:where(&-wrapper) {
@@ -29,41 +30,65 @@
 	}
 
 	:where(& tbody tr:nth-of-type(2n)) {
-		background-color: color-mix(in oklab, var(--oui-blue-0), transparent 67%);
+		background-color: color-mix(in oklab, var(--oui-blue-0), transparent 50%);
 	}
 
 	:where(& th, & tfoot td) {
 		background-color: var(--oui-gray-1);
 		border: solid var(--oui-gray-3);
 		border-width: 0 1px 0 0;
+	}
+
+	:where(& thead th, & tfoot td) {
 		position: sticky;
 		left: 0;
 		z-index: 1;
 
 		&::after {
 			content: '';
-			border-bottom: 1px solid var(--oui-gray-3);
+			width: 100%;
+			height: 4px;
+			background-image: linear-gradient(
+				to var(--oui-shadow-direction),
+				rgba(0, 0, 0, 0.1),
+				transparent
+			);
 			position: absolute;
 		}
 	}
 
 	:where(& th, & td) {
-		padding: .5em;
+		padding: .5em .625rem;
 	}
 
-	:where(& th) {
-		top: 2em;
+	:where(& thead th) {
+		font-size: .75rem;
+		font-weight: bold;
+		letter-spacing: .1em;
+		text-align: left;
+		text-transform: uppercase;
+		top: 0;
 
 		&::after {
-			inset: auto 0 0 0;
+			--oui-shadow-direction: bottom;
+
+			border-top: 1px solid var(--oui-gray-3);
+			inset: 100% 0 0 0;
 		}
+	}
+
+	:where(&:has(caption) thead th) {
+		top: 2rem;
 	}
 
 	:where(& tfoot td) {
 		bottom: 0;
 
 		&::after {
-			inset: 0 0 auto 0;
+			--oui-shadow-direction: top;
+
+			border-bottom: 1px solid var(--oui-gray-3);
+			inset: -4px 0 0 0;
 		}
 	}
 
