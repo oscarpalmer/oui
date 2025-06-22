@@ -29,16 +29,16 @@
 	--oui-green-9: light-dark(oklch(0.35 0.1 141), oklch(0.9 0.03 149));
 	--oui-green-10: light-dark(oklch(0.3 0.09 140), oklch(0.95 0.02 150));
 
-	--oui-orange-0: light-dark(oklch(0.995 0.02 60), oklch(0.2 0.08 50));
-	--oui-orange-1: light-dark(oklch(0.99 0.035 59), oklch(0.25 0.09 51));
+	--oui-orange-0: light-dark(oklch(0.99 0.02 60), oklch(0.2 0.08 50));
+	--oui-orange-1: light-dark(oklch(0.985 0.035 59), oklch(0.25 0.09 51));
 	--oui-orange-2: light-dark(oklch(0.97 0.05 58), oklch(0.32 0.1 52));
 	--oui-orange-3: light-dark(oklch(0.93 0.07 57), oklch(0.4 0.09 53));
-	--oui-orange-4: light-dark(oklch(0.85 0.1 56), oklch(0.5 0.08 54));
-	--oui-orange-5: light-dark(oklch(0.70 0.11 55), oklch(0.6 0.07 55));
-	--oui-orange-6: light-dark(oklch(0.60 0.12 54), oklch(0.7 0.06 56));
-	--oui-orange-7: light-dark(oklch(0.50 0.14 53), oklch(0.8 0.05 57));
-	--oui-orange-8: light-dark(oklch(0.42 0.12 53), oklch(0.85 0.04 58));
-	--oui-orange-9: light-dark(oklch(0.35 0.11 51), oklch(0.9 0.03 59));
+	--oui-orange-4: light-dark(oklch(0.87 0.1 56), oklch(0.5 0.08 54));
+	--oui-orange-5: light-dark(oklch(0.76 0.11 55), oklch(0.6 0.07 55));
+	--oui-orange-6: light-dark(oklch(0.65 0.12 54), oklch(0.7 0.06 56));
+	--oui-orange-7: light-dark(oklch(0.55 0.14 53), oklch(0.8 0.05 57));
+	--oui-orange-8: light-dark(oklch(0.45 0.12 52), oklch(0.85 0.04 58));
+	--oui-orange-9: light-dark(oklch(0.375 0.11 51), oklch(0.9 0.03 59));
 	--oui-orange-10: light-dark(oklch(0.3 0.09 50), oklch(0.95 0.02 60));
 
 	--oui-purple-0: light-dark(oklch(0.99 0.02 300), oklch(0.2 0.08 290));
@@ -53,28 +53,28 @@
 	--oui-purple-9: light-dark(oklch(0.35 0.11 291), oklch(0.9 0.03 299));
 	--oui-purple-10: light-dark(oklch(0.3 0.09 290), oklch(0.95 0.02 300));
 
-	--oui-red-0: light-dark(oklch(0.995 0.024 25), oklch(0.2 0.08 25));
-	--oui-red-1: light-dark(oklch(0.99 0.032 24), oklch(0.25 0.09 24));
-	--oui-red-2: light-dark(oklch(0.96 0.05 23), oklch(0.32 0.1 23));
+	--oui-red-0: light-dark(oklch(0.99 0.024 25), oklch(0.2 0.08 25));
+	--oui-red-1: light-dark(oklch(0.985 0.032 24), oklch(0.25 0.09 24));
+	--oui-red-2: light-dark(oklch(0.97 0.05 23), oklch(0.32 0.1 23));
 	--oui-red-3: light-dark(oklch(0.93 0.07 22), oklch(0.4 0.09 22));
-	--oui-red-4: light-dark(oklch(0.85 0.1 21), oklch(0.5 0.08 21));
-	--oui-red-5: light-dark(oklch(0.72 0.11 20), oklch(0.6 0.07 20));
-	--oui-red-6: light-dark(oklch(0.60 0.12 19), oklch(0.7 0.06 19));
-	--oui-red-7: light-dark(oklch(0.50 0.14 18), oklch(0.8 0.05 18));
-	--oui-red-8: light-dark(oklch(0.42 0.12 17), oklch(0.85 0.04 17));
-	--oui-red-9: light-dark(oklch(0.35 0.11 16), oklch(0.9 0.03 16));
+	--oui-red-4: light-dark(oklch(0.87 0.1 21), oklch(0.5 0.08 21));
+	--oui-red-5: light-dark(oklch(0.76 0.11 20), oklch(0.6 0.07 20));
+	--oui-red-6: light-dark(oklch(0.65 0.12 19), oklch(0.7 0.06 19));
+	--oui-red-7: light-dark(oklch(0.55 0.14 18), oklch(0.8 0.05 18));
+	--oui-red-8: light-dark(oklch(0.45 0.12 17), oklch(0.85 0.04 17));
+	--oui-red-9: light-dark(oklch(0.375 0.11 16), oklch(0.9 0.03 16));
 	--oui-red-10: light-dark(oklch(0.3 0.09 15), oklch(0.95 0.02 15));
 
-	--oui-yellow-0: light-dark(oklch(0.995 0.02 100), oklch(0.2 0.08 90));
-	--oui-yellow-1: light-dark(oklch(0.99 0.035 99), oklch(0.25 0.09 91));
+	--oui-yellow-0: light-dark(oklch(0.99 0.02 100), oklch(0.2 0.08 90));
+	--oui-yellow-1: light-dark(oklch(0.985 0.035 99), oklch(0.25 0.09 91));
 	--oui-yellow-2: light-dark(oklch(0.97 0.05 98), oklch(0.33 0.1 92));
 	--oui-yellow-3: light-dark(oklch(0.93 0.07 97), oklch(0.4 0.09 93));
-	--oui-yellow-4: light-dark(oklch(0.85 0.1 96), oklch(0.5 0.08 94));
-	--oui-yellow-5: light-dark(oklch(0.72 0.11 95), oklch(0.6 0.07 95));
-	--oui-yellow-6: light-dark(oklch(0.60 0.12 94), oklch(0.7 0.06 96));
-	--oui-yellow-7: light-dark(oklch(0.50 0.14 93), oklch(0.8 0.05 97));
-	--oui-yellow-8: light-dark(oklch(0.42 0.12 92), oklch(0.85 0.04 98));
-	--oui-yellow-9: light-dark(oklch(0.35 0.11 91), oklch(0.9 0.03 99));
+	--oui-yellow-4: light-dark(oklch(0.87 0.1 96), oklch(0.5 0.08 94));
+	--oui-yellow-5: light-dark(oklch(.78 0.11 95), oklch(0.6 0.07 95));
+	--oui-yellow-6: light-dark(oklch(0.65 0.12 94), oklch(0.7 0.06 96));
+	--oui-yellow-7: light-dark(oklch(0.55 0.14 93), oklch(0.8 0.05 97));
+	--oui-yellow-8: light-dark(oklch(0.45 0.12 92), oklch(0.85 0.04 98));
+	--oui-yellow-9: light-dark(oklch(0.375 0.11 91), oklch(0.9 0.03 99));
 	--oui-yellow-10: light-dark(oklch(0.3 0.09 90), oklch(0.95 0.02 100));
 
 	--oui-gray-0: light-dark(oklch(0.98 0 0), oklch(0.22 0 0));

@@ -2,6 +2,7 @@
 	--oui-background-percentage: 25%;
 	--oui-foreground-percentage: 0%;
 	--oui-outline-percentage: 100%;
+	--oui-shadow-inset: color-mix(in oklab, white, transparent 75%);
 	--oui-shadow-percentage: 82.5%;
 
 	--oui-shadow-value: color-mix(
@@ -10,7 +11,7 @@
 		transparent var(--oui-shadow-percentage)
 	);
 
-	@include shadow(var(--oui-shadow-value));
+	@include shadow(var(--oui-shadow-value), var(--oui-shadow-inset));
 
 	padding: 0.5em 0.75em;
 	display: inline-flex;
@@ -51,8 +52,9 @@
 	border-radius: 0.5em;
 }
 
-@mixin shadow($color: rgba(0, 0, 0, 0.05)) {
+@mixin shadow($color: rgba(0, 0, 0, 0.05), $inset: transparent) {
 	box-shadow:
+		inset 0 1px 0 0 $inset,
 		0 0 0 1px $color,
 		0 1px 2px -.5px $color,
 		0 2px 4px -1px $color,

@@ -1,4 +1,31 @@
+/*! https://github.com/oscarpalmer/oui */
+
 @use './mixins' as mixins;
+
+@mixin thumb($background, $shadow) {
+	@include mixins.shadow(
+		color-mix(in oklab, $shadow, transparent 33%),
+		color-mix(in oklab, white, transparent 82.5%)
+	);
+
+	appearance: none;
+	min-width: 0.5em;
+	background-color: $background;
+	background-image: none;
+	border-radius: 0.25em;
+}
+
+@mixin track {
+	appearance: none;
+	height: 0.75em;
+	padding: 0.125em;
+	overflow: hidden;
+	background-color: var(--oui-absolute);
+	background-image: none;
+	border: 1px solid var(--oui-gray-3);
+	border-radius: 0.375em;
+	box-shadow: inset 0 1px 2px 0 var(--oui-gray-3);
+}
 
 .oui-card {
 	:where(&) {
@@ -11,34 +38,36 @@
 		display: inline-flex;
 		align-items: center;
 		list-style: none;
-		outline: 4px solid color-mix(
-			in oklab,
-			var(--oui-outline-value, var(--oui-gray-6)),
-			transparent var(--oui-outline-percentage, 100%)
-		);
-		outline-offset: .25em;
-		border-radius: .25em;
-		transition: .125s ease-in-out, margin 0s;
+		outline: 4px solid
+			color-mix(
+				in oklab,
+				var(--oui-blue-6),
+				transparent var(--oui-outline-percentage, 100%)
+			);
+		outline-offset: 0.25em;
+		border-radius: 0.125em;
+		transition: 0.125s ease-in-out, margin 0s;
 		cursor: pointer;
 
 		&::before {
 			content: '';
 			width: 1em;
 			height: 1em;
-			margin: 0 .5em 0 0;
-			background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='4'%3E%3Cpath d='M4 0h6L7 4'/%3E%3C/svg%3E");
-			background-position: center;
-			background-repeat: no-repeat;
-			transition: .125s ease-in-out;
+			margin: 0 0.5em 0 0;
+			background-color: currentColor;
+			mask: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='4'%3E%3Cpath d='M4 0h6L7 4'/%3E%3C/svg%3E");
+			mask-size: contain;
+			mask-position: center;
+			mask-repeat: no-repeat;
+			transition: 0.125s ease-in-out;
 			transform: rotate(-90deg);
 		}
 
 		&:focus-visible {
-			--oui-outline-percentage: 75%;
-			--oui-outline-value: var(--oui-blue-6);
+			--oui-outline-percentage: 50%;
 
-			padding: 0 .5em 0 .25em;
-			outline-color: var(--oui-blue-6);
+			padding: 0 0.5em 0 0.25em;
+			color: var(--oui-blue-8);
 		}
 
 		@media (hover: hover) {
@@ -70,72 +99,58 @@
 
 .oui-meter {
 	:where(&) {
+		@include track;
+
+		&::-moz-meter-bar {
+			@include thumb(var(--oui-blue-5), var(--oui-blue-6));
+		}
+
+		&:-moz-meter-optimum::-moz-meter-bar {
+			@include thumb(var(--oui-green-5), var(--oui-green-6));
+		}
+
+		&:-moz-meter-sub-optimum::-moz-meter-bar {
+			@include thumb(var(--oui-yellow-5), var(--oui-yellow-6));
+		}
+
+		&:-moz-meter-sub-sub-optimum::-moz-meter-bar {
+			@include thumb(var(--oui-red-5), var(--oui-red-6));
+		}
+
 		&::-webkit-meter-bar {
-			height: 1em;
-			background-color: var(--oui-absolute);
-			border: 1px solid var(--oui-gray-3);
-			border-radius: 1em;
-			box-shadow: inset 0 1px 2px 0 color-mix(in oklab, var(--oui-gray-10), transparent 75%);
+			appearance: none;
+			background: none;
 		}
 
 		&::-webkit-meter-even-less-good-value {
-			@include mixins.shadow(color-mix(
-				in oklab,
-				var(--oui-red-6),
-				transparent 82.5%
-			));
-
-			min-width: .5em;
-			background-color: var(--oui-red-4);
+			@include thumb(var(--oui-red-5), var(--oui-red-6));
 		}
 
 		&::-webkit-meter-optimum-value {
-			@include mixins.shadow(color-mix(
-				in oklab,
-				var(--oui-green-6),
-				transparent 82.5%
-			));
-
-			min-width: .5em;
-			background-color: var(--oui-green-4);
+			@include thumb(var(--oui-green-5), var(--oui-green-6));
 		}
 
 		&::-webkit-meter-suboptimum-value {
-			@include mixins.shadow(color-mix(
-				in oklab,
-				var(--oui-yellow-6),
-				transparent 82.5%
-			));
-
-			min-width: .5em;
-			background-color: var(--oui-yellow-4);
+			@include thumb(var(--oui-yellow-5), var(--oui-yellow-6));
 		}
 	}
 }
 
 .oui-progress {
 	:where(&) {
-		appearance: none;
+		@include track;
+
+		&::-moz-progress-bar {
+			@include thumb(var(--oui-blue-5), var(--oui-blue-6));
+		}
 
 		&::-webkit-progress-bar {
-			height: 1em;
-			overflow: hidden;
-			background-color: var(--oui-absolute);
-			border: 1px solid var(--oui-gray-3);
-			border-radius: 1em;
-			box-shadow: inset 0 1px 2px 0 color-mix(in oklab, var(--oui-gray-10), transparent 75%);
+			appearance: none;
+			background: none;
 		}
 
 		&::-webkit-progress-value {
-			@include mixins.shadow(color-mix(
-				in oklab,
-				var(--oui-blue-6),
-				transparent 82.5%
-			));
-
-			min-width: .5em;
-			background-color: var(--oui-blue-4);
+			@include thumb(var(--oui-blue-5), var(--oui-blue-6));
 		}
 	}
 }
-

@@ -3,7 +3,7 @@
 @use 'mixins.scss' as mixins;
 
 @mixin focus() {
-	--oui-border-value: var(--oui-blue-6);
+	--oui-border-value: var(--oui-blue-5);
 	--oui-foreground-value: inherit;
 	--oui-outline-percentage: 75%;
 	--oui-outline-value: var(--oui-blue-6);
@@ -11,7 +11,7 @@
 
 @mixin hover() {
 	--oui-border-value: var(--oui-blue-4);
-	--oui-foreground-percentage: 50%;
+	--oui-foreground-percentage: 0%;
 	--oui-foreground-value: inherit;
 	--oui-outline-percentage: 90%;
 	--oui-outline-value: var(--oui-blue-6);
@@ -23,21 +23,29 @@
 
 	@include outlined;
 
-	background-color: color-mix(in oklab, var(--oui-background-value), transparent var(--oui-background-percentage));
-	border: none;
+	background-color: color-mix(
+		in oklab,
+		var(--oui-background-value),
+		transparent var(--oui-background-percentage)
+	);
 	border: 1px solid var(--oui-border-value, var(--oui-gray-3));
-	box-shadow: inset 0 1px 2px 0 color-mix(in oklab, var(--oui-gray-10), transparent 75%);
+	box-shadow: inset 0 2px 4px -1px var(--oui-gray-3);
 	color: color-mix(
-			in oklab,
-			var(--oui-foreground-value, inherit),
-			transparent var(--oui-foreground-percentage)
-		);
+		in oklab,
+		var(--oui-foreground-value, inherit),
+		transparent var(--oui-foreground-percentage)
+	);
+	-webkit-text-fill-color: color-mix(
+		in oklab,
+		var(--oui-foreground-value, inherit),
+		transparent var(--oui-foreground-percentage)
+	);
 }
 
 @mixin invalid() {
-	--oui-border-value: var(--oui-red-6);
+	--oui-border-value: var(--oui-red-5);
 	--oui-foreground-value: var(--oui-red-9);
-	--oui-outline-percentage: 75%;
+	--oui-outline-percentage: 82.5%;
 	--oui-outline-value: var(--oui-red-6);
 }
 
@@ -45,7 +53,7 @@
 	--oui-outline-percentage: 100%;
 	--oui-outline-value: var(--oui-blue-6);
 
-	outline: 5px solid
+	outline: 4px solid
 		color-mix(
 			in oklab,
 			var(--oui-outline-value),
@@ -56,9 +64,9 @@
 }
 
 @mixin valid() {
-	--oui-border-value: var(--oui-green-6);
+	--oui-border-value: var(--oui-green-5);
 	--oui-foreground-value: var(--oui-green-9);
-	--oui-outline-percentage: 75%;
+	--oui-outline-percentage: 82.5%;
 	--oui-outline-value: var(--oui-green-6);
 }
 
@@ -90,40 +98,36 @@
 		}
 	}
 
-	:where(&:is(
-		select,
-		[type='color' i],
-		[type='file' i],
-		[type='range' i]
-	)[readonly]) {
-		pointer-events: none;
-	}
-
 	:where(&:is([type='color' i])) {
 		padding: 0;
 	}
 
-	:where(&:is([type='date' i],
-			[type='datetime-local' i],
-			[type='month' i],
-			[type='number' i],
-			[type='tel' i],
-			[type='time' i],
-			[type='url' i],
-			[type='week' i])) {
+	:where(
+			&:is(
+					[type='date' i],
+					[type='datetime-local' i],
+					[type='month' i],
+					[type='number' i],
+					[type='tel' i],
+					[type='time' i],
+					[type='url' i],
+					[type='week' i]
+				)
+		) {
 		font-variant-numeric: tabular-nums;
 	}
 
 	:where(&:is([type='file' i])) {
-		padding-left: .5em;
+		padding-left: 0.5em;
 
 		&::file-selector-button {
 			@include mixins.button;
 
+			--oui-background-value: var(--oui-grey-2);
 			--oui-outline-value: var(--oui-grey-6);
 
-			margin: 0 .75em 0 0;
-			font-size: .75em;
+			margin: 0 0.75em 0 0;
+			font-size: 0.75em;
 			cursor: pointer;
 		}
 	}
@@ -138,7 +142,7 @@
 			appearance: none;
 			width: 100%;
 			height: 0.75em;
-			border-radius: .75em;
+			border-radius: 0.75em;
 			position: relative;
 		}
 
@@ -151,12 +155,11 @@
 			appearance: none;
 			width: 1.25em;
 			height: 1.25em;
-			background-color:
-				color-mix(
-					in oklab,
-					var(--oui-background-value),
-					transparent var(--oui-background-percentage)
-				);
+			background-color: color-mix(
+				in oklab,
+				var(--oui-background-value),
+				transparent var(--oui-background-percentage)
+			);
 			border: 2px solid var(--oui-absolute);
 			border-radius: 1.25em;
 			box-shadow: 0 1px 2px 2px rgba(0, 0, 0, 0.125);
@@ -170,11 +173,20 @@
 		}
 	}
 
-	:where(&.oui-validatable:not([disabled], [readonly], [aria-disabled='true' i]):is(:user-invalid:not([aria-invalid='false' i]), [aria-invalid='true' i])) {
+	:where(
+			&.oui-validatable:not(
+					[disabled],
+					[readonly],
+					[aria-disabled='true' i]
+				):is(
+					:user-invalid:not([aria-invalid='false' i]),
+					[aria-invalid='true' i]
+				)
+		) {
 		@include invalid;
 
 		&::file-selector-button {
-			--oui-background-value: var(--oui-red-1);
+			--oui-background-value: var(--oui-red-2);
 			--oui-foreground-value: var(--oui-red-8);
 			--oui-outline-value: var(--oui-red-6);
 		}
@@ -193,11 +205,17 @@
 		}
 	}
 
-	:where(&.oui-validatable:not([disabled], [readonly], [aria-disabled='true' i]):is(:user-valid:not([aria-invalid='true' i]), [aria-invalid='false' i])) {
+	:where(
+			&.oui-validatable:not(
+					[disabled],
+					[readonly],
+					[aria-disabled='true' i]
+				):is(:user-valid:not([aria-invalid='true' i]), [aria-invalid='false' i])
+		) {
 		@include valid;
 
 		&::file-selector-button {
-			--oui-background-value: var(--oui-green-1);
+			--oui-background-value: var(--oui-green-2);
 			--oui-foreground-value: var(--oui-green-8);
 			--oui-outline-value: var(--oui-green-6);
 		}
@@ -216,17 +234,21 @@
 		}
 	}
 
-	:where(&:not([disabled], [readonly], [aria-disabled="true" i])) {
+	:where(&:not([disabled], [readonly], [aria-disabled='true' i])) {
 		&::-webkit-calendar-picker-indicator {
 			outline: 4px solid transparent;
 			outline-offset: 2px;
 			border-radius: 2em;
-			transition: .125s ease-in-out;
+			transition: 0.125s ease-in-out;
 			cursor: pointer;
 
 			@media (hover: hover) {
 				&:hover {
-					outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 75%);
+					outline-color: color-mix(
+						in oklab,
+						var(--oui-blue-6),
+						transparent 75%
+					);
 				}
 			}
 
@@ -236,12 +258,12 @@
 		}
 	}
 
-	:where(&:not([disabled], [readonly], [aria-disabled="true" i]):focus),
-	:where(&:not([disabled], [readonly], [aria-disabled="true" i]):focus-within) {
+	:where(&:not([disabled], [readonly], [aria-disabled='true' i]):focus),
+	:where(&:not([disabled], [readonly], [aria-disabled='true' i]):focus-within) {
 		@include focus;
 
 		&::file-selector-button {
-			--oui-background-value: var(--oui-blue-1);
+			--oui-background-value: var(--oui-blue-2);
 			--oui-foreground-value: var(--oui-blue-8);
 			--oui-outline-value: var(--oui-blue-6);
 		}
@@ -259,11 +281,11 @@
 	}
 
 	@media (hover: hover) {
-		:where(&:not([disabled], [aria-disabled='true' i]):hover) {
+		:where(&:not([disabled], [readonly], [aria-disabled='true' i]):hover) {
 			@include hover;
 
 			&::file-selector-button {
-				--oui-background-value: var(--oui-blue-1);
+				--oui-background-value: var(--oui-blue-2);
 				--oui-foreground-value: var(--oui-blue-8);
 				--oui-outline-value: var(--oui-blue-6);
 			}
@@ -282,6 +304,12 @@
 		--oui-foreground-percentage: 25%;
 
 		font-style: italic;
+
+		&::file-selector-button {
+			--oui-background-value: var(--oui-gray-1);
+
+			cursor: default;
+		}
 	}
 
 	:where(&:is([disabled], [readonly], [aria-disabled='true' i]):focus) {
@@ -291,9 +319,6 @@
 	:where(&[disabled], &[aria-disabled='true' i]) {
 		--oui-background-percentage: 50%;
 
-		pointer-events: none;
-
-		&::file-selector-button,
 		&::range-thumb {
 			--oui-background-value: var(--oui-gray-1);
 
@@ -306,7 +331,7 @@
 		}
 
 		&::-webkit-calendar-picker-indicator {
-			opacity: .5;
+			opacity: 0.5;
 		}
 	}
 }
@@ -345,7 +370,7 @@ select.oui-input:is([multiple]) {
 
 		&::before {
 			content: var(--oui-on);
-			margin: 0 .75em 0 0;
+			margin: 0 0.75em 0 0;
 		}
 	}
 }
@@ -363,7 +388,7 @@ select.oui-input:is([multiple]) {
 
 :where(.oui-label) {
 	cursor: pointer;
-	transition: .125s ease-in-out;
+	transition: 0.125s ease-in-out;
 
 	@media (hover: hover) {
 		:where(&[for]:hover) {
@@ -402,19 +427,33 @@ select.oui-input:is([multiple]) {
 	}
 
 	&::before {
-		background-color: color-mix(in oklab, var(--oui-background-value), transparent var(--oui-background-percentage));
-		outline: 4px solid color-mix(
+		background-color: color-mix(
 			in oklab,
-			var(--oui-outline-value),
-			transparent var(--oui-outline-percentage)
+			var(--oui-background-value),
+			transparent var(--oui-background-percentage)
 		);
+		outline: 4px solid
+			color-mix(
+				in oklab,
+				var(--oui-outline-value),
+				transparent var(--oui-outline-percentage)
+			);
 		outline-offset: 0;
 		border: 1px solid var(--oui-border-value);
-		box-shadow: inset 0 1px 2px 0 color-mix(in oklab, var(--oui-shadow-value), transparent var(--oui-shadow-percentage));
+		box-shadow: inset 0 1px 2px 0
+			color-mix(
+				in oklab,
+				var(--oui-shadow-value),
+				transparent var(--oui-shadow-percentage)
+			);
 	}
 
 	&::after {
-		color: color-mix(in oklab, var(--oui-foreground-value), transparent var(--oui-foreground-percentage));
+		color: color-mix(
+			in oklab,
+			var(--oui-foreground-value),
+			transparent var(--oui-foreground-percentage)
+		);
 	}
 }
 
@@ -552,7 +591,11 @@ select.oui-input:is([multiple]) {
 			color: var(--oui-blue-8);
 		}
 
-		:where(&:has(input:not([disabled], [aria-disabled='true' i]):is(:checked)):hover) {
+		:where(
+				&:has(
+						input:not([disabled], [aria-disabled='true' i]):is(:checked)
+					):hover
+			) {
 			--oui-background-percentage: 50%;
 			--oui-background-value: var(--oui-blue-6);
 		}
@@ -565,9 +608,12 @@ select.oui-input:is([multiple]) {
 		--oui-foreground-percentage: 25%;
 		--oui-foreground-value: currentColor;
 
-		color: color-mix(in oklab, var(--oui-foreground-value), transparent var(--oui-foreground-percentage));
+		color: color-mix(
+			in oklab,
+			var(--oui-foreground-value),
+			transparent var(--oui-foreground-percentage)
+		);
 		font-style: italic;
-		pointer-events: none;
 		cursor: default;
 
 		&::after,

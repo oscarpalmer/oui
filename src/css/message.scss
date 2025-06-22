@@ -33,7 +33,7 @@
 
 	:where(& hr) {
 		height: 1px;
-		margin: 0 -1em;
+		margin: 0 -1.25em;
 		background-color: var(--oui-border, var(--oui-gray-2));
 		border: none;
 	}
