@@ -37,10 +37,17 @@
 	:where(&-pill-tiny, &-tag-tiny) {
 		color: color-mix(in oklab, var(--oui-foreground, var(--oui-gray-8)), transparent 12.5%);
 		font-size: .75em;
-		font-weight: bold;
-		letter-spacing: .1em;
-		text-transform: uppercase;
 	}
+
+	:where(&-pill-tiny) {
+		padding: .25em .75em;
+	}
+
+	:where(&-tag-tiny) {
+		padding: .25em .5em;
+	}
+
+	// Colors
 
 	:where(&-pill-blue, &-tag-blue) {
 		--oui-background: var(--oui-blue-0);

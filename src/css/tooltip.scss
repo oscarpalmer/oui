@@ -1,0 +1,14 @@
+@use 'mixins.scss' as mixins;
+
+:where([oui-tooltip-content]) {
+	@include mixins.shadowOverlay;
+
+	max-width: 48ch;
+	padding: 0.75em 1em;
+	background-color: var(--oui-absolute);
+	border-radius: 0.25rem;
+	font-size: 0.875rem;
+	position: fixed;
+	inset: 0 auto auto 0;
+	z-index: 10;
+}

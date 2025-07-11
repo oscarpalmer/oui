@@ -24,6 +24,7 @@ export default defineConfig({
 		outDir: './dist/js',
 		rollupOptions: {
 			external: [
+				'@oscarpalmer/atoms/is',
 				'@oscarpalmer/atoms/number',
 				'@oscarpalmer/toretto/event',
 				'@oscarpalmer/toretto/find',

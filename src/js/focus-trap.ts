@@ -2,6 +2,7 @@ import {clamp} from '@oscarpalmer/atoms/number';
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {getFocusable} from '@oscarpalmer/toretto/focusable';
+import {attributable} from './attributable';
 
 class FocusTrap {
 	active = true;
@@ -31,19 +32,9 @@ class FocusTrap {
 	}
 }
 
-function addFocusTraps(nodes: Node[] | NodeList): void {
-	const elements = [...nodes].filter(
-		node => node instanceof HTMLElement,
-	) as HTMLElement[];
-
-	const {length} = elements;
-
-	for (let index = 0; index < length; index += 1) {
-		const element = elements[index];
-
-		if (element.hasAttribute(selector)) {
-			focusTraps.set(element, new FocusTrap(element));
-		}
+function addFocusTrap(element: HTMLElement): void {
+	if (!focusTraps.has(element)) {
+		focusTraps.set(element, new FocusTrap(element));
 	}
 }
 
@@ -117,65 +108,26 @@ function onTab(event: KeyboardEvent): void {
 	}
 }
 
-function removeFocusTraps(nodes: Node[] | NodeList): void {
-	const elements = [...nodes].filter(
-		node => node instanceof HTMLElement,
-	) as HTMLElement[];
-
-	const {length} = elements;
-
-	for (let index = 0; index < length; index += 1) {
-		const element = elements[index];
-
-		focusTraps.get(element)?.destroy();
-		focusTraps.delete(element);
-	}
+function removeFocusTraps(element: HTMLElement): void {
+	focusTraps.get(element)?.destroy();
+	focusTraps.delete(element);
 }
 
 const focusTraps = new WeakMap<HTMLElement, FocusTrap>();
 const inactive = new Set<FocusTrap>();
-
-const observer = new MutationObserver(entries => {
-	const {length} = entries;
-
-	for (let index = 0; index < length; index += 1) {
-		const entry = entries[index];
-
-		if (entry.type === 'attributes' && entry.target instanceof HTMLElement) {
-			if (entry.target.hasAttribute(selector)) {
-				addFocusTraps([entry.target]);
-			} else {
-				removeFocusTraps([entry.target]);
-			}
-		} else if (entry.type === 'childList') {
-			addFocusTraps(entry.addedNodes);
-			removeFocusTraps(entry.removedNodes);
-		}
-	}
-});
-
 const selector = 'oui-focus-trap';
 
-observer.observe(document, {
-	attributeFilter: [selector],
-	attributes: true,
-	childList: true,
-	subtree: true,
+attributable(selector, addFocusTrap, removeFocusTraps);
+
+on(document, 'focusout', onFocusOut, {
+	capture: true,
 });
 
-requestAnimationFrame(() => {
-	addFocusTraps(document.querySelectorAll(`[${selector}]`));
+on(document, 'keydown', onTab, {
+	capture: true,
+	passive: false,
+});
 
-	on(document, 'focusout', onFocusOut, {
-		capture: true,
-	});
-
-	on(document, 'keydown', onTab, {
-		capture: true,
-		passive: false,
-	});
-
-	on(document, 'keydown', onEscape, {
-		passive: false,
-	});
+on(document, 'keydown', onEscape, {
+	passive: false,
 });

@@ -4,12 +4,12 @@
 		"url": "https://oscarpalmer.se"
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.102",
+		"@oscarpalmer/atoms": "^0.104",
 		"@oscarpalmer/toretto": "^0.20"
 	},
 	"description": "Styles, components, and utilities for building websites and applications.",
 	"devDependencies": {
-		"@biomejs/biome": "^2",
+		"@biomejs/biome": "^2.1",
 		"@rollup/plugin-node-resolve": "^16",
 		"@rollup/plugin-typescript": "^12.1",
 		"@types/node": "^24",
@@ -25,7 +25,7 @@
 		"stylelint": "^16.21",
 		"tslib": "^2.8",
 		"typescript": "^5.8",
-		"vite": "^6.3",
+		"vite": "^7",
 		"vitest": "^3.2"
 	},
 	"exports": {
@@ -47,6 +47,16 @@
 			"require": {
 				"types": "./types/focus-trap.d.cts",
 				"default": "./dist/js/focus-trap.cjs"
+			}
+		},
+		"./tooltip": {
+			"import": {
+				"types": "./types/tooltip.d.ts",
+				"default": "./dist/js/tooltip.js"
+			},
+			"require": {
+				"types": "./types/tooltip.d.cts",
+				"default": "./dist/js/tooltip.cjs"
 			}
 		}
 	},
@@ -75,7 +85,7 @@
 		"build:postcss": "npx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss",
 		"build:js": "npx vite build && npm run types",
 		"clean": "rm -rf ./dist && rm -rf ./types && rm -f ./tsconfig.tsbuildinfo",
-		"rollup": "npx rollup -c --watch",
+		"rollup": "npx rollup -c",
 		"test": "npx vitest --coverage",
 		"types": "npx tsc && npx dts-bundle-generator --config ./dts.config.cts --silent",
 		"watch:css": "npx sass ./postcss:./dist/css --no-source-map --watch",
@@ -84,5 +94,5 @@
 	},
 	"type": "module",
 	"types": "types/index.d.cts",
-	"version": "0.12.0"
+	"version": "0.13.0"
 }

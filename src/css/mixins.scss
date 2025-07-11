@@ -57,7 +57,20 @@
 		inset 0 1px 0 0 $inset,
 		0 0 0 1px $color,
 		0 1px 2px -.5px $color,
+		0 2px 4px -1px $color;
+}
+
+@mixin shadowOverlay($color: rgba(0, 0, 0, 0.05), $inset: transparent) {
+	box-shadow:
+		inset 0 1px 0 0 $inset,
+		0 0 0 1px $color,
+		0 1px 2px -.5px $color,
 		0 2px 4px -1px $color,
+		0 4px 8px -2px $color,
+		0 8px 16px -4px $color,
+		0 16px 32px -8px $color,
+		0 32px 64px -16px $color,
+		0 64px 128px -32px $color;
 }
 
 @mixin visuallyHidden() {
