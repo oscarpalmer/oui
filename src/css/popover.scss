@@ -1,0 +1,9 @@
+@use 'mixins.scss' as mixins;
+
+:where([oui-popover-content]) {
+	@include mixins.shadowOverlay;
+
+	padding: 1rem;
+	background-color: var(--oui-absolute);
+	border-radius: 0.5rem;
+}

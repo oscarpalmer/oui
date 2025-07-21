@@ -12,11 +12,13 @@ tsConfig.compilerOptions = {
 };
 
 const entries = globSync('./src/js/**/*.ts').map(file => {
-	const slug = file.replace(/^.*\/(.*)\.ts$/, '$1');
+	const [_, dir, slug] = /^.*\/(.*)\/(.*)\.ts$/.exec(file);
+
+	const name = dir === 'js' ? slug : `${dir}/${slug}`;
 
 	return {
-		file: slug,
-		name: slug === 'index' ? 'oui' : slug,
+		file: name,
+		name: slug === 'index' ? 'oui' : name,
 	};
 });
 

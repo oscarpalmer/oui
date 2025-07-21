@@ -1,27 +1,30 @@
 export class Floatable {
-	activate: number | undefined;
-	active = false;
-	deactivate: number | undefined;
-	frame: DOMHighResTimeStamp | undefined;
+		activate: number | undefined;
+		active = false;
+		deactivate: number | undefined;
+		frame: DOMHighResTimeStamp | undefined;
 
-	constructor(
-		public anchor: HTMLElement,
-		public content: HTMLElement,
-	) {}
+		constructor(
+			public anchor: HTMLElement,
+			public content: HTMLElement,
+		) {
+			setStyles(content);
+		}
 
-	destroy(): void {
-		this.activate = undefined;
-		this.deactivate = undefined;
-		this.frame = undefined;
+		destroy(): void {
+			this.activate = undefined;
+			this.deactivate = undefined;
+			this.frame = undefined;
 
-		this.anchor = undefined as never;
-		this.content = undefined as never;
+			this.anchor = undefined as never;
+			this.content = undefined as never;
+		}
 	}
-}
 
 export function activate(
 	floatable: Floatable,
 	active: Set<Floatable>,
+	order?: Floatable[],
 	time?: number,
 ): void {
 	stop(floatable);
@@ -31,10 +34,10 @@ export function activate(
 	}
 
 	if (time == null || time === 0) {
-		onActivate(floatable, active);
+		onActivate(floatable, active, order);
 	} else {
 		floatable.activate = +setTimeout(() => {
-			onActivate(floatable, active);
+			onActivate(floatable, active, order);
 		}, time);
 	}
 }
@@ -42,6 +45,7 @@ export function activate(
 export function deactivate(
 	floatable: Floatable,
 	active: Set<Floatable>,
+	order?: Floatable[],
 	time?: number,
 ): void {
 	stop(floatable);
@@ -51,10 +55,10 @@ export function deactivate(
 	}
 
 	if (time == null || time === 0) {
-		onDeactivate(floatable, active);
+		onDeactivate(floatable, active, order);
 	} else {
 		floatable.deactivate = +setTimeout(() => {
-			onDeactivate(floatable, active);
+			onDeactivate(floatable, active, order);
 		}, time);
 	}
 }
@@ -106,10 +110,18 @@ function getY(anchor: DOMRect, content: DOMRect): number {
 	return anchor.top + (anchor.height - content.height) / 2;
 }
 
-function onActivate(floatable: Floatable, active: Set<Floatable>): void {
+function onActivate(
+	floatable: Floatable,
+	active: Set<Floatable>,
+	order?: Floatable[],
+): void {
 	floatable.active = true;
 
 	active.add(floatable);
+
+	if (order != null) {
+		order.push(floatable);
+	}
 
 	document.body.append(floatable.content);
 
@@ -118,10 +130,20 @@ function onActivate(floatable: Floatable, active: Set<Floatable>): void {
 	update(floatable);
 }
 
-function onDeactivate(floatable: Floatable, active: Set<Floatable>): void {
+function onDeactivate(
+	floatable: Floatable,
+	active: Set<Floatable>,
+	order?: Floatable[],
+): void {
 	floatable.active = false;
 
 	active.delete(floatable);
+
+	const index = order?.indexOf(floatable) ?? -1;
+
+	if (index > -1) {
+		order?.splice(index, 1);
+	}
 
 	floatable.content.hidden = true;
 
@@ -142,6 +164,12 @@ function update(floatable: Floatable): void {
 	}
 
 	floatable.frame = requestAnimationFrame(run);
+}
+
+function setStyles(content: HTMLElement): void {
+	content.style.position = 'fixed';
+	content.style.inset = '0 auto auto 0';
+	content.style.zIndex = '10';
 }
 
 function stop(floatable: Floatable): void {

@@ -162,7 +162,7 @@ function initialize(tooltip: Tooltip): void {
 				element,
 				event,
 				() => {
-					activate(floatable, active, 250);
+					activate(floatable, active, undefined, 250);
 				},
 				{
 					signal: abortController.signal,
@@ -175,7 +175,7 @@ function initialize(tooltip: Tooltip): void {
 				element,
 				event,
 				() => {
-					deactivate(floatable, active, 250);
+					deactivate(floatable, active, undefined, 250);
 				},
 				{
 					signal: abortController.signal,
@@ -191,8 +191,6 @@ function removeTooltip(element: HTMLElement): void {
 }
 
 function reset(anchor: HTMLElement, attributes: Attributes): void {
-	console.log('reset', anchor, attributes);
-
 	if (attributes.ariaDescribedby == null) {
 		anchor.removeAttribute('aria-describedby');
 	} else {

@@ -41,12 +41,12 @@
 		},
 		"./focus-trap": {
 			"import": {
-				"types": "./types/focus-trap.d.ts",
-				"default": "./dist/js/focus-trap.js"
+				"types": "./types/focus-trap/standalone.d.ts",
+				"default": "./dist/js/focus-trap/standalone.js"
 			},
 			"require": {
-				"types": "./types/focus-trap.d.cts",
-				"default": "./dist/js/focus-trap.cjs"
+				"types": "./types/focus-trap/standalone.d.cts",
+				"default": "./dist/js/focus-trap/standalone.cjs"
 			}
 		},
 		"./tooltip": {
@@ -94,5 +94,5 @@
 	},
 	"type": "module",
 	"types": "types/index.d.cts",
-	"version": "0.14.0"
+	"version": "0.15.0"
 }
