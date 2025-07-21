@@ -1,5 +1,12 @@
 @use 'mixins.scss' as mixins;
 
+:where([oui-tooltip]:is(abbr, b, cite, dfn, code, em, i, kbd, mark, q, samp, small, span, strong, sub, sup, time, var)) {
+	text-decoration: underline dotted;
+	text-decoration-skip-ink: auto;
+	text-underline-offset: 0.25em;
+	cursor: help;
+}
+
 :where([oui-tooltip-content]) {
 	@include mixins.shadowOverlay;
 

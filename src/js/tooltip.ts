@@ -1,119 +1,102 @@
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import {on} from '@oscarpalmer/toretto/event';
 import {attributable} from './attributable';
+import {activate, deactivate, Floatable} from './floatable';
+
+type Attributes = {
+	ariaDescribedby: string | null;
+	ariaLabelledBy: string | null;
+};
+
+type Content = {
+	attributes: Attributes;
+	element: HTMLElement;
+};
 
 class Tooltip {
 	abortController = new AbortController();
+	attributes: Attributes;
+	floatable: Floatable;
 
-	activate: number | undefined;
+	constructor(anchor: HTMLElement, content: Content) {
+		this.attributes = content.attributes;
+		this.floatable = new Floatable(anchor, content.element);
 
-	active = false;
-
-	deactivate: number | undefined;
-
-	element: HTMLElement;
-
-	frame: DOMHighResTimeStamp | undefined;
-
-	constructor(public parent: HTMLElement) {
-		this.element = getContent(parent) as HTMLElement;
-
-		if (this.element != null) {
-			parent.insertAdjacentElement('afterend', this.element);
-
-			initialize(this);
-		}
+		initialize(this);
 	}
 
-	destroy() {
-		deactivate(this);
+	destroy(): void {
+		deactivate(this.floatable, active);
+		reset(this.floatable.anchor, this.attributes);
 
 		this.abortController.abort();
+		this.floatable.content.remove();
+		this.floatable.destroy();
 
 		this.abortController = undefined as never;
-		this.activate = undefined as never;
-		this.deactivate = undefined as never;
-		this.element = undefined as never;
-		this.frame = undefined as never;
-		this.parent = undefined as never;
+		this.attributes = undefined as never;
+		this.floatable = undefined as never;
 	}
 }
 
-function activate(tooltip: Tooltip): void {
-	stop(tooltip);
-
-	if (tooltip.active) {
+function addTooltip(anchor: HTMLElement): void {
+	if (tooltips.has(anchor)) {
 		return;
 	}
 
-	tooltip.activate = +setTimeout(() => {
-		tooltip.active = true;
+	const content = getContent(anchor);
 
-		active.add(tooltip);
-
-		document.body.append(tooltip.element);
-
-		tooltip.element.hidden = false;
-
-		update(tooltip);
-	}, 250);
-}
-
-function addTooltip(element: HTMLElement): void {
-	if (!tooltips.has(element)) {
-		tooltips.set(element, new Tooltip(element));
+	if (content != null) {
+		tooltips.set(anchor, new Tooltip(anchor, content));
 	}
 }
 
-function deactivate(tooltip: Tooltip, time?: number): void {
-	stop(tooltip);
+function getContent(anchor: HTMLElement): Content | undefined {
+	const attributes = {
+		ariaDescribedby: anchor.getAttribute('aria-describedby'),
+		ariaLabelledBy: anchor.getAttribute('aria-labelledby'),
+	};
 
-	if (!tooltip.active) {
-		return;
-	}
+	const wrapper = getWrapper(anchor);
 
-	tooltip.deactivate = +setTimeout(() => {
-		tooltip.active = false;
+	const labelledElements = getElements(attributes.ariaLabelledBy);
 
-		active.delete(tooltip);
+	if (labelledElements.length > 0) {
+		anchor.setAttribute('aria-labelledby', wrapper.id);
 
-		tooltip.element.hidden = true;
-
-		tooltip.parent.insertAdjacentElement('afterend', tooltip.element);
-	}, time ?? 250);
-}
-
-function getContent(parent: HTMLElement): HTMLElement | undefined {
-	const wrapper = getWrapper(parent);
-
-	const ids = (parent.getAttribute('aria-describedby') ?? '').split(/\s+/);
-
-	parent.setAttribute('aria-describedby', wrapper.id);
-
-	const elements = ids
-		.map(id =>
-			isNullableOrWhitespace(id) ? undefined : document.querySelector(`#${id}`),
-		)
-		.filter(element => element instanceof HTMLElement);
-
-	if (elements.length > 0) {
-		for (const element of elements) {
-			element.hidden = false;
-
+		for (const element of labelledElements) {
 			wrapper.append(element);
 		}
 
-		return wrapper;
+		return {
+			attributes,
+			element: wrapper,
+		};
 	}
 
-	let content = parent.getAttribute('aria-description');
+	const describedElements = getElements(attributes.ariaDescribedby);
+
+	if (describedElements.length > 0) {
+		anchor.setAttribute('aria-describedby', wrapper.id);
+
+		for (const element of describedElements) {
+			wrapper.append(element);
+		}
+
+		return {
+			attributes,
+			element: wrapper,
+		};
+	}
+
+	let content = anchor.getAttribute('aria-label');
 
 	if (isNullableOrWhitespace(content)) {
-		content = parent.getAttribute('aria-label');
+		content = anchor.getAttribute('aria-description');
+	}
 
-		if (isNullableOrWhitespace(content)) {
-			return;
-		}
+	if (isNullableOrWhitespace(content)) {
+		return;
 	}
 
 	const paragraph = document.createElement('p');
@@ -122,31 +105,41 @@ function getContent(parent: HTMLElement): HTMLElement | undefined {
 
 	wrapper.append(paragraph);
 
-	return wrapper;
+	return {
+		attributes,
+		element: wrapper,
+	};
 }
 
-function getTop(parent: DOMRect, content: DOMRect): number {
-	let top = parent.top - content.height - margin;
+function getElements(attribute: string | null): HTMLElement[] {
+	const ids = attribute?.split(/\s+/) ?? [];
+	const elements: HTMLElement[] = [];
 
-	if (top - margin >= 0) {
-		return top;
+	for (const id of ids) {
+		if (isNullableOrWhitespace(id)) {
+			continue;
+		}
+
+		const element = document.querySelector(`#${id}`);
+
+		if (element instanceof HTMLElement) {
+			const cloned = element.cloneNode(true) as HTMLElement;
+
+			cloned.hidden = false;
+
+			elements.push(cloned);
+		}
 	}
 
-	top = parent.bottom + margin;
-
-	if (top + content.height + margin <= window.innerHeight) {
-		return top;
-	}
-
-	return parent.top + (parent.height - content.height) / 2;
+	return elements;
 }
 
-function getWrapper(parent: HTMLElement): HTMLElement {
+function getWrapper(anchor: HTMLElement): HTMLElement {
 	const wrapper = document.createElement('div');
 
 	wrapper.setAttribute(`${selector}-content`, '');
 
-	wrapper.className = parent.getAttribute(`${selector}-class`) ?? '';
+	wrapper.className = anchor.getAttribute(`${selector}-class`) ?? '';
 	wrapper.hidden = true;
 	wrapper.id = `${selector}-${++index}`;
 	wrapper.role = 'tooltip';
@@ -155,39 +148,13 @@ function getWrapper(parent: HTMLElement): HTMLElement {
 	return wrapper;
 }
 
-function getX(
-	parent: DOMRect,
-	content: DOMRect,
-): {left?: number; right?: number} {
-	if (content.width + 2 * margin >= window.innerWidth) {
-		return {
-			left: margin,
-			right: margin,
-		};
-	}
-
-	const left = parent.left + (parent.width - content.width) / 2;
-	const right = window.innerWidth - margin;
-
-	if (left < margin) {
-		return {
-			left: margin,
-		};
-	}
-
-	if (left + content.width > right) {
-		return {
-			right: margin,
-		};
-	}
-
-	return {
-		left,
-	};
-}
-
 function initialize(tooltip: Tooltip): void {
-	const elements = [tooltip.parent, tooltip.element];
+	const {abortController, floatable} = tooltip;
+	const {anchor, content} = floatable;
+
+	anchor.insertAdjacentElement('afterend', content);
+
+	const elements = [anchor, content];
 
 	for (const element of elements) {
 		for (const event of activateEvents) {
@@ -195,10 +162,10 @@ function initialize(tooltip: Tooltip): void {
 				element,
 				event,
 				() => {
-					activate(tooltip);
+					activate(floatable, active, 250);
 				},
 				{
-					signal: tooltip.abortController.signal,
+					signal: abortController.signal,
 				},
 			);
 		}
@@ -208,10 +175,10 @@ function initialize(tooltip: Tooltip): void {
 				element,
 				event,
 				() => {
-					deactivate(tooltip);
+					deactivate(floatable, active, 250);
 				},
 				{
-					signal: tooltip.abortController.signal,
+					signal: abortController.signal,
 				},
 			);
 		}
@@ -223,52 +190,23 @@ function removeTooltip(element: HTMLElement): void {
 	tooltips.delete(element);
 }
 
-function stop(tooltip: Tooltip): void {
-	if (tooltip.frame != null) {
-		cancelAnimationFrame(tooltip.frame);
+function reset(anchor: HTMLElement, attributes: Attributes): void {
+	console.log('reset', anchor, attributes);
 
-		tooltip.frame = undefined;
+	if (attributes.ariaDescribedby == null) {
+		anchor.removeAttribute('aria-describedby');
+	} else {
+		anchor.setAttribute('aria-describedby', attributes.ariaDescribedby);
 	}
-
-	if (tooltip.activate != null) {
-		clearTimeout(tooltip.activate);
-
-		tooltip.activate = undefined;
-	}
-
-	if (tooltip.deactivate != null) {
-		clearTimeout(tooltip.deactivate);
-
-		tooltip.deactivate = undefined;
-	}
-}
-
-function update(tooltip: Tooltip): void {
-	function run(): void {
-		const parentRect = tooltip.parent.getBoundingClientRect();
-		const contentRect = tooltip.element.getBoundingClientRect();
-
-		const top = getTop(parentRect, contentRect);
-		const {left, right} = getX(parentRect, contentRect);
-
-		tooltip.element.style.inset = `${top}px ${right == null ? 'auto' : `${right}px`} auto ${left == null ? 'auto' : `${left}px`}`;
-
-		tooltip.frame = requestAnimationFrame(run);
-	}
-
-	tooltip.frame = requestAnimationFrame(run);
 }
 
 //
 
-const active = new Set<Tooltip>();
+const active = new Set<Floatable>();
 
 const activateEvents = ['focus', 'mouseenter', 'touchstart'];
 
 const deactivateEvents = ['blur', 'mouseleave'];
-
-const margin =
-	Number.parseInt(getComputedStyle(document.documentElement).fontSize, 10) / 4;
 
 const selector = 'oui-tooltip';
 
@@ -282,8 +220,8 @@ attributable(selector, addTooltip, removeTooltip);
 
 on(document, 'keydown', event => {
 	if (event.key === 'Escape') {
-		for (const tooltip of active) {
-			deactivate(tooltip, 0);
+		for (const floatable of active) {
+			deactivate(floatable, active);
 		}
 	}
 });
