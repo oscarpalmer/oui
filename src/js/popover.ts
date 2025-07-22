@@ -132,7 +132,7 @@ function closeAbove(element: HTMLElement): void {
 		}
 	}
 
-	order[index].content.focus();
+	focus(order[index].content);
 }
 
 function focus(content: HTMLElement): void {

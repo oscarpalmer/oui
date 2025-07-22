@@ -193,4 +193,4 @@ function stop(floatable: Floatable): void {
 //
 
 const margin =
-	Number.parseInt(getComputedStyle(document.documentElement).fontSize, 10) / 4;
+	Number.parseInt(getComputedStyle(document.documentElement).fontSize, 10) / 2;

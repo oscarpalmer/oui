@@ -49,6 +49,26 @@
 				"default": "./dist/js/focus-trap/standalone.cjs"
 			}
 		},
+		"./popover": {
+			"import": {
+				"types": "./types/popover.d.ts",
+				"default": "./dist/js/popover.js"
+			},
+			"require": {
+				"types": "./types/popover.d.cts",
+				"default": "./dist/js/popover.cjs"
+			}
+		},
+		"./splitter": {
+			"import": {
+				"types": "./types/splitter.d.ts",
+				"default": "./dist/js/splitter.js"
+			},
+			"require": {
+				"types": "./types/splitter.d.cts",
+				"default": "./dist/js/splitter.cjs"
+			}
+		},
 		"./tooltip": {
 			"import": {
 				"types": "./types/tooltip.d.ts",
@@ -94,5 +114,5 @@
 	},
 	"type": "module",
 	"types": "types/index.d.cts",
-	"version": "0.15.0"
+	"version": "0.16.0"
 }
