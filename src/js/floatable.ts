@@ -1,12 +1,18 @@
 export class Floatable {
 		activate: number | undefined;
+
 		active = false;
+
 		deactivate: number | undefined;
+
 		frame: DOMHighResTimeStamp | undefined;
 
 		constructor(
 			public anchor: HTMLElement,
 			public content: HTMLElement,
+			readonly attribute: string,
+			readonly position: Position,
+			readonly preferAbove: boolean,
 		) {
 			setStyles(content);
 		}
@@ -20,6 +26,28 @@ export class Floatable {
 			this.content = undefined as never;
 		}
 	}
+
+type Position =
+	| 'above'
+	| 'above-end'
+	| 'above-start'
+	| 'below'
+	| 'below-end'
+	| 'below-start'
+	| 'end'
+	| 'end-bottom'
+	| 'end-top'
+	| 'horizontal'
+	| 'horizontal-bottom'
+	| 'horizontal-top'
+	| 'start'
+	| 'start-bottom'
+	| 'start-top'
+	| 'vertical'
+	| 'vertical-end'
+	| 'vertical-start';
+
+//
 
 export function activate(
 	floatable: Floatable,
@@ -63,48 +91,78 @@ export function deactivate(
 	}
 }
 
-function getX(
-	anchor: DOMRect,
-	content: DOMRect,
-): {left?: number; right?: number} {
-	if (content.width + 2 * margin >= window.innerWidth) {
-		return {
-			left: margin,
-			right: margin,
-		};
+function getX(anchor: DOMRect, content: DOMRect, position: Position): number {
+	if (position.endsWith('-end')) {
+		const end = anchor.right - content.width;
+
+		return end - margin < 0 ? margin : end;
 	}
 
-	const left = anchor.left + (anchor.width - content.width) / 2;
-	const right = window.innerWidth - margin;
+	if (position.endsWith('-start')) {
+		const start = anchor.left;
 
-	if (left < margin) {
-		return {
-			left: margin,
-		};
+		return start + content.width + margin > window.innerWidth
+			? window.innerWidth - content.width - margin
+			: start;
 	}
 
-	if (left + content.width > right) {
-		return {
-			right: margin,
-		};
+	if (position.startsWith('end')) {
+		return anchor.right + margin;
 	}
 
-	return {
-		left,
-	};
+	if (position.startsWith('start')) {
+		return anchor.left - content.width - margin;
+	}
+
+	if (position.startsWith('horizontal')) {
+		if (anchor.right + content.width + margin <= window.innerWidth) {
+			return anchor.right + margin;
+		}
+
+		return anchor.left - content.width - margin;
+	}
+
+	return anchor.left + (anchor.width - content.width) / 2;
 }
 
-function getY(anchor: DOMRect, content: DOMRect): number {
-	let top = anchor.top - content.height - margin;
-
-	if (top - margin >= 0) {
-		return top;
+function getY(
+	anchor: DOMRect,
+	content: DOMRect,
+	position: Position,
+	preferAbove: boolean,
+): number {
+	if (position.startsWith('above')) {
+		return anchor.top - content.height - margin;
 	}
 
-	top = anchor.bottom + margin;
+	if (position.startsWith('below')) {
+		return anchor.bottom + margin;
+	}
 
-	if (top + content.height + margin <= window.innerHeight) {
-		return top;
+	if (position.endsWith('bottom')) {
+		const bottom = anchor.bottom - content.height;
+
+		return bottom + margin < 0 ? margin : bottom;
+	}
+
+	if (position.endsWith('top')) {
+		const top = anchor.top;
+
+		return top + content.height + margin > window.innerHeight
+			? window.innerHeight - content.height - margin
+			: top;
+	}
+
+	if (position.startsWith('vertical')) {
+		if (preferAbove && anchor.top - content.height - margin >= 0) {
+			return anchor.top - content.height - margin;
+		}
+
+		if (anchor.bottom + content.height + margin <= document.body.clientHeight) {
+			return anchor.bottom + margin;
+		}
+
+		return anchor.top - content.height - margin;
 	}
 
 	return anchor.top + (anchor.height - content.height) / 2;
@@ -151,17 +209,25 @@ function onDeactivate(
 }
 
 function update(floatable: Floatable): void {
-	function run(): void {
-		const anchor = floatable.anchor.getBoundingClientRect();
-		const content = floatable.content.getBoundingClientRect();
+	let position: Position =
+		(floatable.anchor.getAttribute(floatable.attribute)?.trim() as Position) ??
+		floatable.position;
 
-		const {left, right} = getX(anchor, content);
-		const top = getY(anchor, content);
-
-		floatable.content.style.inset = `${top}px ${right == null ? 'auto' : `${right}px`} auto ${left == null ? 'auto' : `${left}px`}`;
-
-		floatable.frame = requestAnimationFrame(run);
+	if (!positions.has(position as Position)) {
+		position = floatable.position;
 	}
+
+	function run(): void {
+			const anchor = floatable.anchor.getBoundingClientRect();
+			const content = floatable.content.getBoundingClientRect();
+
+			const left = getX(anchor, content, position);
+			const top = getY(anchor, content, position, floatable.preferAbove);
+
+			floatable.content.style.inset = `${top}px auto auto ${left}px`;
+
+			floatable.frame = requestAnimationFrame(run);
+		}
 
 	floatable.frame = requestAnimationFrame(run);
 }
@@ -194,3 +260,24 @@ function stop(floatable: Floatable): void {
 
 const margin =
 	Number.parseInt(getComputedStyle(document.documentElement).fontSize, 10) / 2;
+
+const positions = new Set<Position>([
+	'above',
+	'above-end',
+	'above-start',
+	'below',
+	'below-end',
+	'below-start',
+	'end',
+	'end-bottom',
+	'end-top',
+	'horizontal',
+	'horizontal-bottom',
+	'horizontal-top',
+	'start',
+	'start-bottom',
+	'start-top',
+	'vertical',
+	'vertical-end',
+	'vertical-start',
+]);

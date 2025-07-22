@@ -27,7 +27,7 @@ oui-splitter {
 :where([oui-splitter-separator]:has([oui-splitter-handle]:focus)),
 :where([oui-splitter-separator]:has([oui-splitter-handle]:hover)),
 :where([oui-splitter-separator][oui-splitter-active]) {
-	background-color: rgba(0, 0, 255, .1);
+	background-color: color-mix(in oklab, var(--oui-blue-6), transparent 82.5%);
 }
 
 :where([oui-splitter-handle]) {
@@ -60,12 +60,12 @@ oui-splitter {
 :where([oui-splitter-handle]:hover),
 :where([oui-splitter-handle][oui-splitter-active]) {
 	&::after {
-		background-color: rgba(0, 0, 255, .25);
+		background-color: color-mix(in oklab, var(--oui-blue-6), transparent 50%);
 	}
 }
 
 :where([oui-splitter-handle]:focus-visible)::after {
-	outline-color: rgba(0, 0, 255, .25);
+	outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 50%);
 }
 
 oui-splitter[type='horizontal' i],

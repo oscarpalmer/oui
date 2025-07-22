@@ -50,7 +50,14 @@ export class OuiPopoverElement extends HTMLElement {
 		toggle.setAttribute('aria-controls', content.id);
 		toggle.setAttribute('aria-haspopup', 'dialog');
 
-		this.#floatable = new Floatable(toggle, content);
+		this.#floatable = new Floatable(
+			toggle,
+			content,
+			'position',
+			'below-start',
+			false,
+		);
+
 		this.#focusTrap = createFocusTrap(content);
 
 		mapped.set(toggle, this.#floatable);

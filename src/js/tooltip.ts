@@ -20,7 +20,14 @@ class Tooltip {
 
 	constructor(anchor: HTMLElement, content: Content) {
 		this.attributes = content.attributes;
-		this.floatable = new Floatable(anchor, content.element);
+
+		this.floatable = new Floatable(
+			anchor,
+			content.element,
+			`${selector}-position`,
+			'vertical',
+			true,
+		);
 
 		initialize(this);
 	}

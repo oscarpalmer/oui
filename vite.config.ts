@@ -25,6 +25,7 @@ export default defineConfig({
 		rollupOptions: {
 			external: [
 				'@oscarpalmer/atoms/is',
+				'@oscarpalmer/atoms/math',
 				'@oscarpalmer/atoms/number',
 				'@oscarpalmer/toretto/event',
 				'@oscarpalmer/toretto/find',

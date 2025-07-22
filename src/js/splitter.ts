@@ -1,3 +1,5 @@
+import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
+import {round} from '@oscarpalmer/atoms/math';
 import {clamp} from '@oscarpalmer/atoms/number';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
@@ -7,11 +9,6 @@ declare global {
 		'oui-splitter': OuiSplitterElement;
 	}
 }
-
-type Flex = {
-	previous: number;
-	value: number;
-};
 
 export class OuiSplitterElement extends HTMLElement {
 	#splitter: Splitter;
@@ -43,12 +40,9 @@ export class OuiSplitterElement extends HTMLElement {
 	}
 }
 
-class Splitter {
-	flex: Flex = {
-		previous: 0.5,
-		value: 0.5,
-	};
+let index = 0;
 
+class Splitter {
 	handle: HTMLSpanElement;
 
 	rectangle: DOMRect;
@@ -57,13 +51,21 @@ class Splitter {
 
 	types: Types;
 
+	values: Values;
+
 	constructor(
 		public element: OuiSplitterElement,
 		public panels: HTMLElement[],
 	) {
+		if (isNullableOrWhitespace(element.id)) {
+			element.id = `oui_splitter_${++index}`;
+		}
+
+		this.values = getValues(element);
+
 		this.handle = createHandle();
 		this.rectangle = element.getBoundingClientRect();
-		this.separator = createSeparator();
+		this.separator = createSeparator(this);
 
 		this.separator.append(this.handle);
 
@@ -72,13 +74,16 @@ class Splitter {
 		mapped.set(element, this);
 		mapped.set(this.handle, this);
 
-		setSize(this, this.flex.value);
+		setSize(this, this.values.now.current);
 
 		this.types = getTypes(this);
 
 		if (this.types.horizontal) {
 			this.element.setAttribute('oui-splitter-horizontal', '');
 		}
+
+		setAriaOrientation(this);
+		setAriaValue(this);
 	}
 }
 
@@ -87,35 +92,53 @@ type Types = {
 	horizontal: boolean;
 };
 
+type Values = {
+	max: number;
+	min: number;
+	now: ValuesNow;
+};
+
+type ValuesNow = {
+	current: number;
+	previous: number;
+};
+
 //
 
 function createHandle(): HTMLSpanElement {
 	const handle = document.createElement('span');
 
-	handle.tabIndex = 0;
-
-	handle.setAttribute('aria-label', 'Resize panels');
+	handle.setAttribute('aria-hidden', 'true');
 	handle.setAttribute('oui-splitter-handle', '');
 
 	return handle;
 }
 
-function createSeparator(): HTMLDivElement {
+function createSeparator(splitter: Splitter): HTMLDivElement {
 	const separator = document.createElement('div');
 
+	separator.role = 'separator';
+	separator.tabIndex = 0;
+
+	separator.setAttribute('aria-controls', splitter.element.id);
+	separator.setAttribute('aria-label', 'Resize panels');
 	separator.setAttribute('oui-splitter-separator', '');
 
 	return separator;
 }
 
-function getFlex(splitter: Splitter, value: number): number {
+function getContained(min: number, value: number, max: number): number {
+	return round(clamp(value, min, max), 6);
+}
+
+function getSize(splitter: Splitter, value: number): number {
 	const {height, left, top, width} = splitter.rectangle;
 
 	const offset = value - (splitter.types.horizontal ? top : left);
 
 	const fraction = offset / (splitter.types.horizontal ? height : width);
 
-	return clamp(fraction, 0.1, 0.9);
+	return getContained(splitter.values.min, fraction, splitter.values.max);
 }
 
 function getTypes(splitter: Splitter, width?: number, height?: number): Types {
@@ -143,15 +166,57 @@ function getTypes(splitter: Splitter, width?: number, height?: number): Types {
 	};
 }
 
+function getValue(
+	element: HTMLElement,
+	name: string,
+	defaultValue: number,
+): number {
+	const value = element.getAttribute(name);
+
+	if (isNullableOrWhitespace(value)) {
+		return defaultValue;
+	}
+
+	const parsed = Number.parseFloat(value);
+
+	if (Number.isNaN(parsed)) {
+		return defaultValue;
+	}
+
+	return parsed < 0 ? defaultValue : parsed > 1 ? parsed / 100 : parsed;
+}
+
+function getValues(element: OuiSplitterElement): Values {
+	const values: Values = {
+		max: getValue(element, 'max', 0.9),
+		min: getValue(element, 'min', 0.1),
+		now: {
+			current: 0.5,
+			previous: 0.5,
+		},
+	};
+
+	const value = getContained(
+		values.min,
+		getValue(element, 'size', values.now.current),
+		values.max,
+	);
+
+	values.now.current = value;
+	values.now.previous = value;
+
+	return values;
+}
+
 function onEnd(reset: boolean): void {
 	if (splitter != null) {
 		splitter.handle.removeAttribute('oui-splitter-active');
 		splitter.separator.removeAttribute('oui-splitter-active');
 
 		if (reset) {
-			setSize(splitter, splitter.flex.previous);
+			setSize(splitter, splitter.values.now.previous);
 		} else {
-			splitter.flex.previous = splitter.flex.value;
+			splitter.values.now.previous = splitter.values.now.current;
 		}
 	}
 
@@ -199,12 +264,12 @@ function onMousemove(event: MouseEvent): void {
 	const position = getPosition(event);
 
 	if (position != null) {
-		splitter.flex.value = getFlex(
+		splitter.values.now.current = getSize(
 			splitter,
 			splitter.types.horizontal ? position.y : position.x,
 		);
 
-		setSize(splitter, splitter.flex.value);
+		setSize(splitter, splitter.values.now.current);
 	}
 }
 
@@ -227,7 +292,11 @@ function onNavigate(event: KeyboardEvent): void {
 	}
 
 	if (absoluteKeys.has(event.key)) {
-		setSize(splitter, event.key === 'End' ? 0.9 : 0.1, true);
+		setSize(
+			splitter,
+			event.key === 'End' ? splitter.values.max : splitter.values.min,
+			true,
+		);
 
 		return;
 	}
@@ -241,7 +310,7 @@ function onNavigate(event: KeyboardEvent): void {
 
 	const modifier = negativeKeys.has(event.key) ? -1 : 1;
 
-	setSize(splitter, splitter.flex.value + modifier * 0.05, true);
+	setSize(splitter, splitter.values.now.current + modifier * 0.05, true);
 }
 
 function onObservation(entries: ResizeObserverEntry[]): void {
@@ -268,20 +337,41 @@ function onObservation(entries: ResizeObserverEntry[]): void {
 			} else {
 				splitter.element.removeAttribute('oui-splitter-horizontal');
 			}
+
+			setAriaOrientation(splitter);
 		}
 
 		frame = undefined;
 	});
 }
 
+function setAriaOrientation(splitter: Splitter): void {
+	splitter.separator.setAttribute(
+		'aria-orientation',
+		splitter.types.horizontal ? 'horizontal' : 'vertical',
+	);
+}
+
+function setAriaValue(splitter: Splitter): void {
+	splitter.separator.setAttribute('aria-valuemax', String(splitter.values.max));
+	splitter.separator.setAttribute('aria-valuemin', String(splitter.values.min));
+
+	splitter.separator.setAttribute(
+		'aria-valuenow',
+		String(splitter.values.now.current),
+	);
+}
+
 function setSize(splitter: Splitter, size: number, previous?: boolean): void {
-	splitter.flex.value = size;
+	splitter.values.now.current = size;
 
 	if (previous) {
-		splitter.flex.previous = size;
+		splitter.values.now.previous = size;
 	}
 
 	splitter.element.style.setProperty('--oui-splitter-size', `${size}`);
+
+	setAriaValue(splitter);
 }
 
 //

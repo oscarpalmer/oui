@@ -6,4 +6,8 @@
 	padding: 1rem;
 	background-color: var(--oui-absolute);
 	border-radius: 0.5rem;
+
+	&:focus {
+		outline: none;
+	}
 }
