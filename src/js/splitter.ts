@@ -6,12 +6,50 @@ import {findAncestor} from '@oscarpalmer/toretto/find';
 
 declare global {
 	interface HTMLElementTagNameMap {
-		'oui-splitter': OuiSplitterElement;
+		[selector]: OuiSplitterElement;
 	}
 }
 
 export class OuiSplitterElement extends HTMLElement {
+	static readonly observedAttributes = ['max', 'min', 'size', 'type'];
+
 	#splitter: Splitter;
+
+	// Getters and setters
+
+	get max(): number {
+		return this.#splitter.values.max;
+	}
+
+	set max(value: number) {
+		this.setAttribute('max', String(value));
+	}
+
+	get min(): number {
+		return this.#splitter.values.min;
+	}
+
+	set min(value: number) {
+		this.setAttribute('min', String(value));
+	}
+
+	get size(): number {
+		return this.#splitter.values.now.current;
+	}
+
+	set size(value: number) {
+		this.setAttribute('size', String(value));
+	}
+
+	get type(): string {
+		return this.getAttribute('type') ?? 'vertical';
+	}
+
+	set type(value: string) {
+		this.setAttribute('type', value);
+	}
+
+	// Constructor
 
 	constructor() {
 		super();
@@ -21,21 +59,33 @@ export class OuiSplitterElement extends HTMLElement {
 		);
 
 		if (panels.length !== 2) {
-			throw new Error('oui-splitter must have exactly two panels.');
+			throw new Error(`${selector} must have exactly two panels.`);
 		}
 
 		this.#splitter = new Splitter(this, panels);
 	}
 
+	// Methods
+
 	connectedCallback(): void {
-		if (this.#splitter.types.auto) {
-			observer.observe(this);
-		}
+		this.#splitter.updateConnections(1);
 	}
 
 	disconnectedCallback(): void {
-		if (this.#splitter.types.auto) {
-			observer.unobserve(this);
+		this.#splitter.updateConnections(0);
+	}
+
+	attributeChangedCallback(name: string): void {
+		switch (name) {
+			case 'max':
+			case 'min':
+			case 'size':
+				this.#splitter.updateValues();
+				break;
+
+			case 'type':
+				this.#splitter.updateOrientation();
+				break;
 		}
 	}
 }
@@ -49,7 +99,7 @@ class Splitter {
 
 	separator: HTMLDivElement;
 
-	types: Types;
+	types!: Types;
 
 	values: Values;
 
@@ -71,25 +121,56 @@ class Splitter {
 
 		panels[0].insertAdjacentElement('afterend', this.separator);
 
-		mapped.set(element, this);
-		mapped.set(this.handle, this);
+		this.updateOrientation();
+		this.updateValues();
+	}
 
-		setSize(this, this.values.now.current);
+	updateConnections(add: 0 | 1): void {
+		mapped[connectMethods[add]](this.element, this);
+		mapped[connectMethods[add]](this.handle, this);
+		mapped[connectMethods[add]](this.separator, this);
 
+		if (this.types.auto) {
+			observer[observeMethods[add]](this.element);
+		}
+	}
+
+	updateOrientation(): void {
 		this.types = getTypes(this);
 
+		if (this.types.auto) {
+			observer.observe(this.element);
+		} else {
+			observer.unobserve(this.element);
+		}
+
 		if (this.types.horizontal) {
-			this.element.setAttribute('oui-splitter-horizontal', '');
+			this.element.setAttribute(attributeHorizontal, '');
+		} else {
+			this.element.removeAttribute(attributeHorizontal);
 		}
 
 		setAriaOrientation(this);
-		setAriaValue(this);
+	}
+
+	updateValues(): void {
+		this.values = getValues(this.element);
+
+		requestAnimationFrame(() => {
+			setSize(this, this.values.now.current);
+			setAriaValue(this);
+		});
 	}
 }
 
 type Types = {
 	auto: boolean;
 	horizontal: boolean;
+};
+
+type UserSelect = {
+	any?: string;
+	webkit?: string;
 };
 
 type Values = {
@@ -109,7 +190,7 @@ function createHandle(): HTMLSpanElement {
 	const handle = document.createElement('span');
 
 	handle.setAttribute('aria-hidden', 'true');
-	handle.setAttribute('oui-splitter-handle', '');
+	handle.setAttribute(attributeHandle, '');
 
 	return handle;
 }
@@ -122,7 +203,7 @@ function createSeparator(splitter: Splitter): HTMLDivElement {
 
 	separator.setAttribute('aria-controls', splitter.element.id);
 	separator.setAttribute('aria-label', 'Resize panels');
-	separator.setAttribute('oui-splitter-separator', '');
+	separator.setAttribute(attributeSeparator, '');
 
 	return separator;
 }
@@ -209,18 +290,22 @@ function getValues(element: OuiSplitterElement): Values {
 }
 
 function onEnd(reset: boolean): void {
-	if (splitter != null) {
-		splitter.handle.removeAttribute('oui-splitter-active');
-		splitter.separator.removeAttribute('oui-splitter-active');
+	if (splitter == null) {
+		return;
+	}
 
-		if (reset) {
-			setSize(splitter, splitter.values.now.previous);
-		} else {
-			splitter.values.now.previous = splitter.values.now.current;
-		}
+	splitter.handle.removeAttribute(attributeActive);
+	splitter.separator.removeAttribute(attributeActive);
+
+	if (reset) {
+		setSize(splitter, splitter.values.now.previous);
+	} else {
+		splitter.values.now.previous = splitter.values.now.current;
 	}
 
 	splitter = undefined;
+
+	unsetUserSelect();
 }
 
 function onKeydown(event: KeyboardEvent): void {
@@ -250,10 +335,12 @@ function onMousedown(event: Event): void {
 		return;
 	}
 
-	splitter.handle.setAttribute('oui-splitter-active', '');
-	splitter.separator.setAttribute('oui-splitter-active', '');
+	splitter.handle.setAttribute(attributeActive, '');
+	splitter.separator.setAttribute(attributeActive, '');
 
 	splitter.rectangle = splitter.element.getBoundingClientRect();
+
+	setUserSelect();
 }
 
 function onMousemove(event: MouseEvent): void {
@@ -283,7 +370,7 @@ function onNavigate(event: KeyboardEvent): void {
 	const splitter = mapped.get(
 		findAncestor(
 			event.target as never,
-			'[oui-splitter-handle]',
+			'[oui-splitter-separator]',
 		) as HTMLSpanElement,
 	);
 
@@ -291,26 +378,28 @@ function onNavigate(event: KeyboardEvent): void {
 		return;
 	}
 
+	const {types, values} = splitter;
+
 	if (absoluteKeys.has(event.key)) {
-		setSize(
-			splitter,
-			event.key === 'End' ? splitter.values.max : splitter.values.min,
-			true,
-		);
+		setSize(splitter, event.key === 'End' ? values.max : values.min, true);
 
 		return;
 	}
 
 	if (
-		(splitter.types.horizontal && !horizontalKeys.has(event.key)) ||
-		(!splitter.types.horizontal && !verticalKeys.has(event.key))
+		(types.horizontal && !horizontalKeys.has(event.key)) ||
+		(!types.horizontal && !verticalKeys.has(event.key))
 	) {
 		return;
 	}
 
 	const modifier = negativeKeys.has(event.key) ? -1 : 1;
 
-	setSize(splitter, splitter.values.now.current + modifier * 0.05, true);
+	setSize(
+		splitter,
+		getContained(values.min, values.now.current + modifier * 0.05, values.max),
+		true,
+	);
 }
 
 function onObservation(entries: ResizeObserverEntry[]): void {
@@ -333,9 +422,9 @@ function onObservation(entries: ResizeObserverEntry[]): void {
 			);
 
 			if (splitter.types.horizontal) {
-				splitter.element.setAttribute('oui-splitter-horizontal', '');
+				splitter.element.setAttribute(attributeHorizontal, '');
 			} else {
-				splitter.element.removeAttribute('oui-splitter-horizontal');
+				splitter.element.removeAttribute(attributeHorizontal);
 			}
 
 			setAriaOrientation(splitter);
@@ -374,17 +463,58 @@ function setSize(splitter: Splitter, size: number, previous?: boolean): void {
 	setAriaValue(splitter);
 }
 
+function setUserSelect(): void {
+	const any = document.body.style.userSelect;
+	const webkit = document.body.style.webkitUserSelect;
+
+	userSelect.any = (any?.length ?? 0) === 0 ? undefined : any;
+	userSelect.webkit = (webkit?.length ?? 0) === 0 ? undefined : webkit;
+
+	document.body.style.userSelect = 'none';
+	document.body.style.webkitUserSelect = 'none';
+}
+
+function unsetUserSelect(): void {
+	if (userSelect.any == null) {
+		document.body.style.removeProperty('user-select');
+	} else {
+		document.body.style.userSelect = userSelect.any;
+	}
+
+	if (userSelect.webkit == null) {
+		document.body.style.removeProperty('-webkit-user-select');
+	} else {
+		document.body.style.webkitUserSelect = userSelect.webkit;
+	}
+}
+
 //
 
+const selector = 'oui-splitter';
+
 const absoluteKeys = new Set(['End', 'Home']);
+
+const attributeActive = `${selector}-active`;
+
+const attributeHandle = `${selector}-handle`;
+
+const attributeHorizontal = `${selector}-horizontal`;
+
+const attributeSeparator = `${selector}-separator`;
+
+const connectMethods = ['delete', 'set'] as const;
 
 const horizontalKeys = new Set(['ArrowDown', 'ArrowUp']);
 
 const mapped = new WeakMap<HTMLElement, Splitter>();
 
+const observeMethods = ['unobserve', 'observe'] as const;
+
 const observer = new ResizeObserver(onObservation);
 
 const negativeKeys = new Set(['ArrowLeft', 'ArrowUp']);
+
+const userSelect: UserSelect = {};
 
 const verticalKeys = new Set(['ArrowLeft', 'ArrowRight']);
 
@@ -396,12 +526,9 @@ let splitter: Splitter | undefined;
 
 //
 
-customElements.define('oui-splitter', OuiSplitterElement);
+customElements.define(selector, OuiSplitterElement);
 
 on(document, 'keydown', onKeydown);
-
 on(document, 'mousedown', onMousedown);
-
 on(document, 'mousemove', onMousemove);
-
 on(document, 'mouseup', onMouseup);

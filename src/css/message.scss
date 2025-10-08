@@ -19,6 +19,7 @@
 			var(--oui-shadow-mixed),
 		);
 
+		max-width: fit-content;
 		display: inline-flex;
 		flex-flow: column nowrap;
 		gap: 1em;
@@ -39,6 +40,8 @@
 	}
 
 	:where(& p) {
+		max-width: 32rem;
+		max-width: 64ch;
 		display: inline-flex;
 		flex-flow: row wrap;
 		gap: 1em;

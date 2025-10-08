@@ -6,8 +6,11 @@ import {getFocusable} from '@oscarpalmer/toretto/focusable';
 export class FocusTrap {
 	active = true;
 
+	get contain(): boolean {
+		return this.element.hasAttribute(`${selector}-contain`);
+	}
+
 	constructor(public element: HTMLElement) {
-		element.setAttribute('aria-modal', 'true');
 		element.setAttribute('tabindex', '-1');
 	}
 
@@ -84,9 +87,11 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 	) as HTMLElement;
 
 	if (lastFocusTrap != null && nextFocusTrap !== lastFocusTrap) {
-		event.preventDefault();
+		if (focusTraps.get(lastFocusTrap)?.contain ?? false) {
+			event.preventDefault();
 
-		lastTarget?.focus();
+			lastTarget?.focus();
+		}
 	}
 
 	if (disabled.size === 0) {
@@ -129,8 +134,6 @@ function onTab(event: KeyboardEvent): void {
 }
 
 function setDisabled(focusTrap: FocusTrap, value: boolean): void {
-	focusTrap.element.setAttribute('aria-modal', String(!value));
-
 	focusTrap.active = !value;
 
 	if (value) {
@@ -207,9 +210,6 @@ export const selector = 'oui-focus-trap';
 //
 
 on(document, 'focusin', onFocusIn, eventOptions);
-
 on(document, 'keydown', onKeydown, eventOptions);
-
 on(document, 'mousedown', onPointerdown, eventOptions);
-
 on(document, 'touchstart', onPointerdown, eventOptions);

@@ -1,7 +1,7 @@
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import {on} from '@oscarpalmer/toretto/event';
 import {attributable} from './attributable';
-import {activate, deactivate, Floatable} from './floatable';
+import {Floatable} from './floatable';
 
 type Attributes = {
 	ariaDescribedby: string | null;
@@ -15,29 +15,33 @@ type Content = {
 
 class Tooltip {
 	abortController = new AbortController();
+
 	attributes: Attributes;
+
 	floatable: Floatable;
+
+	timer: number | undefined;
 
 	constructor(anchor: HTMLElement, content: Content) {
 		this.attributes = content.attributes;
 
-		this.floatable = new Floatable(
+		this.floatable = new Floatable({
 			anchor,
-			content.element,
-			`${selector}-position`,
-			'vertical',
-			true,
-		);
+			content: content.element,
+			defaultPosition: 'vertical',
+			interactive: false,
+			preferAbove: true,
+			positionAttribute: `${selector}-position`,
+		});
 
 		initialize(this);
 	}
 
 	destroy(): void {
-		deactivate(this.floatable, active);
-		reset(this.floatable.anchor, this.attributes);
+		reset(this.floatable.options.anchor, this.attributes);
 
 		this.abortController.abort();
-		this.floatable.content.remove();
+		this.floatable.options.content.remove();
 		this.floatable.destroy();
 
 		this.abortController = undefined as never;
@@ -157,7 +161,7 @@ function getWrapper(anchor: HTMLElement): HTMLElement {
 
 function initialize(tooltip: Tooltip): void {
 	const {abortController, floatable} = tooltip;
-	const {anchor, content} = floatable;
+	const {anchor, content} = floatable.options;
 
 	anchor.insertAdjacentElement('afterend', content);
 
@@ -169,7 +173,11 @@ function initialize(tooltip: Tooltip): void {
 				element,
 				event,
 				() => {
-					activate(floatable, active, undefined, 250);
+					clearTimeout(tooltip.timer);
+
+					tooltip.timer = window.setTimeout(() => {
+						tooltip.floatable.toggle(true);
+					}, 250);
 				},
 				{
 					signal: abortController.signal,
@@ -182,7 +190,11 @@ function initialize(tooltip: Tooltip): void {
 				element,
 				event,
 				() => {
-					deactivate(floatable, active, undefined, 250);
+					clearTimeout(tooltip.timer);
+
+					tooltip.timer = window.setTimeout(() => {
+						tooltip.floatable.toggle(false);
+					}, 250);
 				},
 				{
 					signal: abortController.signal,
@@ -190,6 +202,19 @@ function initialize(tooltip: Tooltip): void {
 			);
 		}
 	}
+
+	on(
+		content,
+		'click',
+		event => {
+			event.stopPropagation();
+
+			clearTimeout(tooltip.timer);
+		},
+		{
+			signal: abortController.signal,
+		},
+	);
 }
 
 function removeTooltip(element: HTMLElement): void {
@@ -207,8 +232,6 @@ function reset(anchor: HTMLElement, attributes: Attributes): void {
 
 //
 
-const active = new Set<Floatable>();
-
 const activateEvents = ['focus', 'mouseenter', 'touchstart'];
 
 const deactivateEvents = ['blur', 'mouseleave'];
@@ -222,11 +245,3 @@ let index = 0;
 //
 
 attributable(selector, addTooltip, removeTooltip);
-
-on(document, 'keydown', event => {
-	if (event.key === 'Escape') {
-		for (const floatable of active) {
-			deactivate(floatable, active);
-		}
-	}
-});

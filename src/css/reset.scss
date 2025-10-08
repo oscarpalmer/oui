@@ -15,6 +15,9 @@
  * - CSS Remedy [CR]
  *   https://github.com/jensimmons/cssremedy
  *
+ * - Harry Roberts [HR]
+ * - https://github.com/csswizardry
+ *
  * - RESS [RS]
  *   https://github.com/filipelinhares/ress
  *
@@ -45,7 +48,8 @@
 	font-family: system-ui, sans-serif;
 	font-size: 100%;
 	line-height: 1.5;
-	text-size-adjust: none; // Prevent text size inflation (e.g., after orientation change) [AB][RE][SE]
+	/** Prevent text size inflation (e.g., after orientation change) [AB][RE][SE] */
+	text-size-adjust: none;
 	tab-size: 4;
 }
 
@@ -63,47 +67,84 @@
 	text-underline-offset: 0.125em;
 }
 
+:where(abbr[title], dfn[title]) {
+	cursor: help;
+}
+
 :where(abbr[title]) {
-	text-decoration: underline; // Add the correct text decoration in Safari [RS][SE]
-	text-decoration: underline dotted; // ditto
+	/** Add the correct text decoration in Safari [RS][SE] */
+	text-decoration: underline;
+	/** Ditto */
+	text-decoration: underline dotted;
 }
 
 :where(b, strong) {
-	font-weight: bolder; // Add the correct font weight in Chrome, Edge, and Safari [RS][SE]
+	/** Add the correct font weight in Chrome, Edge, and Safari [RS][SE], without compounding [HR] */
+	font-weight: bold;
 }
 
 :where(button, h1, h2, h3, h4, h5, h6, input, label, legend) {
-	line-height: 1.125; // Set shorter line heights on headings and interactive elements [AB]
+	/** Set shorter line heights on headings and interactive elements [AB] */
+	line-height: 1.125;
 }
 
-:where(button, [type='button' i], [type='reset' i], [type='submit' i]) {
-	appearance: button; // Correct the inability to style clickable types in iOS [RS][SE]
+:where(
+		button,
+		input[type='button' i],
+		input[type='checkbox' i],
+		input[type='file' i],
+		input[type='image' i],
+		input[type='radio' i],
+		input[type='reset' i],
+		input[type='submit' i],
+		summary
+	) {
+		/** Correct the inability to style clickable types in iOS [HR][RS][SE] */
+	appearance: button;
+	/** Ditto */
 	cursor: pointer;
 }
 
-:where(code, kbd, pre, samp) {
-	font-family: monospace, monospace; // Specify the font family of code elements [RS][SE]
-	font-size: 1em; // Correct the odd 'em' font sizing in all browsers [RS][SE]
+:where(code, kbd, output, pre, samp) {
+	/** Specify the font family of code elements [HR][RS][SE] */
+	font-family: monospace, monospace;
+	/** Correct the odd 'em' font sizing in all browsers [HR][RS][SE] */
+	font-size: inherit;
 }
 
 :where(details > summary:first-of-type) {
-	display: list-item; // Add the correct display in Safari [SE]
+	/** Add the correct display in Safari [SE] */
+	display: list-item;
 }
 
 :where(dl, ol, ul) :where(dl, ol, ul) {
-	margin: 0; // Remove the margin on nested lists in Chrome, Edge, and Safari [SE]
+	/** Remove the margin on nested lists in Chrome, Edge, and Safari [SE] */
+	margin: 0;
 }
 
 :where(h1, h2, h3, h4, h5, h6) {
-	text-wrap: balance;
+	text-wrap: pretty;
+}
+
+:where(h1) {
+	/** Consistent sizing across browsers [HR] */
+	font-size: 2em;
 }
 
 :where(hr) {
-	height: 0; // Add the correct box sizing in Firefox [CR][RS][SE]
-	overflow: visible; // Show the overflow in Edge and IE [CR][RS]
+	/** Add the correct box sizing in Firefox [CR][RS][SE] */
+	height: 0;
+	/** Show the overflow in Edge and IE [CR][RS] */
+	overflow: visible;
 	border-style: solid;
 	border-width: 1px 0 0;
-	color: inherit; // Correct the inheritance of border colour in Firefox [CR][RS][SE]
+	/** // Correct the inheritance of border colour in Firefox [CR][RS][SE] */
+	color: inherit;
+}
+
+:where(ins, u) {
+	/** Prevent link styling [HR] */
+	text-decoration: none;
 }
 
 :where(nav) :where(ol, ul),
@@ -113,22 +154,24 @@
 }
 
 :where(nav li)::before {
-	content: '\200B'; // Prevent VoiceOver from ignoring list semantics in Safari [SE]
+	/** Prevent VoiceOver from ignoring list semantics in Safari [SE] */
+	content: '\200B';
 	float: left;
 }
 
 :where(pre) {
-	overflow: auto; // Prevent overflow of the container in all browsers [SE]
-	white-space: pre-wrap; // Overflow by default is bad… [CR]
+	/** Prevent overflow of the container in all browsers [SE] */
+	overflow: auto;
+	/** Overflow by default is bad… [CR] */
+	white-space: pre-wrap;
 }
 
-:where(small) {
+:where(small, sub, sup) {
 	font-size: 0.875rem;
 }
 
 :where(sub, sup) {
 	vertical-align: baseline;
-	font-size: 0.75rem;
 	line-height: 0;
 	position: relative;
 }
@@ -143,8 +186,14 @@
 
 :where(table) {
 	border-collapse: collapse;
-	border-color: currentColor; // Correct table border colour in Chrome, Edge, and Safari [SE]
-	text-indent: 0; // Remove text indentation from table contents in Chrome, Edge, and Safari [RS][SE]
+	/** Correct table border colour in Chrome, Edge, and Safari [SE] */
+	border-color: currentColor;
+	/** Modernized border spacing [HR] */
+	border-spacing: 0;
+	/** More legible numbers [HR] */
+	font-variant-numeric: tabular-nums;
+	/** Remove text indentation from table contents in Chrome, Edge, and Safari [RS][SE] */
+	text-indent: 0;
 }
 
 /**
@@ -152,75 +201,94 @@
  */
 
 :where(button, input, optgroup, select, textarea) {
-	font: inherit; // Correct the font inheritance in Firefox, Edge, and Safari [RS][SE]
+	/** Correct the font inheritance in Firefox, Edge, and Safari [HR][RS][SE] */
+	font: inherit;
 }
 
 :where(button, input, select, textarea) {
-	padding: 0.25em 0.5em; // Change the inconsistent appearance in all browsers [SE]
-	background-color: transparent; // ditto
-	border: 1px solid WindowFrame; // ditto
-	color: inherit; // ditto
-	letter-spacing: inherit; // ditto
+	/** Change the inconsistent appearance in all browsers [SE] */
+	padding: 0.25em 0.5em;
+	/** Ditto for all */
+	background-color: transparent;
+	border: 1px solid WindowFrame;
+	color: inherit;
+	letter-spacing: inherit;
 }
 
 :where(fieldset) {
-	border: 1px solid darkgrey; // Change the inconsistent appearance in all browsers [SE]
+	/** Change the inconsistent appearance in all browsers [SE] */
+	border: 1px solid darkgrey;
 }
 
 :where(optgroup) {
-	font-weight: bold; // Restore the font weight unset by previous rules [RS]
+	/** Restore the font weight unset by previous rules [RS] */
+	font-weight: bold;
 }
 
 :where(progress) {
-	vertical-align: baseline; // Add the correct vertical alignment in Chrome, Edge, and Firefox [RS][SE]
+	/** Add the correct vertical alignment in Chrome, Edge, and Firefox [RS][SE] */
+	vertical-align: baseline;
 }
 
 :where(select, input[list]) {
-	appearance: none; // Change the inconsistent appearance in all browsers [SE]
-	padding-right: 1em; // ditto
+	/** Change the inconsistent appearance in all browsers [SE] */
+	appearance: none;
+	/** Ditto for all */
+	padding-right: 1em;
 	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='4'%3E%3Cpath d='M4 0h6L7 4'/%3E%3C/svg%3E");
-	background-position: right center / 1em; // ditto
-	background-repeat: no-repeat; // ditto
-	border-radius: 0; // ditto
+	background-position: right center / 1em;
+	background-repeat: no-repeat;
+	border-radius: 0;
 }
 
 :where(select[multiple]) {
-	background-image: none; // Don't show the arrow for multiple choice selects [SE]
+	/** Don't show the arrow for multiple choice selects [SE] */
+	background-image: none;
 }
 
 :where(textarea) {
-	resize: vertical; // Change the resize direction in all browsers [RS][SE]
+	/** Change the resize direction in all browsers [RS][SE] */
+	resize: vertical;
 }
 
 :where([type='color' i], [type='range' i]) {
-	padding: 0; // Remove the padding in all browsers [SE]
-	border-width: 0; // Remove the border in all browsers [SE]
+	/** Remove the padding in all browsers [SE] */
+	padding: 0;
+	/** Remove the border in all browsers [SE] */
+	border-width: 0;
 }
 
 :where([type='search' i]) {
-	appearance: textfield; // Correct the odd appearance in Chrome, Edge, and Safari [RS][SE]
-	outline-offset: -2px; // Correct the outline style in Safari [RS][SE]
+	/** Correct the odd appearance in Chrome, Edge, and Safari [RS][SE] */
+	appearance: textfield;
+	/** Correct the outline style in Safari [RS][SE] */
+	outline-offset: -2px;
 }
 
 ::file-selector-button {
-	appearance: button; // Correct the inability to style upload buttons in iOS and Safari [RS][SE]
+	/** Correct the inability to style upload buttons in iOS and Safari [RS][SE] */
+	appearance: button;
 	color: inherit;
 	font: inherit;
 	line-height: 1.25;
 }
 
 ::placeholder {
-	opacity: 0.54; // Correct the text style of placeholders in Chrome, Edge, and Safari. [SE]
-	color: inherit; // Correct the text style of placeholders in Chrome, Edge, and Safari. [SE]
+	/** Better default text opacity [OP] */
+	opacity: 0.67;
+	/** Better default text color [HR][SE] */
+	color: inherit;
 }
 
 ::-webkit-inner-spin-button,
 ::-webkit-outer-spin-button {
-	height: auto; // Correct the cursor style of increment and decrement buttons in Safari [RS][SE]
+	/** Correct the cursor style of increment and decrement buttons in Safari [RS][SE] */
+	height: auto;
 }
 
 ::-webkit-search-decoration {
-	-webkit-appearance: none; // Remove the inner padding in Chrome, Edge, and Safari on macOS [SE]
+	/** Remove the inner padding in Chrome, Edge, and Safari on macOS [SE] */
+	-webkit-appearance: none;
 }
 
 /**
@@ -228,7 +296,7 @@
  */
 
 :where(audio, canvas, embed, iframe, img, object, picture, svg, video) {
-	max-width: 100%;
+	max-inline-size: 100%;
 	vertical-align: middle;
 }
 
@@ -237,7 +305,8 @@
 }
 
 :where(audio) {
-	width: 100%; // Better default width [CR]
+	/** Better default width [CR] */
+	width: 100%;
 }
 
 :where(audio:not([controls])) {
@@ -245,19 +314,31 @@
 }
 
 :where(canvas, img, svg, video) {
-	height: auto; // Maintain aspect ratios [CR]
+	/** Proportional height based on width [HR] */
+	block-size: auto;
 }
 
 :where(iframe) {
 	border-style: none;
 }
 
+:where(img) {
+	/** CSS magic! [HR] */
+	background-repeat: no-repeat;
+	/** Ditto */
+	background-size: cover;
+	/** Offset alt-text if image does not load [HR] */
+	font-style: italic;
+}
+
 :where(picture) {
-	display: contents; // Remove the unnecessary wrapping 'picture', while maintaining contents [CR]
+	/** Remove the unnecessary wrapping 'picture', while maintaining contents [CR] */
+	display: contents;
 }
 
 :where(source) {
-	display: none; // Source elements have nothing to display, so we hide them entirely [CR]
+	/** Source elements have nothing to display, so we hide them entirely [CR] */
+	display: none;
 }
 
 :where(svg:not([fill])) {

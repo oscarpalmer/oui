@@ -174,7 +174,7 @@
 	}
 
 	:where(
-			&.oui-validatable:not(
+			&.oui-validate:not(
 					[disabled],
 					[readonly],
 					[aria-disabled='true' i]
@@ -206,7 +206,7 @@
 	}
 
 	:where(
-			&.oui-validatable:not(
+			&.oui-validate:not(
 					[disabled],
 					[readonly],
 					[aria-disabled='true' i]
