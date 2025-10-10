@@ -12,7 +12,15 @@
 
 	max-width: 48ch;
 	padding: 0.75em 1em;
+	opacity: 0;
 	background-color: var(--oui-absolute);
 	border-radius: 0.25rem;
 	font-size: 0.875rem;
+	transition: opacity .125s ease-in-out;
+	transition-delay: 0s;
+}
+
+:where([oui-tooltip-content][oui-tooltip-content-active]) {
+	opacity: 1;
+	transition-delay: .25s;
 }

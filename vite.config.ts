@@ -18,7 +18,7 @@ export default defineConfig({
 	build: {
 		lib: {
 			entry: [],
-			formats: ['cjs', 'es'],
+			formats: ['es'],
 		},
 		minify: false,
 		outDir: './dist/js',
@@ -30,6 +30,8 @@ export default defineConfig({
 				'@oscarpalmer/toretto/event',
 				'@oscarpalmer/toretto/find',
 				'@oscarpalmer/toretto/focusable',
+				'@oscarpalmer/toretto/style',
+				'@oscarpalmer/toretto/touch',
 			],
 			input: Object.fromEntries(files),
 			output: {

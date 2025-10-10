@@ -3,17 +3,20 @@ import {round} from '@oscarpalmer/atoms/math';
 import {clamp} from '@oscarpalmer/atoms/number';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
+import {type StyleToggler, toggleStyles} from '@oscarpalmer/toretto/style';
+import supportsTouch from '@oscarpalmer/toretto/touch';
 
 declare global {
+	// biome-ignore lint/nursery/useConsistentTypeDefinitions: Extending builtins to allow custom element type help
 	interface HTMLElementTagNameMap {
-		[selector]: OuiSplitterElement;
+		[SELECTOR]: OuiSplitterElement;
 	}
 }
 
 export class OuiSplitterElement extends HTMLElement {
 	static readonly observedAttributes = ['max', 'min', 'size', 'type'];
 
-	#splitter: Splitter;
+	readonly #splitter: Splitter;
 
 	// Getters and setters
 
@@ -59,7 +62,7 @@ export class OuiSplitterElement extends HTMLElement {
 		);
 
 		if (panels.length !== 2) {
-			throw new Error(`${selector} must have exactly two panels.`);
+			throw new Error(`${SELECTOR} must have exactly two panels.`);
 		}
 
 		this.#splitter = new Splitter(this, panels);
@@ -86,6 +89,9 @@ export class OuiSplitterElement extends HTMLElement {
 			case 'type':
 				this.#splitter.updateOrientation();
 				break;
+
+			default:
+				break;
 		}
 	}
 }
@@ -93,7 +99,11 @@ export class OuiSplitterElement extends HTMLElement {
 let index = 0;
 
 class Splitter {
+	element: OuiSplitterElement;
+
 	handle: HTMLSpanElement;
+
+	panels: HTMLElement[];
 
 	rectangle: DOMRect;
 
@@ -103,10 +113,10 @@ class Splitter {
 
 	values: Values;
 
-	constructor(
-		public element: OuiSplitterElement,
-		public panels: HTMLElement[],
-	) {
+	constructor(element: OuiSplitterElement, panels: HTMLElement[]) {
+		this.element = element;
+		this.panels = panels;
+
 		if (isNullableOrWhitespace(element.id)) {
 			element.id = `oui_splitter_${++index}`;
 		}
@@ -126,12 +136,14 @@ class Splitter {
 	}
 
 	updateConnections(add: 0 | 1): void {
-		mapped[connectMethods[add]](this.element, this);
-		mapped[connectMethods[add]](this.handle, this);
-		mapped[connectMethods[add]](this.separator, this);
+		const method = METHODS_CONNECT[add];
+
+		MAPPED_ELEMENTS[method](this.element, this);
+		MAPPED_ELEMENTS[method](this.handle, this);
+		MAPPED_ELEMENTS[method](this.separator, this);
 
 		if (this.types.auto) {
-			observer[observeMethods[add]](this.element);
+			RESIZE_OBSERVER[METHODS_OBSERVE[add]](this.element);
 		}
 	}
 
@@ -139,15 +151,15 @@ class Splitter {
 		this.types = getTypes(this);
 
 		if (this.types.auto) {
-			observer.observe(this.element);
+			RESIZE_OBSERVER.observe(this.element);
 		} else {
-			observer.unobserve(this.element);
+			RESIZE_OBSERVER.unobserve(this.element);
 		}
 
 		if (this.types.horizontal) {
-			this.element.setAttribute(attributeHorizontal, '');
+			this.element.setAttribute(ATTRIBUTE_HORIZONTAL, '');
 		} else {
-			this.element.removeAttribute(attributeHorizontal);
+			this.element.removeAttribute(ATTRIBUTE_HORIZONTAL);
 		}
 
 		setAriaOrientation(this);
@@ -168,11 +180,6 @@ type Types = {
 	horizontal: boolean;
 };
 
-type UserSelect = {
-	any?: string;
-	webkit?: string;
-};
-
 type Values = {
 	max: number;
 	min: number;
@@ -190,7 +197,7 @@ function createHandle(): HTMLSpanElement {
 	const handle = document.createElement('span');
 
 	handle.setAttribute('aria-hidden', 'true');
-	handle.setAttribute(attributeHandle, '');
+	handle.setAttribute(ATTRIBUTE_HANDLE, '');
 
 	return handle;
 }
@@ -203,13 +210,13 @@ function createSeparator(splitter: Splitter): HTMLDivElement {
 
 	separator.setAttribute('aria-controls', splitter.element.id);
 	separator.setAttribute('aria-label', 'Resize panels');
-	separator.setAttribute(attributeSeparator, '');
+	separator.setAttribute(ATTRIBUTE_SEPARATOR, '');
 
 	return separator;
 }
 
 function getContained(min: number, value: number, max: number): number {
-	return round(clamp(value, min, max), 6);
+	return round(clamp(value, min, max), VALUE_DECIMALS);
 }
 
 function getSize(splitter: Splitter, value: number): number {
@@ -264,13 +271,17 @@ function getValue(
 		return defaultValue;
 	}
 
-	return parsed < 0 ? defaultValue : parsed > 1 ? parsed / 100 : parsed;
+	if (parsed < 0) {
+		return defaultValue;
+	}
+
+	return parsed > 1 ? parsed / NAVIGATION_MAXIMUM_TOTAL : parsed;
 }
 
 function getValues(element: OuiSplitterElement): Values {
 	const values: Values = {
-		max: getValue(element, 'max', 0.9),
-		min: getValue(element, 'min', 0.1),
+		max: getValue(element, 'max', NAVIGATION_MAXIMUM_PERCENTAGE),
+		min: getValue(element, 'min', NAVIGATION_MINIMUM_PERCENTAGE),
 		now: {
 			current: 0.5,
 			previous: 0.5,
@@ -294,8 +305,8 @@ function onEnd(reset: boolean): void {
 		return;
 	}
 
-	splitter.handle.removeAttribute(attributeActive);
-	splitter.separator.removeAttribute(attributeActive);
+	splitter.handle.removeAttribute(ATTRIBUTE_ACTIVE);
+	splitter.separator.removeAttribute(ATTRIBUTE_ACTIVE);
 
 	if (reset) {
 		setSize(splitter, splitter.values.now.previous);
@@ -305,12 +316,12 @@ function onEnd(reset: boolean): void {
 
 	splitter = undefined;
 
-	unsetUserSelect();
+	STYLING_TOGGLER.remove();
 }
 
 function onKeydown(event: KeyboardEvent): void {
 	switch (true) {
-		case allKeys.has(event.key):
+		case KEYS_ALL.has(event.key):
 			onNavigate(event);
 			break;
 
@@ -323,11 +334,11 @@ function onKeydown(event: KeyboardEvent): void {
 	}
 }
 
-function onMousedown(event: Event): void {
-	splitter = mapped.get(
+function onNavigate(event: KeyboardEvent): void {
+	const splitter = MAPPED_ELEMENTS.get(
 		findAncestor(
 			event.target as never,
-			'[oui-splitter-handle]',
+			'[oui-splitter-separator]',
 		) as HTMLSpanElement,
 	);
 
@@ -335,15 +346,95 @@ function onMousedown(event: Event): void {
 		return;
 	}
 
-	splitter.handle.setAttribute(attributeActive, '');
-	splitter.separator.setAttribute(attributeActive, '');
+	const {types, values} = splitter;
+
+	if (KEYS_ABSOLUTE.has(event.key)) {
+		setSize(splitter, event.key === 'End' ? values.max : values.min, true);
+
+		return;
+	}
+
+	if (
+		(types.horizontal && !KEYS_HORIZONTAL.has(event.key)) ||
+		!(types.horizontal || KEYS_VERTICAL.has(event.key))
+	) {
+		return;
+	}
+
+	const offset = KEYS_NEGATIVE.has(event.key) ? -1 : 1;
+
+	setSize(
+		splitter,
+		getContained(
+			values.min,
+			values.now.current + offset * NAVIGATION_MODIFIER,
+			values.max,
+		),
+		true,
+	);
+}
+
+function onObservation(entries: ResizeObserverEntry[]): void {
+	if (frame != null) {
+		cancelAnimationFrame(frame);
+	}
+
+	frame = requestAnimationFrame(() => {
+		for (const entry of entries) {
+			const splitter = MAPPED_ELEMENTS.get(entry.target as HTMLElement);
+
+			if (splitter == null) {
+				return;
+			}
+
+			splitter.types = getTypes(
+				splitter,
+				entry.contentRect.width,
+				entry.contentRect.height,
+			);
+
+			if (splitter.types.horizontal) {
+				splitter.element.setAttribute(ATTRIBUTE_HORIZONTAL, '');
+			} else {
+				splitter.element.removeAttribute(ATTRIBUTE_HORIZONTAL);
+			}
+
+			setAriaOrientation(splitter);
+		}
+
+		frame = undefined;
+	});
+}
+
+function onPointerdown(event: Event): void {
+	if (
+		(event.type === 'mousedown' && supportsTouch.value) ||
+		(event.type === 'touchstart' && !supportsTouch.value)
+	) {
+		return;
+	}
+
+	splitter = MAPPED_ELEMENTS.get(
+		findAncestor(event.target as never, SELECTOR_HANDLE) as HTMLSpanElement,
+	);
+
+	if (splitter == null) {
+		return;
+	}
+
+	if (supportsTouch.value) {
+		event.preventDefault();
+	}
+
+	splitter.handle.setAttribute(ATTRIBUTE_ACTIVE, '');
+	splitter.separator.setAttribute(ATTRIBUTE_ACTIVE, '');
 
 	splitter.rectangle = splitter.element.getBoundingClientRect();
 
-	setUserSelect();
+	STYLING_TOGGLER.set();
 }
 
-function onMousemove(event: MouseEvent): void {
+function onPointermove(event: MouseEvent): void {
 	if (splitter == null) {
 		return;
 	}
@@ -360,78 +451,10 @@ function onMousemove(event: MouseEvent): void {
 	}
 }
 
-function onMouseup(): void {
+function onPointerup(): void {
 	if (splitter != null) {
 		onEnd(false);
 	}
-}
-
-function onNavigate(event: KeyboardEvent): void {
-	const splitter = mapped.get(
-		findAncestor(
-			event.target as never,
-			'[oui-splitter-separator]',
-		) as HTMLSpanElement,
-	);
-
-	if (splitter == null) {
-		return;
-	}
-
-	const {types, values} = splitter;
-
-	if (absoluteKeys.has(event.key)) {
-		setSize(splitter, event.key === 'End' ? values.max : values.min, true);
-
-		return;
-	}
-
-	if (
-		(types.horizontal && !horizontalKeys.has(event.key)) ||
-		(!types.horizontal && !verticalKeys.has(event.key))
-	) {
-		return;
-	}
-
-	const modifier = negativeKeys.has(event.key) ? -1 : 1;
-
-	setSize(
-		splitter,
-		getContained(values.min, values.now.current + modifier * 0.05, values.max),
-		true,
-	);
-}
-
-function onObservation(entries: ResizeObserverEntry[]): void {
-	if (frame != null) {
-		cancelAnimationFrame(frame);
-	}
-
-	frame = requestAnimationFrame(() => {
-		for (const entry of entries) {
-			const splitter = mapped.get(entry.target as HTMLElement);
-
-			if (splitter == null) {
-				return;
-			}
-
-			splitter.types = getTypes(
-				splitter,
-				entry.contentRect.width,
-				entry.contentRect.height,
-			);
-
-			if (splitter.types.horizontal) {
-				splitter.element.setAttribute(attributeHorizontal, '');
-			} else {
-				splitter.element.removeAttribute(attributeHorizontal);
-			}
-
-			setAriaOrientation(splitter);
-		}
-
-		frame = undefined;
-	});
 }
 
 function setAriaOrientation(splitter: Splitter): void {
@@ -463,62 +486,57 @@ function setSize(splitter: Splitter, size: number, previous?: boolean): void {
 	setAriaValue(splitter);
 }
 
-function setUserSelect(): void {
-	const any = document.body.style.userSelect;
-	const webkit = document.body.style.webkitUserSelect;
-
-	userSelect.any = (any?.length ?? 0) === 0 ? undefined : any;
-	userSelect.webkit = (webkit?.length ?? 0) === 0 ? undefined : webkit;
-
-	document.body.style.userSelect = 'none';
-	document.body.style.webkitUserSelect = 'none';
-}
-
-function unsetUserSelect(): void {
-	if (userSelect.any == null) {
-		document.body.style.removeProperty('user-select');
-	} else {
-		document.body.style.userSelect = userSelect.any;
-	}
-
-	if (userSelect.webkit == null) {
-		document.body.style.removeProperty('-webkit-user-select');
-	} else {
-		document.body.style.webkitUserSelect = userSelect.webkit;
-	}
-}
-
 //
 
-const selector = 'oui-splitter';
+const SELECTOR = 'oui-splitter';
 
-const absoluteKeys = new Set(['End', 'Home']);
+const ATTRIBUTE_ACTIVE = `${SELECTOR}-active`;
 
-const attributeActive = `${selector}-active`;
+const ATTRIBUTE_HANDLE = `${SELECTOR}-handle`;
 
-const attributeHandle = `${selector}-handle`;
+const ATTRIBUTE_HORIZONTAL = `${SELECTOR}-horizontal`;
 
-const attributeHorizontal = `${selector}-horizontal`;
+const ATTRIBUTE_SEPARATOR = `${SELECTOR}-separator`;
 
-const attributeSeparator = `${selector}-separator`;
+const KEYS_ABSOLUTE: Set<string> = new Set(['End', 'Home']);
 
-const connectMethods = ['delete', 'set'] as const;
+const KEYS_HORIZONTAL: Set<string> = new Set(['ArrowDown', 'ArrowUp']);
 
-const horizontalKeys = new Set(['ArrowDown', 'ArrowUp']);
+const KEYS_NEGATIVE: Set<string> = new Set(['ArrowLeft', 'ArrowUp']);
 
-const mapped = new WeakMap<HTMLElement, Splitter>();
+const KEYS_VERTICAL: Set<string> = new Set(['ArrowLeft', 'ArrowRight']);
 
-const observeMethods = ['unobserve', 'observe'] as const;
+const KEYS_ALL: Set<string> = new Set([
+	...KEYS_ABSOLUTE,
+	...KEYS_HORIZONTAL,
+	...KEYS_VERTICAL,
+]);
 
-const observer = new ResizeObserver(onObservation);
+const MAPPED_ELEMENTS: WeakMap<HTMLElement, Splitter> = new WeakMap();
 
-const negativeKeys = new Set(['ArrowLeft', 'ArrowUp']);
+const METHODS_CONNECT = ['delete', 'set'] as const;
 
-const userSelect: UserSelect = {};
+const METHODS_OBSERVE = ['unobserve', 'observe'] as const;
 
-const verticalKeys = new Set(['ArrowLeft', 'ArrowRight']);
+const NAVIGATION_MAXIMUM_PERCENTAGE = 0.9;
 
-const allKeys = new Set([...absoluteKeys, ...horizontalKeys, ...verticalKeys]);
+const NAVIGATION_MAXIMUM_TOTAL = 100;
+
+const NAVIGATION_MINIMUM_PERCENTAGE = 0.1;
+
+const NAVIGATION_MODIFIER = 0.05;
+
+const RESIZE_OBSERVER: ResizeObserver = new ResizeObserver(onObservation);
+
+const SELECTOR_HANDLE = `[${ATTRIBUTE_HANDLE}]`;
+
+const STYLING_TOGGLER: StyleToggler = toggleStyles(document.body, {
+	touchAction: 'none',
+	userSelect: 'none',
+	webkitUserSelect: 'none',
+});
+
+const VALUE_DECIMALS = 6;
 
 let frame: DOMHighResTimeStamp | undefined;
 
@@ -526,9 +544,11 @@ let splitter: Splitter | undefined;
 
 //
 
-customElements.define(selector, OuiSplitterElement);
+customElements.define(SELECTOR, OuiSplitterElement);
 
 on(document, 'keydown', onKeydown);
-on(document, 'mousedown', onMousedown);
-on(document, 'mousemove', onMousemove);
-on(document, 'mouseup', onMouseup);
+on(document, 'mousedown', onPointerdown);
+on(document, 'pointermove', onPointermove);
+on(document, 'pointerup', onPointerup);
+on(document, 'touchcancel', onPointerup, {passive: false});
+on(document, 'touchstart', onPointerdown, {passive: false});

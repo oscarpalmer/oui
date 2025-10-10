@@ -4,24 +4,23 @@ import {Floatable} from './floatable';
 import {createFocusTrap, type FocusTrap} from './focus-trap/embedded';
 
 declare global {
+	// biome-ignore lint/nursery/useConsistentTypeDefinitions: Extending builtins to allow custom element type help
 	interface HTMLElementTagNameMap {
 		'oui-popover': OuiPopoverElement;
 	}
 }
 
-const mapped = new Map<HTMLElement, Floatable>();
-
 let index = 0;
 
 export class OuiPopoverElement extends HTMLElement {
-	#floatable: Floatable;
-	#focusTrap: FocusTrap;
+	readonly #floatable: Floatable;
+	readonly #focusTrap: FocusTrap;
 
 	constructor() {
 		super();
 
-		const content = this.querySelector(':scope > [oui-popover-content]');
-		const toggle = this.querySelector(':scope > [oui-popover-toggle]');
+		const content = this.querySelector(SELECTOR_CONTENT);
+		const toggle = this.querySelector(SELECTOR_TOGGLE);
 
 		if (!(content instanceof HTMLElement)) {
 			throw new Error(
@@ -39,11 +38,9 @@ export class OuiPopoverElement extends HTMLElement {
 
 		content.setAttribute('role', 'dialog');
 		content.setAttribute('aria-modal', 'true');
-		content.setAttribute('oui-focus-trap', '');
-		content.setAttribute('oui-focus-trap-noescape', '');
 
 		if (isNullableOrWhitespace(content.id)) {
-			content.setAttribute('id', `oui_popover_content_${++index}`);
+			content.setAttribute('id', `${ATTRIBUTE_ID_PREFIX}_${++index}`);
 		}
 
 		toggle.setAttribute('aria-controls', content.id);
@@ -56,7 +53,7 @@ export class OuiPopoverElement extends HTMLElement {
 			interactive: true,
 			positionAttribute: 'position',
 			preferAbove: false,
-			onAfter: active => {
+			onAfter: (active: boolean): void => {
 				if (active) {
 					focus(content);
 				} else if (!this.#floatable.ignoreFocus) {
@@ -65,14 +62,26 @@ export class OuiPopoverElement extends HTMLElement {
 			},
 		});
 
-		this.#focusTrap = createFocusTrap(content);
+		this.#focusTrap = createFocusTrap(content, {
+			noescape: true,
+		});
 
-		mapped.set(toggle, this.#floatable);
-		mapped.set(content, this.#floatable);
+		POPOVERS.set(toggle, this.#floatable);
+		POPOVERS.set(content, this.#floatable);
 	}
 
 	close(): void {
 		this.hidePopover();
+	}
+
+	connectedCallback(): void {
+		this.#floatable.enable();
+		this.#focusTrap.connect();
+	}
+
+	disconnectedCallback(): void {
+		this.#floatable.disable();
+		this.#focusTrap.disconnect();
 	}
 
 	hidePopover(): void {
@@ -134,4 +143,16 @@ function focus(content: HTMLElement): void {
 
 //
 
-customElements.define('oui-popover', OuiPopoverElement);
+const ATTRIBUTE_ID_PREFIX = 'oui_popover_content_';
+
+const POPOVERS: Map<HTMLElement, Floatable> = new Map();
+
+const SELECTOR = 'oui-popover';
+
+const SELECTOR_CONTENT = `:scope > [${SELECTOR}-content]`;
+
+const SELECTOR_TOGGLE = `:scope > [${SELECTOR}-toggle]`;
+
+//
+
+customElements.define(SELECTOR, OuiPopoverElement);

@@ -1,8 +1,10 @@
-import {on} from '@oscarpalmer/toretto';
+import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 
 export class Floatable {
 	active = false;
+
+	disabled = false;
 
 	frame: DOMHighResTimeStamp | undefined;
 
@@ -15,12 +17,40 @@ export class Floatable {
 	destroy(): void {
 		stop(this);
 
+		const state = getState();
+
+		state?.active.delete(this);
+		state?.mapped.delete(this.options.anchor);
+		state?.mapped.delete(this.options.content);
+
 		this.options.anchor = undefined as never;
 		this.options.content = undefined as never;
 	}
 
+	disable(): void {
+		if (this.disabled) {
+			return;
+		}
+
+		this.disabled = true;
+
+		stop(this);
+
+		getState()?.active.delete(this);
+	}
+
+	enable(): void {
+		if (!this.disabled) {
+			return;
+		}
+
+		this.disabled = false;
+
+		initialize(this);
+	}
+
 	toggle(active: boolean, ignoreFocus?: boolean): void {
-		if (this.active === active) {
+		if (this.disabled || this.active === active) {
 			return;
 		}
 
@@ -61,6 +91,7 @@ export class Floatable {
 }
 
 type FloatableWindow = Window & {
+	// biome-ignore lint/style/useNamingConvention: Non-standard name to avoid conflicts
 	_oscarpalmer_oui_floatable: State;
 };
 
@@ -120,8 +151,9 @@ function closeAbove(element: HTMLElement): void {
 	}
 
 	const index = state.order.findIndex(
-		floated =>
-			floated.options.anchor === element || floated.options.content === element,
+		floatable =>
+			floatable.options.anchor === element ||
+			floatable.options.content === element,
 	);
 
 	if (index === -1 || index === state.order.length - 1) {
@@ -129,28 +161,26 @@ function closeAbove(element: HTMLElement): void {
 	}
 
 	while (index < state.order.length - 1) {
-		const floated = state.order.pop();
-
-		void floated?.toggle(false, true);
+		void state.order.pop()?.toggle(false, true);
 	}
 }
 
 function closeAll(): void {
 	const state = getState();
 
-	const floateds = [...(state?.active ?? [])];
+	const floatables = [...(state?.active ?? [])];
 
 	state?.active.clear();
 
-	for (const floated of floateds) {
-		void floated.toggle(false, true);
+	for (const floatable of floatables) {
+		void floatable.toggle(false, true);
 	}
 }
 
 function closeNonInteractive(state: State): void {
-	for (const floated of state.active) {
-		if (!floated.options.interactive) {
-			void floated.toggle(false);
+	for (const floatable of state.active) {
+		if (!floatable.options.interactive) {
+			void floatable.toggle(false);
 		}
 	}
 }
@@ -161,7 +191,7 @@ export function deactivate(floatable: Floatable): void {
 	floatable.options.content.hidden = true;
 
 	floatable.options.anchor.insertAdjacentElement(
-		'afterend',
+		INSERT_AFTEREND,
 		floatable.options.content,
 	);
 
@@ -173,13 +203,13 @@ function getState(): State {
 }
 
 function getX(anchor: DOMRect, content: DOMRect, position: Position): number {
-	if (position.endsWith('-end')) {
+	if (position.endsWith(POSITION_SUFFIX_END)) {
 		const end = anchor.right - content.width;
 
 		return end < 0 ? 0 : end;
 	}
 
-	if (position.endsWith('-start')) {
+	if (position.endsWith(POSITION_SUFFIX_START)) {
 		const start = anchor.left;
 
 		return start + content.width > window.innerWidth
@@ -187,15 +217,15 @@ function getX(anchor: DOMRect, content: DOMRect, position: Position): number {
 			: start;
 	}
 
-	if (position.startsWith('end')) {
+	if (position.startsWith(POSITION_END)) {
 		return anchor.right;
 	}
 
-	if (position.startsWith('start')) {
+	if (position.startsWith(POSITION_START)) {
 		return anchor.left - content.width;
 	}
 
-	if (position.startsWith('horizontal')) {
+	if (position.startsWith(POSITION_HORIZONTAL)) {
 		if (anchor.right + content.width <= window.innerWidth) {
 			return anchor.right;
 		}
@@ -214,21 +244,21 @@ function getY(
 	position: Position,
 	preferAbove: boolean,
 ): number {
-	if (position.startsWith('above')) {
+	if (position.startsWith(POSITION_ABOVE)) {
 		return anchor.top - content.height;
 	}
 
-	if (position.startsWith('below')) {
+	if (position.startsWith(POSITION_BELOW)) {
 		return anchor.bottom;
 	}
 
-	if (position.endsWith('bottom')) {
+	if (position.endsWith(POSITION_BOTTOM)) {
 		const bottom = anchor.bottom - content.height;
 
 		return bottom < 0 ? 0 : bottom;
 	}
 
-	if (position.endsWith('top')) {
+	if (position.endsWith(POSITION_TOP)) {
 		const top = anchor.top;
 
 		return top + content.height > window.innerHeight
@@ -236,7 +266,7 @@ function getY(
 			: top;
 	}
 
-	if (position.startsWith('vertical')) {
+	if (position.startsWith(POSITION_VERTICAL)) {
 		if (preferAbove && anchor.top - content.height >= 0) {
 			return anchor.top - content.height;
 		}
@@ -255,8 +285,8 @@ function initialize(floatable: Floatable): void {
 	const {anchor, content, interactive} = floatable.options;
 
 	if (interactive) {
-		anchor.setAttribute(attributeAnchor, '');
-		content.setAttribute(attributeContent, '');
+		anchor.setAttribute(ATTRIBUTE_ANCHOR, '');
+		content.setAttribute(ATTRIBUTE_CONTENT, '');
 	}
 
 	content.style.position = 'fixed';
@@ -278,11 +308,11 @@ function isDisabled(element: HTMLElement): boolean {
 }
 
 function onClick(event: PointerEvent): void {
-	const related = findAncestor(event.target as never, attributes.all);
+	const related = findAncestor(event.target as never, SELECTOR_ALL);
 
 	if (!(related instanceof HTMLElement)) {
 		closeAll();
-	} else if (related.hasAttribute(attributeContent)) {
+	} else if (related.hasAttribute(ATTRIBUTE_CONTENT)) {
 		closeAbove(related);
 	} else if (!isDisabled(related)) {
 		toggle(related);
@@ -302,7 +332,7 @@ function onKeyDown(event: KeyboardEvent): void {
 
 	closeNonInteractive(state);
 
-	const related = findAncestor(event.target as never, attributes.content);
+	const related = findAncestor(event.target as never, SELECTOR_CONTENT);
 
 	if (!(related instanceof HTMLElement)) {
 		return;
@@ -310,10 +340,10 @@ function onKeyDown(event: KeyboardEvent): void {
 
 	closeAbove(related);
 
-	const floated = state.mapped.get(related);
+	const floatable = state.mapped.get(related);
 
-	if (floated != null) {
-		void floated.toggle(false);
+	if (floatable != null) {
+		void floatable.toggle(false);
 	}
 }
 
@@ -326,16 +356,16 @@ function stop(floatable: Floatable): void {
 }
 
 function toggle(anchor: HTMLElement): void {
-	const floated = getState()?.mapped.get(anchor);
+	const floatable = getState()?.mapped.get(anchor);
 
-	if (floated == null) {
+	if (floatable == null) {
 		closeAll();
 
 		return;
 	}
 
-	const active = Boolean(floated.active);
-	const content = findAncestor(floated.options.anchor, attributes.content);
+	const active = Boolean(floatable.active);
+	const content = findAncestor(floatable.options.anchor, SELECTOR_CONTENT);
 
 	if (content == null) {
 		closeAll();
@@ -343,11 +373,7 @@ function toggle(anchor: HTMLElement): void {
 		closeAbove(content as HTMLElement);
 	}
 
-	if (active) {
-		void floated.toggle(false);
-	} else {
-		void floated.toggle(true);
-	}
+	void floatable.toggle(!active);
 }
 
 function updatePosition(floatable: Floatable): void {
@@ -356,7 +382,7 @@ function updatePosition(floatable: Floatable): void {
 			.getAttribute(floatable.options.positionAttribute)
 			?.trim() as Position) ?? floatable.options.defaultPosition;
 
-	if (!positions.has(position as Position)) {
+	if (!POSITIONS.has(position as Position)) {
 		position = floatable.options.defaultPosition;
 	}
 
@@ -373,10 +399,10 @@ function updatePosition(floatable: Floatable): void {
 		if (calculated) {
 			if (previousAnchor != null && previousContent != null) {
 				if (
-					properties.every(
+					PROPERTIES.every(
 						property => anchor[property] === previousAnchor[property],
 					) &&
-					properties.every(
+					PROPERTIES.every(
 						property => content[property] === previousContent[property],
 					)
 				) {
@@ -389,6 +415,10 @@ function updatePosition(floatable: Floatable): void {
 			calculated = true;
 		}
 
+		update(anchor, content);
+	}
+
+	function update(anchor: DOMRect, content: DOMRect): void {
 		previousAnchor = anchor;
 		previousContent = content;
 
@@ -407,7 +437,8 @@ function updatePosition(floatable: Floatable): void {
 			floatable.options.content.style.width = '';
 		}
 
-		floatable.options.content.style.inset = `${top}px auto auto ${left}px`;
+		// floatable.options.content.style.inset = `${top}px auto auto ${left}px`;
+		floatable.options.content.style.transform = `translate3d(${left}px, ${top}px, 0)`;
 
 		floatable.frame = requestAnimationFrame(run);
 
@@ -423,16 +454,33 @@ function updatePosition(floatable: Floatable): void {
 
 //
 
-const attributeAnchor = 'oui-floatable-anchor';
-const attributeContent = 'oui-floatable-content';
+const ATTRIBUTE_ANCHOR = 'oui-floatable-anchor';
 
-const attributes = {
-	all: `[${attributeAnchor}], [${attributeContent}]`,
-	anchor: `[${attributeAnchor}]`,
-	content: `[${attributeContent}]`,
-};
+const ATTRIBUTE_CONTENT = 'oui-floatable-content';
 
-const positions = new Set<Position>([
+const INSERT_AFTEREND = 'afterend';
+
+const POSITION_ABOVE = 'above';
+
+const POSITION_BELOW = 'below';
+
+const POSITION_BOTTOM = 'bottom';
+
+const POSITION_END = 'end';
+
+const POSITION_HORIZONTAL = 'horizontal';
+
+const POSITION_START = 'start';
+
+const POSITION_SUFFIX_END = '-end';
+
+const POSITION_SUFFIX_START = '-start';
+
+const POSITION_TOP = 'top';
+
+const POSITION_VERTICAL = 'vertical';
+
+const POSITIONS: Set<Position> = new Set([
 	'above',
 	'above-end',
 	'above-start',
@@ -453,7 +501,11 @@ const positions = new Set<Position>([
 	'vertical-start',
 ]);
 
-const properties: (keyof DOMRect)[] = ['bottom', 'left', 'right', 'top'];
+const PROPERTIES: (keyof DOMRect)[] = ['bottom', 'left', 'right', 'top'];
+
+const SELECTOR_ALL = `[${ATTRIBUTE_ANCHOR}], [${ATTRIBUTE_CONTENT}]`;
+
+const SELECTOR_CONTENT = `[${ATTRIBUTE_CONTENT}]`;
 
 //
 

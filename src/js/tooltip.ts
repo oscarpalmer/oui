@@ -1,5 +1,6 @@
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import {on} from '@oscarpalmer/toretto/event';
+import {findAncestor} from '@oscarpalmer/toretto/find';
 import {attributable} from './attributable';
 import {Floatable} from './floatable';
 
@@ -14,8 +15,6 @@ type Content = {
 };
 
 class Tooltip {
-	abortController = new AbortController();
-
 	attributes: Attributes;
 
 	floatable: Floatable;
@@ -31,34 +30,65 @@ class Tooltip {
 			defaultPosition: 'vertical',
 			interactive: false,
 			preferAbove: true,
-			positionAttribute: `${selector}-position`,
+			positionAttribute: ATTRIBUTE_POSITION,
 		});
 
-		initialize(this);
+		anchor.insertAdjacentElement('afterend', content.element);
+
+		TOOLTIPS_ALL.set(content.element, this);
 	}
 
 	destroy(): void {
-		reset(this.floatable.options.anchor, this.attributes);
+		const {attributes, floatable} = this;
 
-		this.abortController.abort();
-		this.floatable.options.content.remove();
-		this.floatable.destroy();
+		TOOLTIPS_ACTIVE.delete(this);
+		TOOLTIPS_ALL.delete(floatable.options.anchor);
+		TOOLTIPS_ALL.delete(floatable.options.content);
 
-		this.abortController = undefined as never;
+		reset(floatable.options.anchor, attributes);
+
+		floatable.options.content.remove();
+		floatable.destroy();
+
 		this.attributes = undefined as never;
 		this.floatable = undefined as never;
 	}
 }
 
 function addTooltip(anchor: HTMLElement): void {
-	if (tooltips.has(anchor)) {
+	if (TOOLTIPS_ALL.has(anchor)) {
 		return;
 	}
 
 	const content = getContent(anchor);
 
 	if (content != null) {
-		tooltips.set(anchor, new Tooltip(anchor, content));
+		TOOLTIPS_ALL.set(anchor, new Tooltip(anchor, content));
+	}
+}
+
+function closeTooltips(next: Tooltip | undefined): void {
+	const tooltips = [...TOOLTIPS_ACTIVE];
+
+	for (const active of tooltips) {
+		if (active === next) {
+			continue;
+		}
+
+		if (active.timer != null) {
+			clearTimeout(active.timer);
+		}
+
+		active.floatable.options.content.removeAttribute(
+			'oui-tooltip-content-active',
+		);
+
+		requestAnimationFrame(() => {
+			active.timer = setTimeout(() => {
+				TOOLTIPS_ACTIVE.delete(active);
+				active.floatable.toggle(false);
+			}, delay) as never;
+		});
 	}
 }
 
@@ -123,7 +153,7 @@ function getContent(anchor: HTMLElement): Content | undefined {
 }
 
 function getElements(attribute: string | null): HTMLElement[] {
-	const ids = attribute?.split(/\s+/) ?? [];
+	const ids = attribute?.split(EXPRESSION_WHITESPACE) ?? [];
 	const elements: HTMLElement[] = [];
 
 	for (const id of ids) {
@@ -148,78 +178,92 @@ function getElements(attribute: string | null): HTMLElement[] {
 function getWrapper(anchor: HTMLElement): HTMLElement {
 	const wrapper = document.createElement('div');
 
-	wrapper.setAttribute(`${selector}-content`, '');
+	wrapper.setAttribute(ATTRIBUTE_CONTENT, '');
 
-	wrapper.className = anchor.getAttribute(`${selector}-class`) ?? '';
+	wrapper.className = anchor.getAttribute(ATTRIBUTE_CLASS) ?? '';
 	wrapper.hidden = true;
-	wrapper.id = `${selector}-${++index}`;
+	wrapper.id = `${SELECTOR}-${++index}`;
 	wrapper.role = 'tooltip';
 	wrapper.tabIndex = -1;
 
 	return wrapper;
 }
 
-function initialize(tooltip: Tooltip): void {
-	const {abortController, floatable} = tooltip;
-	const {anchor, content} = floatable.options;
+function onActivate(event: Event): void {
+	onToggle(event, true);
+}
 
-	anchor.insertAdjacentElement('afterend', content);
+function onClick(event: Event): void {
+	if (findAncestor(event.target as HTMLElement, SELECTOR_CONTENT) != null) {
+		event.stopPropagation();
+	}
+}
 
-	const elements = [anchor, content];
+function onDeactivate(event: Event): void {
+	onToggle(event, false);
+}
 
-	for (const element of elements) {
-		for (const event of activateEvents) {
-			on(
-				element,
-				event,
-				() => {
-					clearTimeout(tooltip.timer);
-
-					tooltip.timer = window.setTimeout(() => {
-						tooltip.floatable.toggle(true);
-					}, 250);
-				},
-				{
-					signal: abortController.signal,
-				},
-			);
-		}
-
-		for (const event of deactivateEvents) {
-			on(
-				element,
-				event,
-				() => {
-					clearTimeout(tooltip.timer);
-
-					tooltip.timer = window.setTimeout(() => {
-						tooltip.floatable.toggle(false);
-					}, 250);
-				},
-				{
-					signal: abortController.signal,
-				},
-			);
-		}
+function onToggle(event: Event, activate: boolean): void {
+	if (toggle != null) {
+		cancelAnimationFrame(toggle);
 	}
 
-	on(
-		content,
-		'click',
-		event => {
-			event.stopPropagation();
+	toggle = requestAnimationFrame(() => {
+		toggle = undefined;
 
-			clearTimeout(tooltip.timer);
-		},
-		{
-			signal: abortController.signal,
-		},
-	);
+		const element = findAncestor(
+			event.target as HTMLElement,
+			SELECTOR_FULL,
+		) as HTMLElement;
+
+		const tooltip = TOOLTIPS_ALL.get(element);
+
+		if (TOOLTIPS_ACTIVE.size > 0) {
+			closeTooltips(tooltip);
+		}
+
+		if (
+			tooltip == null ||
+			tooltip.floatable.options.content.hasAttribute(
+				'oui-tooltip-content-active',
+			) === activate
+		) {
+			return;
+		}
+
+		if (activate) {
+			if (tooltip.timer != null) {
+				clearTimeout(tooltip.timer);
+			}
+
+			TOOLTIPS_ACTIVE.add(tooltip);
+			tooltip.floatable.toggle(true);
+
+			requestAnimationFrame(() => {
+				tooltip.floatable.options.content.setAttribute(
+					'oui-tooltip-content-active',
+					'',
+				);
+			});
+
+			return;
+		}
+
+		tooltip.floatable.options.content.removeAttribute(
+			'oui-tooltip-content-active',
+		);
+
+		tooltip.timer ??= setTimeout(() => {
+			TOOLTIPS_ACTIVE.delete(tooltip);
+			tooltip.floatable.toggle(false);
+		}, delay) as never;
+	});
 }
 
 function removeTooltip(element: HTMLElement): void {
-	tooltips.get(element)?.destroy();
-	tooltips.delete(element);
+	if (!element.hasAttribute(ATTRIBUTE_CONTENT)) {
+		TOOLTIPS_ALL.get(element)?.destroy();
+	}
 }
 
 function reset(anchor: HTMLElement, attributes: Attributes): void {
@@ -230,18 +274,46 @@ function reset(anchor: HTMLElement, attributes: Attributes): void {
 	}
 }
 
+function setDelay(value: number): void {
+	delay = typeof value === 'number' && value >= 0 ? value : delay;
+}
+
 //
 
-const activateEvents = ['focus', 'mouseenter', 'touchstart'];
+const SELECTOR = 'oui-tooltip';
 
-const deactivateEvents = ['blur', 'mouseleave'];
+const ATTRIBUTE_CLASS = `${SELECTOR}-class`;
 
-const selector = 'oui-tooltip';
+const ATTRIBUTE_CONTENT = `${SELECTOR}-content`;
 
-const tooltips = new WeakMap<HTMLElement, Tooltip>();
+const ATTRIBUTE_POSITION = `${SELECTOR}-position`;
+
+const SELECTOR_CONTENT = `[${ATTRIBUTE_CONTENT}]`;
+
+const SELECTOR_FULL = `[${SELECTOR}], [${ATTRIBUTE_CONTENT}]`;
+
+const EXPRESSION_WHITESPACE = /\s+/;
+
+const TOOLTIPS_ACTIVE: Set<Tooltip> = new Set();
+
+const TOOLTIPS_ALL: WeakMap<HTMLElement, Tooltip> = new WeakMap();
+
+let delay = 250;
 
 let index = 0;
 
+let toggle: DOMHighResTimeStamp | undefined;
+
 //
 
-attributable(selector, addTooltip, removeTooltip);
+attributable(SELECTOR, addTooltip, removeTooltip);
+
+on(document, 'click', onClick, {capture: true});
+on(document, 'focusin', onActivate);
+on(document, 'focusout', onDeactivate);
+on(document, 'mousemove', onActivate);
+on(document, 'touchstart', onActivate);
+
+//
+
+export {setDelay};

@@ -12,6 +12,9 @@
  * - Andy Bell's "A (more) Modern CSS Reset" [AB]
  *   https://andy-bell.co.uk/a-more-modern-css-reset/
  *
+ * - Chris Coyier's "The Coyier CSS Starter" [CC]
+ *   https://frontendmasters.com/blog/the-coyier-css-starter/
+ *
  * - CSS Remedy [CR]
  *   https://github.com/jensimmons/cssremedy
  *
@@ -51,6 +54,7 @@
 	/** Prevent text size inflation (e.g., after orientation change) [AB][RE][SE] */
 	text-size-adjust: none;
 	tab-size: 4;
+	word-break: break-word;
 }
 
 :where(body) {
@@ -123,7 +127,7 @@
 }
 
 :where(h1, h2, h3, h4, h5, h6) {
-	text-wrap: pretty;
+	text-wrap: balance;
 }
 
 :where(h1) {
@@ -363,4 +367,45 @@
 
 :where([aria-controls]) {
 	cursor: pointer;
+}
+
+/**
+ * Pseudo-classes
+ */
+
+:where(:target) {
+	scroll-margin: 2rlh;
+}
+
+/**
+ * Media queries
+ */
+
+@media (prefers-reduced-motion: no-preference) {
+	:where(:root) {
+		/** Allow for animations on auto-sizes [CC] */
+		interpolate-size: allow-keywords;
+	}
+
+	:where(:root:focus-within) {
+		/** Allow for smooth scrolling to focused elements */
+		scroll-behavior: smooth;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:where(:root:focus-within) {
+		/** Disable smooth scrolling, when requested */
+		scroll-behavior: auto;
+	}
+
+	/** Disable animations and transitions, when requested */
+	:where(*),
+	::after,
+	::before {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }
