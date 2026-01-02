@@ -93,17 +93,17 @@
 }
 
 :where(
-		button,
-		input[type='button' i],
-		input[type='checkbox' i],
-		input[type='file' i],
-		input[type='image' i],
-		input[type='radio' i],
-		input[type='reset' i],
-		input[type='submit' i],
-		summary
-	) {
-		/** Correct the inability to style clickable types in iOS [HR][RS][SE] */
+	button,
+	input[type='button' i],
+	input[type='checkbox' i],
+	input[type='file' i],
+	input[type='image' i],
+	input[type='radio' i],
+	input[type='reset' i],
+	input[type='submit' i],
+	summary
+) {
+	/** Correct the inability to style clickable types in iOS [HR][RS][SE] */
 	appearance: button;
 	/** Ditto */
 	cursor: pointer;
@@ -191,7 +191,7 @@
 :where(table) {
 	border-collapse: collapse;
 	/** Correct table border colour in Chrome, Edge, and Safari [SE] */
-	border-color: currentColor;
+	border-color: currentcolor;
 	/** Modernized border spacing [HR] */
 	border-spacing: 0;
 	/** More legible numbers [HR] */
@@ -292,7 +292,7 @@
 
 ::-webkit-search-decoration {
 	/** Remove the inner padding in Chrome, Edge, and Safari on macOS [SE] */
-	-webkit-appearance: none;
+	appearance: none;
 }
 
 /**
@@ -346,7 +346,7 @@
 }
 
 :where(svg:not([fill])) {
-	fill: currentColor;
+	fill: currentcolor;
 }
 
 /**

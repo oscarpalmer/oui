@@ -39,9 +39,7 @@ function handleAdded(
 	nodes: Node[] | NodeList,
 	add: (element: HTMLElement) => void,
 ): void {
-	const elements = [...nodes].filter(
-		node => node instanceof HTMLElement,
-	) as HTMLElement[];
+	const elements = [...nodes].filter(node => node instanceof HTMLElement) as HTMLElement[];
 
 	const {length} = elements;
 
@@ -54,13 +52,8 @@ function handleAdded(
 	}
 }
 
-function handleRemoved(
-	nodes: Node[] | NodeList,
-	remove: (element: HTMLElement) => void,
-): void {
-	const elements = [...nodes].filter(
-		node => node instanceof HTMLElement,
-	) as HTMLElement[];
+function handleRemoved(nodes: Node[] | NodeList, remove: (element: HTMLElement) => void): void {
+	const elements = [...nodes].filter(node => node instanceof HTMLElement) as HTMLElement[];
 
 	const {length} = elements;
 

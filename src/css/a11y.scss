@@ -8,6 +8,6 @@
 	}
 
 	:where(&:not(:active, :focus, :focus-within)) {
-		@include mixins.visuallyHidden;
+		@include mixins.visually-hidden;
 	}
 }

@@ -7,54 +7,54 @@
 		@include mixins.button;
 	}
 
-	:where(&-blue) {
+	:where(&--blue) {
 		--oui-background-value: var(--oui-blue-2);
 		--oui-foreground-value: var(--oui-blue-8);
 		--oui-outline-value: var(--oui-blue-6);
 	}
 
-	:where(&-green) {
+	:where(&--green) {
 		--oui-background-value: var(--oui-green-2);
 		--oui-foreground-value: var(--oui-green-8);
 		--oui-outline-value: var(--oui-green-6);
 	}
 
-	:where(&-orange) {
+	:where(&--orange) {
 		--oui-background-value: var(--oui-orange-2);
 		--oui-foreground-value: var(--oui-orange-8);
 		--oui-outline-value: var(--oui-orange-6);
 	}
 
-	:where(&-purple) {
+	:where(&--purple) {
 		--oui-background-value: var(--oui-purple-2);
 		--oui-foreground-value: var(--oui-purple-8);
 		--oui-outline-value: var(--oui-purple-6);
 	}
 
-	:where(&-red) {
+	:where(&--red) {
 		--oui-background-value: var(--oui-red-2);
 		--oui-foreground-value: var(--oui-red-8);
 		--oui-outline-value: var(--oui-red-6);
 	}
 
-	:where(&-yellow) {
+	:where(&--yellow) {
 		--oui-background-value: var(--oui-yellow-2);
 		--oui-foreground-value: var(--oui-yellow-8);
 		--oui-outline-value: var(--oui-yellow-6);
 	}
 
-	:where(&-rounded) {
+	:where(&--rounded) {
 		padding: 0.5em 1em;
 		flex-wrap: nowrap;
 		border-radius: 5em;
 		white-space: nowrap;
 	}
 
-	:where(&-small) {
+	:where(&--small) {
 		font-size: 0.875em;
 	}
 
-	:where(&-tiny) {
+	:where(&--tiny) {
 		--oui-foreground-percentage: 12.5%;
 
 		font-size: 0.75em;

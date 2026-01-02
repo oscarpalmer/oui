@@ -3,7 +3,7 @@
 @use './mixins' as mixins;
 
 @mixin thumb($background, $shadow) {
-	@include mixins.shadowSmall(
+	@include mixins.shadow-small(
 		color-mix(in oklab, $shadow, transparent 33%),
 		color-mix(in oklab, white, transparent 82.5%)
 	);
@@ -38,14 +38,12 @@
 		align-items: center;
 		list-style: none;
 		outline: 4px solid
-			color-mix(
-				in oklab,
-				var(--oui-blue-6),
-				transparent var(--oui-outline-percentage, 100%)
-			);
+			color-mix(in oklab, var(--oui-blue-6), transparent var(--oui-outline-percentage, 100%));
 		outline-offset: 0.25em;
 		border-radius: 0.125em;
-		transition: 0.125s ease-in-out, margin 0s;
+		transition:
+			0.125s ease-in-out,
+			margin 0s;
 		cursor: pointer;
 
 		&::before {
@@ -53,7 +51,7 @@
 			width: 1em;
 			height: 1em;
 			margin: 0 0.5em 0 0;
-			background-color: currentColor;
+			background-color: currentcolor;
 			mask: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='4'%3E%3Cpath d='M4 0h6L7 4'/%3E%3C/svg%3E");
 			mask-size: contain;
 			mask-position: center;

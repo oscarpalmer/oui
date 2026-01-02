@@ -151,9 +151,7 @@ function closeAbove(element: HTMLElement): void {
 	}
 
 	const index = state.order.findIndex(
-		floatable =>
-			floatable.options.anchor === element ||
-			floatable.options.content === element,
+		floatable => floatable.options.anchor === element || floatable.options.content === element,
 	);
 
 	if (index === -1 || index === state.order.length - 1) {
@@ -190,10 +188,7 @@ export function deactivate(floatable: Floatable): void {
 
 	floatable.options.content.hidden = true;
 
-	floatable.options.anchor.insertAdjacentElement(
-		INSERT_AFTEREND,
-		floatable.options.content,
-	);
+	floatable.options.anchor.insertAdjacentElement(INSERT_AFTEREND, floatable.options.content);
 
 	floatable.options.onAfter?.(false);
 }
@@ -212,9 +207,7 @@ function getX(anchor: DOMRect, content: DOMRect, position: Position): number {
 	if (position.endsWith(POSITION_SUFFIX_START)) {
 		const start = anchor.left;
 
-		return start + content.width > window.innerWidth
-			? window.innerWidth - content.width
-			: start;
+		return start + content.width > window.innerWidth ? window.innerWidth - content.width : start;
 	}
 
 	if (position.startsWith(POSITION_END)) {
@@ -238,12 +231,7 @@ function getX(anchor: DOMRect, content: DOMRect, position: Position): number {
 	return left < 0 ? 0 : left;
 }
 
-function getY(
-	anchor: DOMRect,
-	content: DOMRect,
-	position: Position,
-	preferAbove: boolean,
-): number {
+function getY(anchor: DOMRect, content: DOMRect, position: Position, preferAbove: boolean): number {
 	if (position.startsWith(POSITION_ABOVE)) {
 		return anchor.top - content.height;
 	}
@@ -261,9 +249,7 @@ function getY(
 	if (position.endsWith(POSITION_TOP)) {
 		const top = anchor.top;
 
-		return top + content.height > window.innerHeight
-			? window.innerHeight - content.height
-			: top;
+		return top + content.height > window.innerHeight ? window.innerHeight - content.height : top;
 	}
 
 	if (position.startsWith(POSITION_VERTICAL)) {
@@ -399,12 +385,8 @@ function updatePosition(floatable: Floatable): void {
 		if (calculated) {
 			if (previousAnchor != null && previousContent != null) {
 				if (
-					PROPERTIES.every(
-						property => anchor[property] === previousAnchor[property],
-					) &&
-					PROPERTIES.every(
-						property => content[property] === previousContent[property],
-					)
+					PROPERTIES.every(property => anchor[property] === previousAnchor[property]) &&
+					PROPERTIES.every(property => content[property] === previousContent[property])
 				) {
 					floatable.frame = requestAnimationFrame(run);
 

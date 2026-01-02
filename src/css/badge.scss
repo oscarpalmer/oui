@@ -14,72 +14,76 @@
 
 		display: inline-flex;
 		flex-flow: row nowrap;
-		gap: .5em;
-		background-color: color-mix(in oklab, var(--oui-background, var(--oui-gray-0)), transparent 25%);
+		gap: 0.5em;
+		background-color: color-mix(
+			in oklab,
+			var(--oui-background, var(--oui-gray-0)),
+			transparent 25%
+		);
 		color: var(--oui-foreground, var(--oui-gray-8));
 		line-height: 1.25;
 	}
 
 	:where(&-pill) {
 		border-radius: 3em;
-		padding: .5em 1em;
+		padding: 0.5em 1em;
 	}
 
 	:where(&-tag) {
-		border-radius: .25em;
-		padding: .5em .75em;
+		border-radius: 0.25em;
+		padding: 0.5em 0.75em;
 	}
 
-	:where(&-pill-small, &-tag-small) {
-		font-size: .875em;
+	:where(&-pill--small, &-tag--small) {
+		font-size: 0.875em;
 	}
 
-	:where(&-pill-tiny, &-tag-tiny) {
+	:where(&-pill--tiny, &-tag--tiny) {
 		color: color-mix(in oklab, var(--oui-foreground, var(--oui-gray-8)), transparent 12.5%);
-		font-size: .75em;
+		font-size: 0.75em;
 	}
 
-	:where(&-pill-tiny) {
-		padding: .25em .75em;
+	:where(&-pill--tiny) {
+		padding: 0.25em 0.75em;
 	}
 
-	:where(&-tag-tiny) {
-		padding: .25em .5em;
+	:where(&-tag--tiny) {
+		padding: 0.25em 0.5em;
 	}
 
 	// Colors
 
-	:where(&-pill-blue, &-tag-blue) {
+	:where(&-pill--blue, &-tag--blue) {
 		--oui-background: var(--oui-blue-0);
 		--oui-foreground: var(--oui-blue-8);
 		--oui-shadow: var(--oui-blue-6);
 	}
 
-	:where(&-pill-green, &-tag-green) {
+	:where(&-pill--green, &-tag--green) {
 		--oui-background: var(--oui-green-0);
 		--oui-foreground: var(--oui-green-8);
 		--oui-shadow: var(--oui-green-6);
 	}
 
-	:where(&-pill-orange, &-tag-orange) {
+	:where(&-pill--orange, &-tag--orange) {
 		--oui-background: var(--oui-orange-0);
 		--oui-foreground: var(--oui-orange-8);
 		--oui-shadow: var(--oui-orange-6);
 	}
 
-	:where(&-pill-purple, &-tag-purple) {
+	:where(&-pill--purple, &-tag--purple) {
 		--oui-background: var(--oui-purple-0);
 		--oui-foreground: var(--oui-purple-8);
 		--oui-shadow: var(--oui-purple-6);
 	}
 
-	:where(&-pill-red, &-tag-red) {
+	:where(&-pill--red, &-tag--red) {
 		--oui-background: var(--oui-red-0);
 		--oui-foreground: var(--oui-red-8);
 		--oui-shadow: var(--oui-red-6);
 	}
 
-	:where(&-pill-yellow, &-tag-yellow) {
+	:where(&-pill--yellow, &-tag--yellow) {
 		--oui-background: var(--oui-yellow-0);
 		--oui-foreground: var(--oui-yellow-8);
 		--oui-shadow: var(--oui-yellow-6);

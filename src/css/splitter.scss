@@ -8,20 +8,20 @@ oui-splitter {
 	}
 
 	:where(& > :first-child) {
-		flex: var(--oui-splitter-size, .5);
+		flex: var(--oui-splitter-size, 0.5);
 	}
 
 	:where(& > :last-child) {
-		flex: calc(1 - var(--oui-splitter-size, .5));
+		flex: calc(1 - var(--oui-splitter-size, 0.5));
 	}
 }
 
 :where([oui-splitter-separator]) {
-	width: .25rem;
-	background-color: rgba(0, 0, 0, 0.1);
-	border-radius: .25rem;
+	width: 0.25rem;
+	background-color: rgb(0 0 0 / 10%);
+	border-radius: 0.25rem;
 	position: relative;
-	transition: background .125s ease-in-out;
+	transition: background 0.125s ease-in-out;
 }
 
 :where([oui-splitter-separator]:has([oui-splitter-handle]:focus)),
@@ -33,7 +33,7 @@ oui-splitter {
 :where([oui-splitter-handle]) {
 	width: 2rem;
 	height: 4rem;
-	padding: .875rem;
+	padding: 0.875rem;
 	position: absolute;
 	inset: 50% auto auto 50%;
 	transform: translate3d(-50%, -50%, 0);
@@ -48,11 +48,13 @@ oui-splitter {
 		width: 100%;
 		height: 100%;
 		display: block;
-		background-color: rgba(0, 0, 0, 0.25);
-		outline: .25rem solid transparent;
-		outline-offset: .25rem;
-		border-radius: .25rem;
-		transition: background .125s ease-in-out, outline .125s ease-in-out;
+		background-color: rgb(0 0 0 / 25%);
+		outline: 0.25rem solid transparent;
+		outline-offset: 0.25rem;
+		border-radius: 0.25rem;
+		transition:
+			background 0.125s ease-in-out,
+			outline 0.125s ease-in-out;
 	}
 }
 
@@ -76,7 +78,7 @@ oui-splitter[oui-splitter-horizontal] {
 
 	:where(& [oui-splitter-separator]) {
 		width: 100%;
-		height: .25rem;
+		height: 0.25rem;
 	}
 
 	:where(& [oui-splitter-handle]) {

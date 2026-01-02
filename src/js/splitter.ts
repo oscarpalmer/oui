@@ -57,9 +57,7 @@ export class OuiSplitterElement extends HTMLElement {
 	constructor() {
 		super();
 
-		const panels = [...this.children].filter(
-			child => child instanceof HTMLElement,
-		);
+		const panels = [...this.children].filter(child => child instanceof HTMLElement);
 
 		if (panels.length !== 2) {
 			throw new Error(`${SELECTOR} must have exactly two panels.`);
@@ -242,9 +240,7 @@ function getTypes(splitter: Splitter, width?: number, height?: number): Types {
 	if (type === 'auto') {
 		return {
 			auto: true,
-			horizontal:
-				(height ?? splitter.rectangle.height) >
-				(width ?? splitter.rectangle.width),
+			horizontal: (height ?? splitter.rectangle.height) > (width ?? splitter.rectangle.width),
 		};
 	}
 
@@ -254,11 +250,7 @@ function getTypes(splitter: Splitter, width?: number, height?: number): Types {
 	};
 }
 
-function getValue(
-	element: HTMLElement,
-	name: string,
-	defaultValue: number,
-): number {
+function getValue(element: HTMLElement, name: string, defaultValue: number): number {
 	const value = element.getAttribute(name);
 
 	if (isNullableOrWhitespace(value)) {
@@ -288,11 +280,7 @@ function getValues(element: OuiSplitterElement): Values {
 		},
 	};
 
-	const value = getContained(
-		values.min,
-		getValue(element, 'size', values.now.current),
-		values.max,
-	);
+	const value = getContained(values.min, getValue(element, 'size', values.now.current), values.max);
 
 	values.now.current = value;
 	values.now.previous = value;
@@ -336,10 +324,7 @@ function onKeydown(event: KeyboardEvent): void {
 
 function onNavigate(event: KeyboardEvent): void {
 	const splitter = MAPPED_ELEMENTS.get(
-		findAncestor(
-			event.target as never,
-			'[oui-splitter-separator]',
-		) as HTMLSpanElement,
+		findAncestor(event.target as never, '[oui-splitter-separator]') as HTMLSpanElement,
 	);
 
 	if (splitter == null) {
@@ -365,11 +350,7 @@ function onNavigate(event: KeyboardEvent): void {
 
 	setSize(
 		splitter,
-		getContained(
-			values.min,
-			values.now.current + offset * NAVIGATION_MODIFIER,
-			values.max,
-		),
+		getContained(values.min, values.now.current + offset * NAVIGATION_MODIFIER, values.max),
 		true,
 	);
 }
@@ -387,11 +368,7 @@ function onObservation(entries: ResizeObserverEntry[]): void {
 				return;
 			}
 
-			splitter.types = getTypes(
-				splitter,
-				entry.contentRect.width,
-				entry.contentRect.height,
-			);
+			splitter.types = getTypes(splitter, entry.contentRect.width, entry.contentRect.height);
 
 			if (splitter.types.horizontal) {
 				splitter.element.setAttribute(ATTRIBUTE_HORIZONTAL, '');
@@ -468,10 +445,7 @@ function setAriaValue(splitter: Splitter): void {
 	splitter.separator.setAttribute('aria-valuemax', String(splitter.values.max));
 	splitter.separator.setAttribute('aria-valuemin', String(splitter.values.min));
 
-	splitter.separator.setAttribute(
-		'aria-valuenow',
-		String(splitter.values.now.current),
-	);
+	splitter.separator.setAttribute('aria-valuenow', String(splitter.values.now.current));
 }
 
 function setSize(splitter: Splitter, size: number, previous?: boolean): void {
@@ -506,11 +480,7 @@ const KEYS_NEGATIVE: Set<string> = new Set(['ArrowLeft', 'ArrowUp']);
 
 const KEYS_VERTICAL: Set<string> = new Set(['ArrowLeft', 'ArrowRight']);
 
-const KEYS_ALL: Set<string> = new Set([
-	...KEYS_ABSOLUTE,
-	...KEYS_HORIZONTAL,
-	...KEYS_VERTICAL,
-]);
+const KEYS_ALL: Set<string> = new Set([...KEYS_ABSOLUTE, ...KEYS_HORIZONTAL, ...KEYS_VERTICAL]);
 
 const MAPPED_ELEMENTS: WeakMap<HTMLElement, Splitter> = new WeakMap();
 

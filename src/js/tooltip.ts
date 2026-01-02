@@ -79,9 +79,7 @@ function closeTooltips(next: Tooltip | undefined): void {
 			clearTimeout(active.timer);
 		}
 
-		active.floatable.options.content.removeAttribute(
-			'oui-tooltip-content-active',
-		);
+		active.floatable.options.content.removeAttribute('oui-tooltip-content-active');
 
 		requestAnimationFrame(() => {
 			active.timer = setTimeout(() => {
@@ -211,10 +209,7 @@ function onToggle(event: Event, activate: boolean): void {
 	toggle = requestAnimationFrame(() => {
 		toggle = undefined;
 
-		const element = findAncestor(
-			event.target as HTMLElement,
-			SELECTOR_FULL,
-		) as HTMLElement;
+		const element = findAncestor(event.target as HTMLElement, SELECTOR_FULL) as HTMLElement;
 
 		const tooltip = TOOLTIPS_ALL.get(element);
 
@@ -224,9 +219,7 @@ function onToggle(event: Event, activate: boolean): void {
 
 		if (
 			tooltip == null ||
-			tooltip.floatable.options.content.hasAttribute(
-				'oui-tooltip-content-active',
-			) === activate
+			tooltip.floatable.options.content.hasAttribute('oui-tooltip-content-active') === activate
 		) {
 			return;
 		}
@@ -240,18 +233,13 @@ function onToggle(event: Event, activate: boolean): void {
 			tooltip.floatable.toggle(true);
 
 			requestAnimationFrame(() => {
-				tooltip.floatable.options.content.setAttribute(
-					'oui-tooltip-content-active',
-					'',
-				);
+				tooltip.floatable.options.content.setAttribute('oui-tooltip-content-active', '');
 			});
 
 			return;
 		}
 
-		tooltip.floatable.options.content.removeAttribute(
-			'oui-tooltip-content-active',
-		);
+		tooltip.floatable.options.content.removeAttribute('oui-tooltip-content-active');
 
 		tooltip.timer ??= setTimeout(() => {
 			TOOLTIPS_ACTIVE.delete(tooltip);

@@ -70,10 +70,7 @@ type Options = {
 
 //
 
-export function createFocusTrap(
-	element: HTMLElement,
-	options?: Options,
-): FocusTrap {
+export function createFocusTrap(element: HTMLElement, options?: Options): FocusTrap {
 	let focusTrap = FOCUSTRAPS_ALL.get(element);
 
 	if (focusTrap == null) {
@@ -86,10 +83,7 @@ export function createFocusTrap(
 }
 
 function onEscape(event: KeyboardEvent): void {
-	let element = findAncestor(
-		event.target as HTMLElement,
-		ATTRIBUTE_SELECTOR,
-	) as HTMLElement;
+	let element = findAncestor(event.target as HTMLElement, ATTRIBUTE_SELECTOR) as HTMLElement;
 
 	let focusTrap = FOCUSTRAPS_ALL.get(element);
 
@@ -119,10 +113,7 @@ function onEscape(event: KeyboardEvent): void {
 
 function onFocusIn(event: Event): void {
 	const focusTrap = FOCUSTRAPS_ALL.get(
-		findAncestor(
-			event.target as HTMLElement,
-			ATTRIBUTE_SELECTOR,
-		) as HTMLElement,
+		findAncestor(event.target as HTMLElement, ATTRIBUTE_SELECTOR) as HTMLElement,
 	);
 
 	lastTarget = focusTrap == null ? undefined : (event.target as HTMLElement);
@@ -144,10 +135,7 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 function onPointerdown(event: MouseEvent | TouchEvent): void {
-	const lastFocusTrap = findAncestor(
-		lastTarget as HTMLElement,
-		ATTRIBUTE_SELECTOR,
-	) as HTMLElement;
+	const lastFocusTrap = findAncestor(lastTarget as HTMLElement, ATTRIBUTE_SELECTOR) as HTMLElement;
 
 	const nextFocusTrap = findAncestor(
 		event.target as HTMLElement,
@@ -174,10 +162,7 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 }
 
 function onTab(event: KeyboardEvent): void {
-	const element = findAncestor(
-		event.target as HTMLElement,
-		ATTRIBUTE_SELECTOR,
-	) as HTMLElement;
+	const element = findAncestor(event.target as HTMLElement, ATTRIBUTE_SELECTOR) as HTMLElement;
 
 	const focusTrap = FOCUSTRAPS_ALL.get(element);
 
@@ -228,10 +213,7 @@ function tabToElement(
 	const next = clamp(index + modifier, 0, length - 1, true);
 
 	if (focusTrap.disabled) {
-		if (
-			(index === length - 1 && next === 0) ||
-			(index === 0 && next === length - 1)
-		) {
+		if ((index === length - 1 && next === 0) || (index === 0 && next === length - 1)) {
 			lastTarget = undefined;
 
 			focusTrap.enable();

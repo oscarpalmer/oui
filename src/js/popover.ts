@@ -84,7 +84,7 @@ export class OuiPopoverElement extends HTMLElement {
 		this.#focusTrap.disconnect();
 	}
 
-	hidePopover(): void {
+	override hidePopover(): void {
 		if (this.#floatable.active && this.isConnected) {
 			this.#floatable.toggle(false);
 		}
@@ -94,7 +94,7 @@ export class OuiPopoverElement extends HTMLElement {
 		this.showPopover();
 	}
 
-	showPopover(): void {
+	override showPopover(): void {
 		if (!this.#floatable.active && this.isConnected) {
 			this.#floatable.toggle(true);
 		}
@@ -104,7 +104,7 @@ export class OuiPopoverElement extends HTMLElement {
 		this.togglePopover();
 	}
 
-	togglePopover(options?: boolean): boolean {
+	override togglePopover(options?: boolean): boolean {
 		if (typeof options === 'boolean') {
 			if (options === true) {
 				this.showPopover();

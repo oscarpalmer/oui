@@ -6,11 +6,11 @@
 		background-color: var(--oui-absolute);
 	}
 
-	:where(&-wrapper) {
+	:where(&_wrapper) {
 		max-height: 32em;
 		overflow: auto;
 		border: 1px solid var(--oui-gray-3);
-		border-radius: .25em;
+		border-radius: 0.25em;
 		position: relative;
 		overscroll-behavior-y: none;
 	}
@@ -20,10 +20,10 @@
 		align-content: center;
 		background-color: var(--oui-gray-1);
 		border: solid var(--oui-gray-3);
-		border-width: 0 0 1px 0;
-		font-size: .875rem;
+		border-width: 0 0 1px;
+		font-size: 0.875rem;
 		text-align: left;
-		text-indent: .5rem;
+		text-indent: 0.5rem;
 		position: sticky;
 		top: 0;
 		z-index: 2;
@@ -50,7 +50,7 @@
 			height: 4px;
 			background-image: linear-gradient(
 				to var(--oui-shadow-direction),
-				rgba(0, 0, 0, 0.1),
+				rgb(0 0 0 / 10%),
 				transparent
 			);
 			position: absolute;
@@ -58,13 +58,13 @@
 	}
 
 	:where(& th, & td) {
-		padding: .5em .625rem;
+		padding: 0.5em 0.625rem;
 	}
 
 	:where(& thead th) {
-		font-size: .75rem;
+		font-size: 0.75rem;
 		font-weight: bold;
-		letter-spacing: .1em;
+		letter-spacing: 0.1em;
 		text-align: left;
 		text-transform: uppercase;
 		top: 0;
@@ -73,7 +73,7 @@
 			--oui-shadow-direction: bottom;
 
 			border-top: 1px solid var(--oui-gray-3);
-			inset: 100% 0 0 0;
+			inset: 100%;
 		}
 	}
 
@@ -88,7 +88,7 @@
 			--oui-shadow-direction: top;
 
 			border-bottom: 1px solid var(--oui-gray-3);
-			inset: -4px 0 0 0;
+			inset: -4px;
 		}
 	}
 
