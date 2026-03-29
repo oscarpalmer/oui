@@ -1,90 +1,85 @@
 {
-	"author": {
-		"name": "Oscar Palmér",
-		"url": "https://oscarpalmer.se"
-	},
-	"dependencies": {
-		"@oscarpalmer/atoms": "^0.124",
-		"@oscarpalmer/toretto": "^0.34"
-	},
+	"name": "@oscarpalmer/oui",
+	"version": "0.20.0",
 	"description": "Styles, components, and utilities for building websites and applications.",
-	"devDependencies": {
-		"@types/node": "^25",
-		"@vitest/coverage-istanbul": "^4",
-		"autoprefixer": "^10.4",
-		"jsdom": "^27.4",
-		"oxfmt": "^0.21",
-		"oxlint": "^1.36",
-		"postcss-cli": "^11",
-		"postcss-input-range": "^6",
-		"postcss-scss": "^4",
-		"rolldown": "1.0.0-beta.57",
-		"sass": "^1.97",
-		"stylelint": "^16.26",
-		"stylelint-config-standard-scss": "^16",
-		"tslib": "^2.8",
-		"typescript": "^5.9",
-		"vite": "8.0.0-beta.5",
-		"vitest": "^4"
-	},
-	"exports": {
-		".": {
-			"types": "./types/index.d.ts",
-			"default": "./dist/js/index.js"
-		},
-		"./focus-trap": {
-			"types": "./types/focus-trap/standalone.d.ts",
-			"default": "./dist/js/focus-trap/standalone.js"
-		},
-		"./popover": {
-			"types": "./types/popover.d.ts",
-			"default": "./dist/js/popover.js"
-		},
-		"./splitter": {
-			"types": "./types/splitter.d.ts",
-			"default": "./dist/js/splitter.js"
-		},
-		"./tooltip": {
-			"types": "./types/tooltip.d.ts",
-			"default": "./dist/js/tooltip.js"
-		}
-	},
-	"files": [
-		"dist",
-		"src",
-		"types"
-	],
 	"keywords": [
 		"css",
-		"scss",
 		"design",
 		"framework",
 		"library",
+		"scss",
 		"style",
 		"stylesheet",
 		"utility"
 	],
 	"license": "MIT",
-	"module": "dist/js/index.js",
-	"name": "@oscarpalmer/oui",
+	"author": {
+		"name": "Oscar Palmér",
+		"url": "https://oscarpalmer.se"
+	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/oscarpalmer/oui.git"
 	},
-	"scripts": {
-		"build": "npm run clean && npm run build:js && npm run build:css",
-		"build:css": "npm run build:postcss && npx sass ./postcss:./dist/css --no-source-map",
-		"build:postcss": "npx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss",
-		"build:js": "npm run clean && npx vite build && npm run rolldown:build && npx tsc",
-		"clean": "rm -rf ./dist && rm -rf ./types && rm -f ./tsconfig.tsbuildinfo",
-		"rolldown:build": "npx rolldown -c",
-		"rolldown:watch": "npx rolldown -c ./rolldown.config.js --watch",
-		"test": "npx vitest --coverage",
-		"watch:css": "npx sass ./postcss:./dist/css --no-source-map --watch",
-		"watch:postcss": "npx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss --watch",
-		"watch:js": "npx vite build --watch"
-	},
+	"files": [
+		"dist",
+		"src"
+	],
 	"type": "module",
-	"types": "types/index.d.ts",
-	"version": "0.19.0"
+	"module": "dist/js/index.mjs",
+	"types": "dist/js/index.d.mts",
+	"exports": {
+		".": {
+			"types": "./dist/js/index.d.mts",
+			"default": "./dist/js/index.mjs"
+		},
+		"./focus-trap": {
+			"types": "./dist/js/focus-trap/standalone.d.mts",
+			"default": "./dist/js/focus-trap/standalone.mjs"
+		},
+		"./popover": {
+			"types": "./dist/js/popover.d.mts",
+			"default": "./dist/js/popover.mjs"
+		},
+		"./splitter": {
+			"types": "./dist/js/splitter.d.mts",
+			"default": "./dist/js/splitter.mjs"
+		},
+		"./tooltip": {
+			"types": "./dist/js/tooltip.d.mts",
+			"default": "./dist/js/tooltip.mjs"
+		}
+	},
+	"scripts": {
+		"build": "vp run build:js && vp run build:css",
+		"build:css": "vp run build:postcss && vpx sass ./postcss:./dist/css --no-source-map",
+		"build:postcss": "vpx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss",
+		"build:js": "vpx vp pack",
+		"test": "vpx vitest --coverage",
+		"tsdown:build": "vpx tsdown -c ./tsdown.config.ts",
+		"tsdown:watch": "vpx tsdown -c ./tsdown.config.ts --watch",
+		"watch:css": "vpx sass ./postcss:./dist/css --no-source-map --watch",
+		"watch:postcss": "vpx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss --watch",
+		"watch:js": "vpx vite build --watch"
+	},
+	"dependencies": {
+		"@oscarpalmer/atoms": "^0.170",
+		"@oscarpalmer/toretto": "^0.41"
+	},
+	"devDependencies": {
+		"@vitest/coverage-istanbul": "^4.1",
+		"autoprefixer": "^10.4",
+		"jsdom": "^29",
+		"postcss-cli": "^11",
+		"postcss-input-range": "^6",
+		"postcss-scss": "^4",
+		"sass": "^1.98",
+		"stylelint": "^17.6",
+		"stylelint-config-standard-scss": "^17",
+		"typescript": "^5.9",
+		"vite": "npm:@voidzero-dev/vite-plus-core@latest",
+		"vite-plus": "latest",
+		"vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+	},
+	"packageManager": "npm@11.12.1"
 }

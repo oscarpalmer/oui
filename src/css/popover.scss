@@ -1,13 +1,18 @@
 @use 'mixins.scss' as mixins;
 
 :where([oui-popover-content]) {
-	@include mixins.shadow-overlay;
+	@include mixins.floatable;
 
 	padding: 1rem;
+	overscroll-behavior: contain;
 	background-color: var(--oui-absolute);
 	border-radius: 0.5rem;
 
 	&:focus {
 		outline: none;
+	}
+
+	* {
+		overscroll-behavior: contain;
 	}
 }

@@ -54,7 +54,7 @@
 	/** Prevent text size inflation (e.g., after orientation change) [AB][RE][SE] */
 	text-size-adjust: none;
 	tab-size: 4;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 :where(body) {
@@ -104,7 +104,7 @@
 	summary
 ) {
 	/** Correct the inability to style clickable types in iOS [HR][RS][SE] */
-	appearance: button;
+	appearance: auto;
 	/** Ditto */
 	cursor: pointer;
 }
@@ -171,7 +171,7 @@
 }
 
 :where(small, sub, sup) {
-	font-size: 0.875rem;
+	font-size: 0.875em;
 }
 
 :where(sub, sup) {
@@ -271,7 +271,7 @@
 
 ::file-selector-button {
 	/** Correct the inability to style upload buttons in iOS and Safari [RS][SE] */
-	appearance: button;
+	appearance: auto;
 	color: inherit;
 	font: inherit;
 	line-height: 1.25;

@@ -7,7 +7,6 @@ import {type StyleToggler, toggleStyles} from '@oscarpalmer/toretto/style';
 import supportsTouch from '@oscarpalmer/toretto/touch';
 
 declare global {
-	// biome-ignore lint/nursery/useConsistentTypeDefinitions: Extending builtins to allow custom element type help
 	interface HTMLElementTagNameMap {
 		[SELECTOR]: OuiSplitterElement;
 	}
@@ -324,7 +323,7 @@ function onKeydown(event: KeyboardEvent): void {
 
 function onNavigate(event: KeyboardEvent): void {
 	const splitter = MAPPED_ELEMENTS.get(
-		findAncestor(event.target as never, '[oui-splitter-separator]') as HTMLSpanElement,
+		findAncestor(event, '[oui-splitter-separator]') as HTMLSpanElement,
 	);
 
 	if (splitter == null) {
@@ -391,9 +390,7 @@ function onPointerdown(event: Event): void {
 		return;
 	}
 
-	splitter = MAPPED_ELEMENTS.get(
-		findAncestor(event.target as never, SELECTOR_HANDLE) as HTMLSpanElement,
-	);
+	splitter = MAPPED_ELEMENTS.get(findAncestor(event, SELECTOR_HANDLE) as HTMLSpanElement);
 
 	if (splitter == null) {
 		return;

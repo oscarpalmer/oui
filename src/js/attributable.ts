@@ -49,6 +49,10 @@ function handleAdded(
 		if (element.hasAttribute(attribute)) {
 			add(element);
 		}
+
+		if (element.hasChildNodes()) {
+			handleAdded(attribute, element.childNodes, add);
+		}
 	}
 }
 
@@ -58,6 +62,12 @@ function handleRemoved(nodes: Node[] | NodeList, remove: (element: HTMLElement) 
 	const {length} = elements;
 
 	for (let index = 0; index < length; index += 1) {
-		remove(elements[index]);
+		const element = elements[index];
+
+		remove(element);
+
+		if (element.hasChildNodes()) {
+			handleRemoved(element.childNodes, remove);
+		}
 	}
 }

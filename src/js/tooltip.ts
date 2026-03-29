@@ -79,12 +79,12 @@ function closeTooltips(next: Tooltip | undefined): void {
 			clearTimeout(active.timer);
 		}
 
-		active.floatable.options.content.removeAttribute('oui-tooltip-content-active');
+		active.floatable?.options.content.removeAttribute('oui-tooltip-content-active');
 
 		requestAnimationFrame(() => {
 			active.timer = setTimeout(() => {
 				TOOLTIPS_ACTIVE.delete(active);
-				active.floatable.toggle(false);
+				active.floatable?.toggle(false);
 			}, delay) as never;
 		});
 	}
@@ -192,7 +192,7 @@ function onActivate(event: Event): void {
 }
 
 function onClick(event: Event): void {
-	if (findAncestor(event.target as HTMLElement, SELECTOR_CONTENT) != null) {
+	if (findAncestor(event, SELECTOR_CONTENT) != null) {
 		event.stopPropagation();
 	}
 }
@@ -209,7 +209,7 @@ function onToggle(event: Event, activate: boolean): void {
 	toggle = requestAnimationFrame(() => {
 		toggle = undefined;
 
-		const element = findAncestor(event.target as HTMLElement, SELECTOR_FULL) as HTMLElement;
+		const element = findAncestor(event, SELECTOR_FULL) as HTMLElement;
 
 		const tooltip = TOOLTIPS_ALL.get(element);
 
@@ -286,7 +286,7 @@ const TOOLTIPS_ACTIVE: Set<Tooltip> = new Set();
 
 const TOOLTIPS_ALL: WeakMap<HTMLElement, Tooltip> = new WeakMap();
 
-let delay = 250;
+let delay = 500;
 
 let index = 0;
 

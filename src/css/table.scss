@@ -9,10 +9,10 @@
 	:where(&_wrapper) {
 		max-height: 32em;
 		overflow: auto;
+		overscroll-behavior: contain;
 		border: 1px solid var(--oui-gray-3);
 		border-radius: 0.25em;
 		position: relative;
-		overscroll-behavior-y: none;
 	}
 
 	:where(& caption) {

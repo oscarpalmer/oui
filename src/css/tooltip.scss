@@ -29,7 +29,7 @@
 }
 
 :where([oui-tooltip-content]) {
-	@include mixins.shadow-overlay;
+	@include mixins.floatable;
 
 	max-width: 48ch;
 	padding: 0.75em 1em;
@@ -39,6 +39,60 @@
 	font-size: 0.875rem;
 	transition: opacity 0.125s ease-in-out;
 	transition-delay: 0s;
+
+	&::after {
+		content: '';
+		opacity: 0;
+		position: absolute;
+	}
+
+	&[position^='above'],
+	&[position^='below'],
+	&[position^='bottom'],
+	&[position^='top'] {
+		&::after {
+			width: 100%;
+			height: 0.5rem;
+		}
+	}
+
+	&[position^='above'],
+	&[position^='top'] {
+		&::after {
+			inset: 100% 0 0;
+		}
+	}
+
+	&[position^='below'],
+	&[position^='bottom'] {
+		&::after {
+			inset: -5rem 0 0;
+		}
+	}
+
+	&[position^='end'],
+	&[position^='left'],
+	&[position^='right'],
+	&[position^='start'] {
+		&::after {
+			width: 0.5rem;
+			height: 100%;
+		}
+	}
+
+	&[position^='end'],
+	&[position^='right'] {
+		&::after {
+			inset: 0 0 0 -0.5rem;
+		}
+	}
+
+	&[position^='left'],
+	&[position^='start'] {
+		&::after {
+			inset: 0 0 0 100%;
+		}
+	}
 }
 
 :where([oui-tooltip-content][oui-tooltip-content-active]) {

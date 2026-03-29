@@ -51,6 +51,36 @@
 	border-radius: 0.5em;
 }
 
+@mixin floatable() {
+	@include shadow-overlay;
+
+	--margin-left: 0;
+	--margin-top: 0;
+
+	margin: var(--margin-top, 0) 0 0 var(--margin-left, 0);
+	pointer-events: all !important;
+
+	&[position^='above'],
+	&[position^='top'] {
+		--margin-top: -0.5rem;
+	}
+
+	&[position^='below'],
+	&[position^='bottom'] {
+		--margin-top: 0.5rem;
+	}
+
+	&[position^='end'],
+	&[position^='right'] {
+		--margin-left: 0.5rem;
+	}
+
+	&[position^='left'],
+	&[position^='start'] {
+		--margin-left: -0.5rem;
+	}
+}
+
 @mixin shadow($color: rgb(0 0 0 / 5%), $inset: transparent) {
 	box-shadow:
 		inset 0 1px 0 0 $inset,
@@ -83,7 +113,6 @@
 	width: 1px !important;
 	height: 1px !important;
 	padding: 0 !important;
-	clip: rect(1px, 1px 1px, 1px) !important;
 	clip-path: inset(50%) !important;
 	overflow: hidden !important;
 	border: 0 !important;

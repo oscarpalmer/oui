@@ -91,7 +91,6 @@ export class Floatable {
 }
 
 type FloatableWindow = Window & {
-	// biome-ignore lint/style/useNamingConvention: Non-standard name to avoid conflicts
 	_oscarpalmer_oui_floatable: State;
 };
 
@@ -193,78 +192,157 @@ export function deactivate(floatable: Floatable): void {
 	floatable.options.onAfter?.(false);
 }
 
+function getAttribute(
+	position: Position,
+	anchor: DOMRect,
+	top: number,
+	left: number,
+): Position | undefined {
+	switch (position) {
+		case 'horizontal':
+		case 'horizontal-bottom':
+		case 'horizontal-top':
+			return position.replace('horizontal', left >= anchor.right ? 'right' : 'left') as Position;
+
+		case 'vertical':
+		case 'vertical-end':
+		case 'vertical-start':
+			return position.replace('vertical', top >= anchor.bottom ? 'bottom' : 'top') as Position;
+
+		default:
+			break;
+	}
+}
+
+function getMargin(): number {
+	try {
+		const fontsize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+		if (Number.isNaN(fontsize)) {
+			return 5;
+		}
+
+		const margin = fontsize / 2;
+
+		return margin < 5 ? 5 : margin;
+	} catch {
+		return 5;
+	}
+}
+
 function getState(): State {
 	return (window as unknown as FloatableWindow)._oscarpalmer_oui_floatable;
 }
 
-function getX(anchor: DOMRect, content: DOMRect, position: Position): number {
-	if (position.endsWith(POSITION_SUFFIX_END)) {
-		const end = anchor.right - content.width;
+function getX(anchor: DOMRect, content: DOMRect, position: Position, margin: number): number {
+	if (position === 'above' || position === 'below' || position === 'vertical') {
+		const center = anchor.left + anchor.width / 2;
+		const width = content.width / 2;
 
-		return end < 0 ? 0 : end;
+		if (center + width + margin >= document.body.clientWidth) {
+			return document.body.clientWidth - content.width - margin / 2;
+		}
+
+		if (center - width - margin <= 0) {
+			return margin / 2;
+		}
+
+		return center - width;
 	}
 
-	if (position.endsWith(POSITION_SUFFIX_START)) {
-		const start = anchor.left;
-
-		return start + content.width > window.innerWidth ? window.innerWidth - content.width : start;
-	}
-
-	if (position.startsWith(POSITION_END)) {
+	if (position.startsWith('end')) {
 		return anchor.right;
 	}
 
-	if (position.startsWith(POSITION_START)) {
+	if (position.startsWith('start')) {
 		return anchor.left - content.width;
 	}
 
-	if (position.startsWith(POSITION_HORIZONTAL)) {
-		if (anchor.right + content.width <= window.innerWidth) {
-			return anchor.right;
+	if (position.endsWith('end')) {
+		return anchor.right - content.width - margin <= 0 ? margin / 2 : anchor.right - content.width;
+	}
+
+	if (position.endsWith('start')) {
+		if (anchor.left + content.width + margin >= document.body.clientWidth) {
+			return document.body.clientWidth - content.width - margin / 2;
 		}
 
+		return anchor.left - margin <= 0 ? margin / 2 : anchor.left;
+	}
+
+	if (!position.startsWith('horizontal')) {
+		return 0;
+	}
+
+	if (anchor.right + content.width + margin >= document.body.clientWidth) {
 		return anchor.left - content.width;
 	}
 
-	const left = anchor.left + (anchor.width - content.width) / 2;
-
-	return left < 0 ? 0 : left;
+	return anchor.right;
 }
 
-function getY(anchor: DOMRect, content: DOMRect, position: Position, preferAbove: boolean): number {
-	if (position.startsWith(POSITION_ABOVE)) {
+function getY(
+	anchor: DOMRect,
+	content: DOMRect,
+	position: Position,
+	margin: number,
+	preferAbove: boolean,
+): number {
+	if (position === 'end' || position === 'start' || position === 'horizontal') {
+		const center = anchor.top + anchor.height / 2;
+		const height = content.height / 2;
+
+		if (center + height + margin >= document.body.clientHeight) {
+			return document.body.clientHeight - content.height - margin / 2;
+		}
+
+		if (center - height - margin <= 0) {
+			return margin / 2;
+		}
+
+		return center - height;
+	}
+
+	if (position.startsWith('above')) {
 		return anchor.top - content.height;
 	}
 
-	if (position.startsWith(POSITION_BELOW)) {
+	if (position.startsWith('below')) {
 		return anchor.bottom;
 	}
 
-	if (position.endsWith(POSITION_BOTTOM)) {
-		const bottom = anchor.bottom - content.height;
-
-		return bottom < 0 ? 0 : bottom;
+	if (position.endsWith('bottom')) {
+		return anchor.bottom - content.height - margin <= 0
+			? margin / 2
+			: anchor.bottom - content.height;
 	}
 
-	if (position.endsWith(POSITION_TOP)) {
-		const top = anchor.top;
-
-		return top + content.height > window.innerHeight ? window.innerHeight - content.height : top;
+	if (position.endsWith('top')) {
+		return anchor.top + content.height + margin >= document.body.clientHeight
+			? document.body.clientHeight - content.height - margin
+			: anchor.top;
 	}
 
-	if (position.startsWith(POSITION_VERTICAL)) {
-		if (preferAbove && anchor.top - content.height >= 0) {
-			return anchor.top - content.height;
-		}
+	if (!position.startsWith('vertical')) {
+		return 0;
+	}
 
-		if (anchor.bottom + content.height <= document.body.clientHeight) {
+	if (preferAbove) {
+		if (
+			anchor.top - content.height - margin <= 0 &&
+			anchor.bottom + content.height + margin <= document.body.clientHeight
+		) {
 			return anchor.bottom;
 		}
 
 		return anchor.top - content.height;
 	}
 
-	return anchor.top + (anchor.height - content.height) / 2;
+	if (anchor.bottom + content.height + margin >= document.body.clientHeight) {
+		return anchor.top - content.height;
+	}
+
+	return anchor.bottom;
 }
 
 function initialize(floatable: Floatable): void {
@@ -294,7 +372,7 @@ function isDisabled(element: HTMLElement): boolean {
 }
 
 function onClick(event: PointerEvent): void {
-	const related = findAncestor(event.target as never, SELECTOR_ALL);
+	const related = findAncestor(event, SELECTOR_ALL);
 
 	if (!(related instanceof HTMLElement)) {
 		closeAll();
@@ -318,7 +396,7 @@ function onKeyDown(event: KeyboardEvent): void {
 
 	closeNonInteractive(state);
 
-	const related = findAncestor(event.target as never, SELECTOR_CONTENT);
+	const related = findAncestor(event, SELECTOR_CONTENT);
 
 	if (!(related instanceof HTMLElement)) {
 		return;
@@ -331,6 +409,22 @@ function onKeyDown(event: KeyboardEvent): void {
 	if (floatable != null) {
 		void floatable.toggle(false);
 	}
+}
+
+function setAttribute(
+	position: Position,
+	anchor: DOMRect,
+	floater: HTMLElement,
+	top: number,
+	left: number,
+): void {
+	let actual: Position | undefined;
+
+	if (/^(horizontal|vertical)/.test(position)) {
+		actual = getAttribute(position, anchor, top, left);
+	}
+
+	floater.setAttribute('position', actual ?? position);
 }
 
 function stop(floatable: Floatable): void {
@@ -372,6 +466,8 @@ function updatePosition(floatable: Floatable): void {
 		position = floatable.options.defaultPosition;
 	}
 
+	const margin = getMargin();
+
 	let previousAnchor: DOMRect;
 	let previousContent: DOMRect;
 
@@ -404,8 +500,10 @@ function updatePosition(floatable: Floatable): void {
 		previousAnchor = anchor;
 		previousContent = content;
 
-		const left = getX(anchor, content, position);
-		const top = getY(anchor, content, position, floatable.options.preferAbove);
+		const left = getX(anchor, content, position, margin);
+		const top = getY(anchor, content, position, margin, floatable.options.preferAbove);
+
+		setAttribute(position, anchor, floatable.options.content, top, left);
 
 		if (top + content.height > window.innerHeight) {
 			floatable.options.content.style.height = `${window.innerHeight - top}px`;
@@ -441,26 +539,6 @@ const ATTRIBUTE_ANCHOR = 'oui-floatable-anchor';
 const ATTRIBUTE_CONTENT = 'oui-floatable-content';
 
 const INSERT_AFTEREND = 'afterend';
-
-const POSITION_ABOVE = 'above';
-
-const POSITION_BELOW = 'below';
-
-const POSITION_BOTTOM = 'bottom';
-
-const POSITION_END = 'end';
-
-const POSITION_HORIZONTAL = 'horizontal';
-
-const POSITION_START = 'start';
-
-const POSITION_SUFFIX_END = '-end';
-
-const POSITION_SUFFIX_START = '-start';
-
-const POSITION_TOP = 'top';
-
-const POSITION_VERTICAL = 'vertical';
 
 const POSITIONS: Set<Position> = new Set([
 	'above',

@@ -83,7 +83,7 @@ export function createFocusTrap(element: HTMLElement, options?: Options): FocusT
 }
 
 function onEscape(event: KeyboardEvent): void {
-	let element = findAncestor(event.target as HTMLElement, ATTRIBUTE_SELECTOR) as HTMLElement;
+	let element = findAncestor(event, ATTRIBUTE_SELECTOR) as HTMLElement;
 
 	let focusTrap = FOCUSTRAPS_ALL.get(element);
 
@@ -112,9 +112,7 @@ function onEscape(event: KeyboardEvent): void {
 }
 
 function onFocusIn(event: Event): void {
-	const focusTrap = FOCUSTRAPS_ALL.get(
-		findAncestor(event.target as HTMLElement, ATTRIBUTE_SELECTOR) as HTMLElement,
-	);
+	const focusTrap = FOCUSTRAPS_ALL.get(findAncestor(event, ATTRIBUTE_SELECTOR) as HTMLElement);
 
 	lastTarget = focusTrap == null ? undefined : (event.target as HTMLElement);
 }
@@ -136,11 +134,7 @@ function onKeydown(event: KeyboardEvent): void {
 
 function onPointerdown(event: MouseEvent | TouchEvent): void {
 	const lastFocusTrap = findAncestor(lastTarget as HTMLElement, ATTRIBUTE_SELECTOR) as HTMLElement;
-
-	const nextFocusTrap = findAncestor(
-		event.target as HTMLElement,
-		ATTRIBUTE_SELECTOR,
-	) as HTMLElement;
+	const nextFocusTrap = findAncestor(event, ATTRIBUTE_SELECTOR) as HTMLElement;
 
 	if (lastFocusTrap != null && nextFocusTrap !== lastFocusTrap) {
 		if (FOCUSTRAPS_ALL.get(lastFocusTrap)?.contain ?? false) {
@@ -162,7 +156,7 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 }
 
 function onTab(event: KeyboardEvent): void {
-	const element = findAncestor(event.target as HTMLElement, ATTRIBUTE_SELECTOR) as HTMLElement;
+	const element = findAncestor(event, ATTRIBUTE_SELECTOR) as HTMLElement;
 
 	const focusTrap = FOCUSTRAPS_ALL.get(element);
 
