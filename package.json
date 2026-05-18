@@ -1,6 +1,6 @@
 {
 	"name": "@oscarpalmer/oui",
-	"version": "0.20.0",
+	"version": "0.21.0",
 	"description": "Styles, components, and utilities for building websites and applications.",
 	"keywords": [
 		"css",
@@ -51,32 +51,34 @@
 		}
 	},
 	"scripts": {
-		"build": "vp run build:js && vp run build:css",
-		"build:css": "vp run build:postcss && vpx sass ./postcss:./dist/css --no-source-map",
-		"build:postcss": "vpx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss",
-		"build:js": "vpx vp pack",
+		"build": "vp run clean && vp pack && vp run css:build",
+		"clean": "rm -rf ./dist && rm -rf ./postcss",
+		"css:build": "vp run postcss:build && vpx sass ./postcss:./dist/css --no-source-map",
+		"css:watch": "vpx sass ./postcss:./dist/css --no-source-map --watch",
+		"postcss:build": "vpx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss",
+		"postcss:watch": "vpx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss --watch",
 		"test": "vpx vitest --coverage",
-		"tsdown:build": "vpx tsdown -c ./tsdown.config.ts",
-		"tsdown:watch": "vpx tsdown -c ./tsdown.config.ts --watch",
-		"watch:css": "vpx sass ./postcss:./dist/css --no-source-map --watch",
-		"watch:postcss": "vpx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss --watch",
-		"watch:js": "vpx vite build --watch"
+		"tsdown": "vpx tsdown -c ./tsdown.config.ts --watch",
+		"watch": "vp run clean && concurrently \"php -S localhost:3000\" \"vp run postcss:watch\" \"vp run css:watch\" \"vp run tsdown\""
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.170",
-		"@oscarpalmer/toretto": "^0.41"
+		"@oscarpalmer/atoms": "^0.187",
+		"@oscarpalmer/toretto": "^0.45"
 	},
 	"devDependencies": {
+		"@oxlint/plugins": "^1.65",
 		"@vitest/coverage-istanbul": "^4.1",
-		"autoprefixer": "^10.4",
-		"jsdom": "^29",
+		"autoprefixer": "^10.5",
+		"concurrently": "^9.2",
+		"jsdom": "^29.1",
 		"postcss-cli": "^11",
 		"postcss-input-range": "^6",
 		"postcss-scss": "^4",
-		"sass": "^1.98",
-		"stylelint": "^17.6",
+		"sass": "^1.99",
+		"stylelint": "^17.11",
 		"stylelint-config-standard-scss": "^17",
-		"typescript": "^5.9",
+		"tsdown": "^0.22",
+		"typescript": "^6",
 		"vite": "npm:@voidzero-dev/vite-plus-core@latest",
 		"vite-plus": "latest",
 		"vitest": "npm:@voidzero-dev/vite-plus-test@latest"

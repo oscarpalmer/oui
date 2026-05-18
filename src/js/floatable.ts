@@ -158,7 +158,7 @@ function closeAbove(element: HTMLElement): void {
 	}
 
 	while (index < state.order.length - 1) {
-		void state.order.pop()?.toggle(false, true);
+		state.order.pop()?.toggle(false, true);
 	}
 }
 
@@ -170,14 +170,14 @@ function closeAll(): void {
 	state?.active.clear();
 
 	for (const floatable of floatables) {
-		void floatable.toggle(false, true);
+		floatable.toggle(false, true);
 	}
 }
 
 function closeNonInteractive(state: State): void {
 	for (const floatable of state.active) {
 		if (!floatable.options.interactive) {
-			void floatable.toggle(false);
+			floatable.toggle(false);
 		}
 	}
 }
@@ -407,7 +407,7 @@ function onKeyDown(event: KeyboardEvent): void {
 	const floatable = state.mapped.get(related);
 
 	if (floatable != null) {
-		void floatable.toggle(false);
+		floatable.toggle(false);
 	}
 }
 
@@ -453,7 +453,7 @@ function toggle(anchor: HTMLElement): void {
 		closeAbove(content as HTMLElement);
 	}
 
-	void floatable.toggle(!active);
+	floatable.toggle(!active);
 }
 
 function updatePosition(floatable: Floatable): void {

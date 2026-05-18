@@ -1,4 +1,5 @@
 import {defineConfig} from 'vite-plus';
+import rules from './node_modules/@oscarpalmer/atoms/plugin/rules.js';
 
 export default defineConfig({
 	base: './',
@@ -8,7 +9,12 @@ export default defineConfig({
 		singleQuote: true,
 		useTabs: true,
 	},
-	lint: {},
+	lint: {
+		jsPlugins: ['./node_modules/@oscarpalmer/atoms/plugin/index.js'],
+		rules: {
+			...rules,
+		},
+	},
 	pack: {
 		deps: {
 			onlyBundle: false,
