@@ -383,10 +383,7 @@ function onObservation(entries: ResizeObserverEntry[]): void {
 }
 
 function onPointerdown(event: Event): void {
-	if (
-		(event.type === 'mousedown' && supportsTouch.value) ||
-		(event.type === 'touchstart' && !supportsTouch.value)
-	) {
+	if (supportsTouch.value ? event.type === 'mousedown' : event.type === 'touchstart') {
 		return;
 	}
 

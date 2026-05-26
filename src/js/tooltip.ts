@@ -1,8 +1,8 @@
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
-import {attributable} from './attributable';
-import {Floatable} from './floatable';
+import {attributable} from './internal/attributable';
+import {Floatable} from './internal/floatable';
 
 type Attributes = {
 	ariaDescribedby: string | null;
@@ -84,6 +84,7 @@ function closeTooltips(next: Tooltip | undefined): void {
 		requestAnimationFrame(() => {
 			active.timer = setTimeout(() => {
 				TOOLTIPS_ACTIVE.delete(active);
+
 				active.floatable?.toggle(false);
 			}, delay) as never;
 		});
@@ -243,6 +244,7 @@ function onToggle(event: Event, activate: boolean): void {
 
 		tooltip.timer ??= setTimeout(() => {
 			TOOLTIPS_ACTIVE.delete(tooltip);
+
 			tooltip.floatable.toggle(false);
 		}, delay) as never;
 	});
@@ -262,7 +264,7 @@ function reset(anchor: HTMLElement, attributes: Attributes): void {
 	}
 }
 
-function setDelay(value: number): void {
+function setTooltipDelay(value: number): void {
 	delay = typeof value === 'number' && value >= 0 ? value : delay;
 }
 
@@ -304,4 +306,4 @@ on(document, 'touchstart', onActivate);
 
 //
 
-export {setDelay};
+export {setTooltipDelay};

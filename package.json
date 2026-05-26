@@ -63,10 +63,10 @@
 	},
 	"dependencies": {
 		"@oscarpalmer/atoms": "^0.187",
-		"@oscarpalmer/toretto": "^0.45"
+		"@oscarpalmer/toretto": "^0.46"
 	},
 	"devDependencies": {
-		"@oxlint/plugins": "^1.65",
+		"@oxlint/plugins": "^1.67",
 		"@vitest/coverage-istanbul": "^4.1",
 		"autoprefixer": "^10.5",
 		"concurrently": "^9.2",
@@ -74,7 +74,7 @@
 		"postcss-cli": "^11",
 		"postcss-input-range": "^6",
 		"postcss-scss": "^4",
-		"sass": "^1.99",
+		"sass": "^1.100",
 		"stylelint": "^17.11",
 		"stylelint-config-standard-scss": "^17",
 		"tsdown": "^0.22",

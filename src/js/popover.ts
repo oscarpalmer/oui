@@ -1,6 +1,6 @@
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import {getFocusable} from '@oscarpalmer/toretto/focusable';
-import {Floatable} from './floatable';
+import {Floatable} from './internal/floatable';
 import {createFocusTrap, type FocusTrap} from './focus-trap/embedded';
 
 declare global {

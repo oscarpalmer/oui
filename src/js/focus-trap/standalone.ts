@@ -1,4 +1,4 @@
-import {attributable} from '../attributable';
+import {attributable} from '../internal/attributable';
 import {createFocusTrap, FOCUS_TRAP_SELECTOR, FOCUSTRAPS_ALL} from './embedded';
 
 function removeFocusTraps(element: HTMLElement): void {

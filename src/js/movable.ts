@@ -1,83 +1,105 @@
+import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
 import {clamp} from '@oscarpalmer/atoms/number';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
-import {findAncestor} from '@oscarpalmer/toretto/find';
-import {toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
-import {attributable} from './attributable';
+import {attributable} from './internal/attributable';
+import {
+	addDraggable,
+	Draggable,
+	removeDraggable,
+	type DraggableBound,
+	type DraggableState,
+} from './internal/draggable';
 
 // #region Types
 
-type Direction = 'horizontal' | 'vertical' | 'x' | 'y';
-
-class Movable {
-	container: HTMLElement | undefined;
-
-	hasHandles = false;
-
-	horizontal = true;
-
+export class Movable extends Draggable {
 	inset: string;
 
 	moved = false;
 
-	offset: Partial<Position> | undefined;
+	offset: Partial<EventPosition> | undefined;
 
 	position: string;
 
-	vertical = true;
+	get active(): HTMLElement | undefined {
+		return this.element;
+	}
 
-	constructor(public element: HTMLElement) {
-		setContainer(this, element.getAttribute(CONTAINER));
-		setDirection(this, element.getAttribute(DIRECTION));
+	get dragged(): HTMLElement {
+		return this.element;
+	}
 
-		this.hasHandles = element.querySelector(ATTRIBUTE_HANDLE) != null;
+	constructor(element: HTMLElement) {
+		super('move', element, {
+			container: {
+				attribute: ATTRIBUTE_CONTAINER,
+				map: CONTAINERS,
+				onDestroy: destroyContainer,
+				onInitialize: initializeContainer,
+			},
+			direction: {
+				attribute: ATTRIBUTE_DIRECTION,
+				onAfter: afterDirection,
+			},
+			onBegin,
+			onCancel,
+			onEnd,
+			onMove,
+		});
+
+		this.hasHandles = element.querySelector(SELECTOR_HANDLE) != null;
 
 		this.inset = element.style.inset;
 		this.position = element.style.position;
 	}
 
-	destroy(): void {
-		MOVED.delete(this);
+	override destroy(): void {
+		super.destroy();
 
-		unsetContainer(this);
+		MOVED.delete(this);
 
 		this.element.style.inset = this.inset;
 		this.element.style.position = this.position;
-
-		this.container = undefined;
-		this.element = undefined!;
 	}
 }
-
-type Position = {
-	x: number;
-	y: number;
-};
-
-type State = {
-	container: DOMRect | undefined;
-	offset: Position;
-	original: Position;
-};
 
 // #endregion
 
 // #region Functions
 
-function addMovable(element: HTMLElement): void {
-	if (!MOVABLES.has(element)) {
-		MOVABLES.set(element, new Movable(element));
+function afterDirection(draggable: Draggable): void {
+	const container = draggable.container?.getBoundingClientRect();
+
+	if (container != null) {
+		setOffset(draggable as Movable, container);
 	}
 }
 
-function onKeydown(event: KeyboardEvent): void {
-	if (instance == null || event.key !== KEY_ESCAPE) {
-		return;
+function destroyContainer(_: Draggable, container: HTMLElement, empty: boolean): void {
+	if (empty) {
+		resizer.unobserve(container);
 	}
+}
 
-	const {element, inset, moved, position} = instance;
+function initializeContainer(draggable: Draggable): void {
+	resizer.observe(draggable.container!);
+}
+
+function onBegin(
+	_: MouseEvent | TouchEvent,
+	state: DraggableState,
+	__: Draggable,
+	element: HTMLElement,
+): void {
+	element.style.position = 'fixed';
+	element.style.inset = `${state.original.y}px auto auto ${state.original.x}px`;
+}
+
+function onCancel(state: DraggableState, draggable: Draggable): void {
+	const movable = draggable as Movable;
+
+	const {element, inset, moved, position} = movable;
 	const {x, y} = state.original;
-
-	reset();
 
 	if (moved) {
 		element.style.inset = `${y}px auto auto ${x}px`;
@@ -87,94 +109,80 @@ function onKeydown(event: KeyboardEvent): void {
 	}
 }
 
-function onPointerdown(event: PointerEvent): void {
-	const element = findAncestor(event, ATTRIBUTE)! as HTMLElement;
-	const movable = MOVABLES.get(element!);
+function onEnd(
+	event: MouseEvent | TouchEvent,
+	state: DraggableState,
+	draggable: Draggable,
+	reset: () => void,
+): void {
+	const movable = draggable as Movable;
 
-	if (movable == null) {
-		return;
+	if (!movable.moved) {
+		movable.moved = true;
+
+		if (movable.container != null) {
+			MOVED.add(movable);
+		}
 	}
 
-	let handle: HTMLElement | null = element;
+	const container = movable.container?.getBoundingClientRect();
 
-	if (movable.hasHandles) {
-		handle = findAncestor(event, ATTRIBUTE_HANDLE) as HTMLElement;
+	if (container != null) {
+		setOffset(movable, container);
 	}
 
-	if (handle == null) {
-		return;
-	}
+	const end = new CustomEvent(EVENT_END, {
+		detail: {
+			from: {...state.original},
+			to: getPosition(event),
+		},
+		cancelable: true,
+	});
 
-	const {left, top} = element.getBoundingClientRect();
-	const {x, y} = getPosition(event) ?? {x: 0, y: 0};
+	movable.element.dispatchEvent(end);
 
-	instance = movable;
+	setTimeout(() => {
+		if (end.defaultPrevented) {
+			onCancel(state, draggable);
+		}
 
-	state.container = movable.container?.getBoundingClientRect();
-
-	state.offset = {
-		x: x - left,
-		y: y - top,
-	};
-
-	state.original = {
-		x: left,
-		y: top,
-	};
-
-	element.style.position = 'fixed';
-	element.style.inset = `${top}px auto auto ${left}px`;
-
-	styleToggler.set();
+		reset();
+	});
 }
 
-function onPointermove(event: PointerEvent): void {
-	if (instance == null) {
-		return;
-	}
-
-	const position = getPosition(event);
-
-	if (position == null) {
-		return;
-	}
+function onMove(
+	_: MouseEvent | TouchEvent,
+	state: DraggableState,
+	draggable: Draggable,
+	position: EventPosition,
+): PlainObject | undefined {
+	const movable = draggable as Movable;
 
 	let x = state.original.x;
 	let y = state.original.y;
 
-	if (instance.horizontal) {
+	if (movable.horizontal) {
 		x = position.x - state.offset.x;
 
 		if (state.container != null) {
-			x = clamp(x, state.container.left, state.container.right - instance.element.offsetWidth);
+			x = clamp(x, state.container.left, state.container.right - movable.element.offsetWidth);
 		}
 	}
 
-	if (instance.vertical) {
+	if (movable.vertical) {
 		y = position.y - state.offset.y;
 
 		if (state.container != null) {
-			y = clamp(y, state.container.top, state.container.bottom - instance.element.offsetHeight);
+			y = clamp(y, state.container.top, state.container.bottom - movable.element.offsetHeight);
 		}
 	}
 
-	instance.element.style.inset = `${y}px auto auto ${x}px`;
-}
+	movable.element.style.inset = `${y}px auto auto ${x}px`;
 
-function onPointerup(): void {
-	if (instance == null) {
-		return;
-	}
-
-	if (!instance.moved) {
-		instance.moved = true;
-
-		if (instance.container != null) {
-			MOVED.add(instance);
-		}
-	}
-
-	reset();
+	return {
+		from: {...state.original},
+		to: {...position},
+	};
 }
 
 function onResize(entries: ResizeObserverEntry[]): void {
@@ -200,18 +208,6 @@ function onScroll(): void {
 	}
 }
 
-function removeMovable(element: HTMLElement): void {
-	const movable = MOVABLES.get(element);
-
-	if (movable == null) {
-		return;
-	}
-
-	movable.destroy();
-
-	MOVABLES.delete(element);
-}
-
 function reposition(movable: Movable): void {
 	if (!movable.moved || movable.container == null) {
 		return;
@@ -221,71 +217,10 @@ function reposition(movable: Movable): void {
 
 	let {x, y} = movable.element.getBoundingClientRect();
 
-	if (movable.horizontal) {
-		x = clamp(x, container.left, container.right - movable.element.offsetWidth);
-
-		if (!movable.vertical) {
-			y = container.top + (movable.offset?.y ?? 0);
-		}
-	}
-
-	if (movable.vertical) {
-		y = clamp(y, container.top, container.bottom - movable.element.offsetHeight);
-
-		if (!movable.horizontal) {
-			x = container.left + (movable.offset?.x ?? 0);
-		}
-	}
+	x = container.left + (movable.offset?.x ?? 0);
+	y = container.top + (movable.offset?.y ?? 0);
 
 	movable.element.style.inset = `${y}px auto auto ${x}px`;
-}
-
-function reset(): void {
-	instance = undefined;
-
-	state.container = undefined;
-	state.offset = undefined!;
-	state.original = undefined!;
-
-	styleToggler.remove();
-}
-
-function setContainer(movable: Movable, selector: unknown): void {
-	if (typeof selector !== 'string') {
-		return;
-	}
-
-	movable.container = globals.has(selector)
-		? movable.element.ownerDocument.body
-		: (document.querySelector(selector) ?? undefined);
-
-	if (movable.container == null) {
-		return;
-	}
-
-	const set = CONTAINERS.get(movable.container);
-
-	if (set == null) {
-		CONTAINERS.set(movable.container, new Set([movable]));
-	} else {
-		set.add(movable);
-	}
-
-	resizer.observe(movable.container);
-}
-
-function setDirection(movable: Movable, direction: unknown): void {
-	if (horizontals.has(direction as Direction)) {
-		movable.vertical = false;
-	} else if (verticals.has(direction as Direction)) {
-		movable.horizontal = false;
-	}
-
-	const container = movable.container?.getBoundingClientRect();
-
-	if (movable.horizontal !== movable.vertical && container != null) {
-		setOffset(movable, container);
-	}
 }
 
 function setOffset(movable: Movable, container: DOMRect): void {
@@ -293,91 +228,41 @@ function setOffset(movable: Movable, container: DOMRect): void {
 
 	const element = movable.element.getBoundingClientRect();
 
-	if (movable.horizontal && !movable.vertical) {
-		movable.offset.y = element.top - container.top;
-	}
-
-	if (movable.vertical && !movable.horizontal) {
-		movable.offset.x = element.left - container.left;
-	}
-}
-
-function unsetContainer(movable: Movable): void {
-	const {container} = movable;
-
-	if (container == null) {
-		return;
-	}
-
-	const set = CONTAINERS.get(container);
-
-	if (set != null) {
-		set.delete(movable);
-
-		if (set.size === 0) {
-			CONTAINERS.delete(container);
-
-			resizer.unobserve(container);
-		}
-	}
+	movable.offset.y = element.top - container.top;
+	movable.offset.x = element.left - container.left;
 }
 
 // #endregion
 
 // #region Variables
 
-const SELECTOR = 'oui-movable';
+const ATTRIBUTE = 'oui-movable';
 
-const SELECTOR_HANDLE = `${SELECTOR}-handle`;
+const ATTRIBUTE_CONTAINER = `${ATTRIBUTE}-container`;
 
-const ATTRIBUTE = `[${SELECTOR}]`;
-
-const ATTRIBUTE_HANDLE = `[${SELECTOR_HANDLE}]`;
-
-const CONTAINER = `${SELECTOR}-container`;
+const ATTRIBUTE_DIRECTION = `${ATTRIBUTE}-direction`;
 
 const CONTAINERS = new Map<HTMLElement, Set<Movable>>();
 
-const DIRECTION = `${SELECTOR}-direction`;
-
-const KEY_ESCAPE = 'Escape';
-
-const MOVABLES = new WeakMap<Element, Movable>();
+const EVENT_END = 'move:end';
 
 const MOVED = new Set<Movable>();
 
-const globals = new Set<string>(['body', 'document', 'window']);
+const SELECTOR_HANDLE = `[${ATTRIBUTE}-handle]`;
 
-const horizontals = new Set<Direction>(['horizontal', 'x']);
-
-const resizer = new ResizeObserver(onResize);
-
-const state: State = {
-	container: undefined!,
-	offset: undefined!,
-	original: undefined!,
+const bound: DraggableBound = {
+	constructor: Movable,
+	property: 'movable',
 };
 
-const styleToggler: StyleToggler = toggleStyles(document.body, {
-	touchAction: 'none',
-	userSelect: 'none',
-	webkitUserSelect: 'none',
-});
-
-const verticals = new Set<Direction>(['vertical', 'y']);
-
-let instance: Movable | undefined;
+const resizer = new ResizeObserver(onResize);
 
 // #endregion
 
 // #region Initialization
 
-attributable(SELECTOR, addMovable, removeMovable);
+attributable(ATTRIBUTE, addDraggable.bind(bound), removeDraggable.bind(bound));
 
-on(document, 'keydown', onKeydown);
-on(document, 'pointerdown', onPointerdown);
-on(document, 'pointermove', onPointermove);
-on(document, 'pointerup', onPointerup);
 on(document, 'scroll', onScroll);
 
 // #endregion
