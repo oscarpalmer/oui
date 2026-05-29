@@ -1,10 +1,11 @@
 import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
+import {clamp} from '@oscarpalmer/atoms/number';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {toggleStyles} from '@oscarpalmer/toretto/style';
+import supportsTouch from '@oscarpalmer/toretto/touch';
 import type {Movable} from '../movable';
 import type {Sortable} from '../sortable';
-import supportsTouch from '@oscarpalmer/toretto/touch';
 
 // #region Types
 
@@ -19,9 +20,9 @@ export abstract class Draggable {
 
 	vertical = true;
 
-	abstract active: HTMLElement | undefined;
-
 	abstract readonly dragged: HTMLElement;
+
+	abstract origin: HTMLElement | undefined;
 
 	constructor(
 		public prefix: string,
@@ -47,6 +48,7 @@ type DragBegin = (
 	draggable: Draggable,
 	element: HTMLElement,
 	handle: HTMLElement,
+	position: EventPosition,
 ) => void;
 
 type DragCancel = (state: DraggableState, draggable: Draggable) => void;
@@ -62,8 +64,13 @@ type DragMove = (
 	event: MouseEvent | TouchEvent,
 	state: DraggableState,
 	draggable: Draggable,
-	position: EventPosition,
+	position: DragMovePosition,
 ) => PlainObject | undefined;
+
+export type DragMovePosition = {
+	calculated: EventPosition;
+	original: EventPosition;
+};
 
 export type DraggableBound<
 	Property extends keyof DraggableInstances = keyof DraggableInstances,
@@ -78,32 +85,71 @@ type DraggableInstances = {
 	sortable?: Sortable;
 };
 
-export type DraggableState = {
-	container: DOMRect | undefined;
-	instances: WeakMap<HTMLElement, DraggableInstances>;
-	offset: EventPosition;
-	original: EventPosition;
-};
-
 type DraggableOptions = {
 	container: DraggableOptionsContainer;
 	direction: DraggableOptionsDirection;
+	drag: DraggableOptionsDrag;
+	position: DraggableOptionsPosition;
+};
+
+type DraggableOptionsContainer = {
+	attribute: string;
+	map: Map<HTMLElement, Set<Draggable>>;
+	onDestroy?: DraggableOptionsContainerOnDestroy;
+	onInitialize?: DraggableOptionsContainerOnInitialize;
+};
+
+type DraggableOptionsContainerOnDestroy = (
+	draggable: Draggable,
+	container: HTMLElement,
+	empty: boolean,
+) => void;
+
+type DraggableOptionsContainerOnInitialize = (draggable: Draggable) => void;
+
+type DraggableOptionsDirection = {
+	attribute: string;
+	onAfter?: DraggableOptionsDirectionOnAfter;
+};
+
+type DraggableOptionsDirectionOnAfter = (draggable: Draggable) => void;
+
+type DraggableOptionsDrag = {
 	onBegin: DragBegin;
 	onCancel: DragCancel;
 	onEnd: DragEnd;
 	onMove: DragMove;
 };
 
-type DraggableOptionsContainer = {
-	attribute: string;
-	map: Map<HTMLElement, Set<Draggable>>;
-	onDestroy?: (draggable: Draggable, container: HTMLElement, empty: boolean) => void;
-	onInitialize?: (draggable: Draggable) => void;
+type DraggableOptionsPosition = {
+	getOffset: DraggableOptionsPositionGetOffset;
+	getOriginal: DraggableOptionsPositionGetOriginal;
 };
 
-type DraggableOptionsDirection = {
-	attribute: string;
-	onAfter?: (draggable: Draggable) => void;
+type DraggableOptionsPositionGetOffset = (
+	state: DraggableState,
+	draggable: Draggable,
+	element: HTMLElement,
+	position: EventPosition,
+) => EventPosition;
+
+type DraggableOptionsPositionGetOriginal = (
+	state: DraggableState,
+	draggable: Draggable,
+	position: EventPosition,
+) => EventPosition;
+
+export type DraggableState = {
+	container: DOMRect | undefined;
+	element: DraggableStateElement | undefined;
+	instances: WeakMap<HTMLElement, DraggableInstances>;
+	offset: EventPosition | undefined;
+	original: EventPosition | undefined;
+};
+
+type DraggableStateElement = {
+	node: HTMLElement;
+	rectangle: DOMRect;
 };
 
 // #endregion
@@ -132,19 +178,42 @@ function getHandle(event: Event, isMovable: boolean): HTMLElement | null {
 	) as HTMLElement;
 }
 
+function getNextPosition(draggable: Draggable, position: EventPosition): EventPosition {
+	let x = state.original?.x ?? 0;
+	let y = state.original?.y ?? 0;
+
+	if (draggable.horizontal) {
+		x = position.x - (state.offset?.x ?? 0);
+
+		if (state.container != null && state.element != null) {
+			x = clamp(x, state.container.left, state.container.right - state.element.rectangle.width);
+		}
+	}
+
+	if (draggable.vertical) {
+		y = position.y - (state.offset?.y ?? 0);
+
+		if (state.container != null && state.element != null) {
+			y = clamp(y, state.container.top, state.container.bottom - state.element.rectangle.height);
+		}
+	}
+
+	return {x, y};
+}
+
 function onKeydown(event: KeyboardEvent): void {
 	if (current == null || event.key !== KEY_ESCAPE) {
 		return;
 	}
 
-	const {active} = current;
+	const {origin} = current;
 
-	current.options.onCancel?.(state, current);
+	current.options.drag.onCancel?.(state, current);
 
 	current.element.dispatchEvent(
 		new CustomEvent(`${current.prefix}:cancel`, {
 			detail: {
-				element: active,
+				element: origin,
 			},
 		}),
 	);
@@ -153,7 +222,15 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 function onPointerdown(event: MouseEvent | TouchEvent): void {
-	if (supportsTouch.value ? event.type === 'mousedown' : event.type === 'touchstart') {
+	if (
+		event.altKey ||
+		event.ctrlKey ||
+		event.metaKey ||
+		event.shiftKey ||
+		(supportsTouch.value
+			? event.type === 'mousedown'
+			: event.type === 'touchstart' || (event as MouseEvent).button !== 0)
+	) {
 		return;
 	}
 
@@ -198,26 +275,23 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		return;
 	}
 
-	current = instance;
+	const {dragged} = instance;
 
-	const {left, top} = instance.dragged.getBoundingClientRect();
-	const {x, y} = getPosition(event) ?? {x: 0, y: 0};
+	const rectangle = dragged.getBoundingClientRect();
+
+	const position = getPosition(event) ?? {x: 0, y: 0};
+
+	current = instance;
 
 	state.container = instance.container?.getBoundingClientRect();
 
-	state.offset = {
-		x: x - left,
-		y: y - top,
+	state.element = {
+		rectangle,
+		node: dragged,
 	};
 
-	state.original = {
-		x: isMovable ? left : x,
-		y: isMovable ? top : y,
-	};
-
-	instance.options.onBegin(event, state, instance, element, handle);
-
-	styleToggler.set();
+	state.offset = instance.options.position.getOffset(state, instance, element, position);
+	state.original = instance.options.position.getOriginal(state, instance, position);
 
 	const begin = new CustomEvent(`${instance.prefix}:begin`, {
 		detail: {
@@ -231,10 +305,21 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 
 	setTimeout(() => {
 		if (begin.defaultPrevented) {
-			current?.options.onCancel(state, instance);
+			current?.options.drag.onCancel(state, instance);
 
 			reset();
+
+			return;
 		}
+
+		const next = getNextPosition(instance, position);
+
+		dragged.style.position = 'fixed';
+		dragged.style.inset = `${next.y}px auto auto ${next.x}px`;
+
+		instance.options.drag.onBegin(event, state, instance, element, handle, next);
+
+		styleToggler.set();
 	});
 }
 
@@ -249,7 +334,16 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 		return;
 	}
 
-	const detail = current.options.onMove(event, state, current, position);
+	const next = getNextPosition(current, position);
+
+	if (state.element != null) {
+		state.element.node.style.inset = `${next.y}px auto auto ${next.x}px`;
+	}
+
+	const detail = current.options.drag.onMove(event, state, current, {
+		calculated: next,
+		original: position,
+	});
 
 	current.element.dispatchEvent(
 		new CustomEvent(`${current.prefix}:move`, {
@@ -259,7 +353,7 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 }
 
 function onPointerup(event: MouseEvent | TouchEvent): void {
-	current?.options.onEnd?.(event, state, current, reset);
+	current?.options.drag.onEnd?.(event, state, current, reset);
 }
 
 export function removeDraggable<
@@ -293,8 +387,9 @@ function reset(): void {
 	current = undefined;
 
 	state.container = undefined;
-	state.offset = undefined!;
-	state.original = undefined!;
+	state.element = undefined;
+	state.offset = undefined;
+	state.original = undefined;
 
 	styleToggler.remove();
 }
@@ -390,9 +485,10 @@ const properties: Record<keyof DraggableInstances, keyof DraggableInstances> = {
 
 const state: DraggableState = {
 	container: undefined,
+	element: undefined,
 	instances: new WeakMap(),
-	offset: undefined!,
-	original: undefined!,
+	offset: undefined,
+	original: undefined,
 };
 
 const styleToggler = toggleStyles(document.body, {

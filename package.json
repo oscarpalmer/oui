@@ -62,7 +62,7 @@
 		"watch": "vp run clean && concurrently \"php -S localhost:3000\" \"vp run postcss:watch\" \"vp run css:watch\" \"vp run tsdown\""
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.187",
+		"@oscarpalmer/atoms": "^0.187.2",
 		"@oscarpalmer/toretto": "^0.46"
 	},
 	"devDependencies": {

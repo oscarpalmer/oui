@@ -1,6 +1,6 @@
-export * from './focus-trap/standalone';
-export * from './movable';
+import './focus-trap/standalone';
+import './movable';
 export * from './popover';
-export * from './sortable';
+import './sortable';
 export * from './splitter';
 export * from './tooltip';

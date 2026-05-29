@@ -1,5 +1,4 @@
 import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
-import {clamp} from '@oscarpalmer/atoms/number';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {attributable} from './internal/attributable';
 import {
@@ -8,6 +7,7 @@ import {
 	removeDraggable,
 	type DraggableBound,
 	type DraggableState,
+	type DragMovePosition,
 } from './internal/draggable';
 
 // #region Types
@@ -21,11 +21,11 @@ export class Movable extends Draggable {
 
 	position: string;
 
-	get active(): HTMLElement | undefined {
+	get dragged(): HTMLElement {
 		return this.element;
 	}
 
-	get dragged(): HTMLElement {
+	get origin(): HTMLElement | undefined {
 		return this.element;
 	}
 
@@ -41,10 +41,16 @@ export class Movable extends Draggable {
 				attribute: ATTRIBUTE_DIRECTION,
 				onAfter: afterDirection,
 			},
-			onBegin,
-			onCancel,
-			onEnd,
-			onMove,
+			drag: {
+				onBegin,
+				onCancel,
+				onEnd,
+				onMove,
+			},
+			position: {
+				getOffset: getOffsetPosition,
+				getOriginal: getOriginalPosition,
+			},
 		});
 
 		this.hasHandles = element.querySelector(SELECTOR_HANDLE) != null;
@@ -81,25 +87,36 @@ function destroyContainer(_: Draggable, container: HTMLElement, empty: boolean):
 	}
 }
 
+function getOffsetPosition(
+	state: DraggableState,
+	_: Draggable,
+	__: HTMLElement,
+	position: EventPosition,
+): EventPosition {
+	return {
+		x: position.x - (state.element?.rectangle.left ?? 0),
+		y: position.y - (state.element?.rectangle.top ?? 0),
+	};
+}
+
+function getOriginalPosition(state: DraggableState): EventPosition {
+	return {
+		x: state.element?.rectangle.left ?? 0,
+		y: state.element?.rectangle.top ?? 0,
+	};
+}
+
 function initializeContainer(draggable: Draggable): void {
 	resizer.observe(draggable.container!);
 }
 
-function onBegin(
-	_: MouseEvent | TouchEvent,
-	state: DraggableState,
-	__: Draggable,
-	element: HTMLElement,
-): void {
-	element.style.position = 'fixed';
-	element.style.inset = `${state.original.y}px auto auto ${state.original.x}px`;
-}
+function onBegin(): void {}
 
 function onCancel(state: DraggableState, draggable: Draggable): void {
 	const movable = draggable as Movable;
 
 	const {element, inset, moved, position} = movable;
-	const {x, y} = state.original;
+	const {x, y} = state.original ?? {x: 0, y: 0};
 
 	if (moved) {
 		element.style.inset = `${y}px auto auto ${x}px`;
@@ -153,35 +170,12 @@ function onEnd(
 function onMove(
 	_: MouseEvent | TouchEvent,
 	state: DraggableState,
-	draggable: Draggable,
-	position: EventPosition,
+	__: Draggable,
+	position: DragMovePosition,
 ): PlainObject | undefined {
-	const movable = draggable as Movable;
-
-	let x = state.original.x;
-	let y = state.original.y;
-
-	if (movable.horizontal) {
-		x = position.x - state.offset.x;
-
-		if (state.container != null) {
-			x = clamp(x, state.container.left, state.container.right - movable.element.offsetWidth);
-		}
-	}
-
-	if (movable.vertical) {
-		y = position.y - state.offset.y;
-
-		if (state.container != null) {
-			y = clamp(y, state.container.top, state.container.bottom - movable.element.offsetHeight);
-		}
-	}
-
-	movable.element.style.inset = `${y}px auto auto ${x}px`;
-
 	return {
 		from: {...state.original},
-		to: {...position},
+		to: {...position.calculated},
 	};
 }
 
@@ -215,10 +209,8 @@ function reposition(movable: Movable): void {
 
 	const container = movable.container.getBoundingClientRect();
 
-	let {x, y} = movable.element.getBoundingClientRect();
-
-	x = container.left + (movable.offset?.x ?? 0);
-	y = container.top + (movable.offset?.y ?? 0);
+	const x = container.left + (movable.offset?.x ?? 0);
+	const y = container.top + (movable.offset?.y ?? 0);
 
 	movable.element.style.inset = `${y}px auto auto ${x}px`;
 }
