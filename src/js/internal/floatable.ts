@@ -206,7 +206,11 @@ function initialize(floatable: Floatable): void {
 		content.setAttribute(ATTRIBUTE_CONTENT, '');
 	}
 
-	const anchorName = getAnchorName();
+	let anchorName = anchor.style.anchorName;
+
+	if (anchorName.length === 0) {
+		anchorName = getAnchorName();
+	}
 
 	anchor.style.anchorName = anchorName;
 
