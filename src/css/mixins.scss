@@ -60,24 +60,20 @@
 	margin: var(--margin-top, 0) 0 0 var(--margin-left, 0);
 	pointer-events: all !important;
 
-	&[position^='above'],
-	&[position^='top'] {
-		--margin-top: -0.5rem;
+	&[oui-position^='above'] {
+		margin: 0 0 0.5em;
 	}
 
-	&[position^='below'],
-	&[position^='bottom'] {
-		--margin-top: 0.5rem;
+	&[oui-position^='below'] {
+		margin: 0.5em 0 0;
 	}
 
-	&[position^='end'],
-	&[position^='right'] {
-		--margin-left: 0.5rem;
+	&[oui-position^='end'] {
+		margin: 0 0 0 0.5em;
 	}
 
-	&[position^='left'],
-	&[position^='start'] {
-		--margin-left: -0.5rem;
+	&[oui-position^='start'] {
+		margin: 0 0.5em 0 0;
 	}
 }
 

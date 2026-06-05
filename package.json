@@ -1,6 +1,6 @@
 {
 	"name": "@oscarpalmer/oui",
-	"version": "0.21.0",
+	"version": "0.22.0",
 	"description": "Styles, components, and utilities for building websites and applications.",
 	"keywords": [
 		"css",
@@ -37,9 +37,17 @@
 			"types": "./dist/js/focus-trap/standalone.d.mts",
 			"default": "./dist/js/focus-trap/standalone.mjs"
 		},
+		"./movable": {
+			"types": "./dist/js/movable.d.mts",
+			"default": "./dist/js/movable.mjs"
+		},
 		"./popover": {
 			"types": "./dist/js/popover.d.mts",
 			"default": "./dist/js/popover.mjs"
+		},
+		"./sortable": {
+			"types": "./dist/js/sortable.d.mts",
+			"default": "./dist/js/sortable.mjs"
 		},
 		"./splitter": {
 			"types": "./dist/js/splitter.d.mts",
@@ -66,16 +74,16 @@
 		"@oscarpalmer/toretto": "^0.46"
 	},
 	"devDependencies": {
-		"@oxlint/plugins": "^1.67",
+		"@oxlint/plugins": "^1.68",
 		"@vitest/coverage-istanbul": "^4.1",
 		"autoprefixer": "^10.5",
-		"concurrently": "^9.2",
+		"concurrently": "^10",
 		"jsdom": "^29.1",
 		"postcss-cli": "^11",
 		"postcss-input-range": "^6",
 		"postcss-scss": "^4",
 		"sass": "^1.100",
-		"stylelint": "^17.11",
+		"stylelint": "^17.12",
 		"stylelint-config-standard-scss": "^17",
 		"tsdown": "^0.22",
 		"typescript": "^6",

@@ -100,7 +100,7 @@ type Options = {
 	defaultPosition: Position;
 	interactive: boolean;
 	positionAttribute: string;
-	preferAbove: boolean;
+	reusable: boolean;
 	onAfter?: (active: boolean) => void;
 };
 
@@ -114,15 +114,9 @@ type Position =
 	| 'end'
 	| 'end-bottom'
 	| 'end-top'
-	| 'horizontal'
-	| 'horizontal-bottom'
-	| 'horizontal-top'
 	| 'start'
 	| 'start-bottom'
-	| 'start-top'
-	| 'vertical'
-	| 'vertical-end'
-	| 'vertical-start';
+	| 'start-top';
 
 type State = {
 	active: Set<Floatable>;
@@ -139,7 +133,7 @@ function activate(floatable: Floatable): void {
 
 	floatable.options.content.hidden = false;
 
-	updatePosition(floatable);
+	setPosition(floatable);
 }
 
 function closeAbove(element: HTMLElement): void {
@@ -185,164 +179,23 @@ function closeNonInteractive(state: State): void {
 export function deactivate(floatable: Floatable): void {
 	floatable.active = false;
 
-	floatable.options.content.hidden = true;
+	if (!floatable.options.reusable) {
+		floatable.options.content.hidden = true;
 
-	floatable.options.anchor.insertAdjacentElement(INSERT_AFTEREND, floatable.options.content);
+		floatable.options.anchor.insertAdjacentElement(INSERT_AFTEREND, floatable.options.content);
+	}
 
 	floatable.options.onAfter?.(false);
 }
 
-function getAttribute(
-	position: Position,
-	anchor: DOMRect,
-	top: number,
-	left: number,
-): Position | undefined {
-	switch (position) {
-		case 'horizontal':
-		case 'horizontal-bottom':
-		case 'horizontal-top':
-			return position.replace('horizontal', left >= anchor.right ? 'right' : 'left') as Position;
+function getAnchorName(): string {
+	index += 1;
 
-		case 'vertical':
-		case 'vertical-end':
-		case 'vertical-start':
-			return position.replace('vertical', top >= anchor.bottom ? 'bottom' : 'top') as Position;
-
-		default:
-			break;
-	}
-}
-
-function getMargin(): number {
-	try {
-		const fontsize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-
-		if (Number.isNaN(fontsize)) {
-			return 5;
-		}
-
-		const margin = fontsize / 2;
-
-		return margin < 5 ? 5 : margin;
-	} catch {
-		return 5;
-	}
+	return `--oui-floatable-anchor-${index}`;
 }
 
 function getState(): State {
 	return (window as unknown as FloatableWindow)._oscarpalmer_oui_floatable;
-}
-
-function getX(anchor: DOMRect, content: DOMRect, position: Position, margin: number): number {
-	if (position === 'above' || position === 'below' || position === 'vertical') {
-		const center = anchor.left + anchor.width / 2;
-		const width = content.width / 2;
-
-		if (center + width + margin >= document.body.clientWidth) {
-			return document.body.clientWidth - content.width - margin / 2;
-		}
-
-		if (center - width - margin <= 0) {
-			return margin / 2;
-		}
-
-		return center - width;
-	}
-
-	if (position.startsWith('end')) {
-		return anchor.right;
-	}
-
-	if (position.startsWith('start')) {
-		return anchor.left - content.width;
-	}
-
-	if (position.endsWith('end')) {
-		return anchor.right - content.width - margin <= 0 ? margin / 2 : anchor.right - content.width;
-	}
-
-	if (position.endsWith('start')) {
-		if (anchor.left + content.width + margin >= document.body.clientWidth) {
-			return document.body.clientWidth - content.width - margin / 2;
-		}
-
-		return anchor.left - margin <= 0 ? margin / 2 : anchor.left;
-	}
-
-	if (!position.startsWith('horizontal')) {
-		return 0;
-	}
-
-	if (anchor.right + content.width + margin >= document.body.clientWidth) {
-		return anchor.left - content.width;
-	}
-
-	return anchor.right;
-}
-
-function getY(
-	anchor: DOMRect,
-	content: DOMRect,
-	position: Position,
-	margin: number,
-	preferAbove: boolean,
-): number {
-	if (position === 'end' || position === 'start' || position === 'horizontal') {
-		const center = anchor.top + anchor.height / 2;
-		const height = content.height / 2;
-
-		if (center + height + margin >= document.body.clientHeight) {
-			return document.body.clientHeight - content.height - margin / 2;
-		}
-
-		if (center - height - margin <= 0) {
-			return margin / 2;
-		}
-
-		return center - height;
-	}
-
-	if (position.startsWith('above')) {
-		return anchor.top - content.height;
-	}
-
-	if (position.startsWith('below')) {
-		return anchor.bottom;
-	}
-
-	if (position.endsWith('bottom')) {
-		return anchor.bottom - content.height - margin <= 0
-			? margin / 2
-			: anchor.bottom - content.height;
-	}
-
-	if (position.endsWith('top')) {
-		return anchor.top + content.height + margin >= document.body.clientHeight
-			? document.body.clientHeight - content.height - margin
-			: anchor.top;
-	}
-
-	if (!position.startsWith('vertical')) {
-		return 0;
-	}
-
-	if (preferAbove) {
-		if (
-			anchor.top - content.height - margin <= 0 &&
-			anchor.bottom + content.height + margin <= document.body.clientHeight
-		) {
-			return anchor.bottom;
-		}
-
-		return anchor.top - content.height;
-	}
-
-	if (anchor.bottom + content.height + margin >= document.body.clientHeight) {
-		return anchor.top - content.height;
-	}
-
-	return anchor.bottom;
 }
 
 function initialize(floatable: Floatable): void {
@@ -353,9 +206,13 @@ function initialize(floatable: Floatable): void {
 		content.setAttribute(ATTRIBUTE_CONTENT, '');
 	}
 
-	content.style.position = 'fixed';
-	content.style.inset = '0 auto auto 0';
-	content.style.zIndex = '10';
+	const anchorName = getAnchorName();
+
+	anchor.style.anchorName = anchorName;
+
+	content.style.position = 'absolute';
+	content.style.positionAnchor = anchorName;
+	content.style.positionTry = 'normal flip-start';
 
 	const state = getState();
 
@@ -411,20 +268,22 @@ function onKeyDown(event: KeyboardEvent): void {
 	}
 }
 
-function setAttribute(
-	position: Position,
-	anchor: DOMRect,
-	floater: HTMLElement,
-	top: number,
-	left: number,
-): void {
-	let actual: Position | undefined;
+function setPosition(floatable: Floatable): void {
+	let position: Position =
+		(floatable.options.anchor.getAttribute(floatable.options.positionAttribute) as Position) ??
+		floatable.options.defaultPosition;
 
-	if (/^(horizontal|vertical)/.test(position)) {
-		actual = getAttribute(position, anchor, top, left);
+	if (AREAS[position] == null) {
+		position = floatable.options.defaultPosition;
 	}
 
-	floater.setAttribute('position', actual ?? position);
+	const area = AREAS[position];
+
+	floatable.options.content.style.positionArea = area;
+
+	floatable.options.content.setAttribute(ATTRIBUTE_POSITION, POSITIONS[area]);
+
+	floatable.options.onAfter?.(true);
 }
 
 function stop(floatable: Floatable): void {
@@ -456,116 +315,40 @@ function toggle(anchor: HTMLElement): void {
 	floatable.toggle(!active);
 }
 
-function updatePosition(floatable: Floatable): void {
-	let position: Position =
-		(floatable.options.anchor
-			.getAttribute(floatable.options.positionAttribute)
-			?.trim() as Position) ?? floatable.options.defaultPosition;
-
-	if (!POSITIONS.has(position as Position)) {
-		position = floatable.options.defaultPosition;
-	}
-
-	const margin = getMargin();
-
-	let previousAnchor: DOMRect;
-	let previousContent: DOMRect;
-
-	let calculated = false;
-	let runOnAfter = false;
-
-	function run(): void {
-		const anchor = floatable.options.anchor.getBoundingClientRect();
-		const content = floatable.options.content.getBoundingClientRect();
-
-		if (calculated) {
-			if (previousAnchor != null && previousContent != null) {
-				if (
-					PROPERTIES.every(property => anchor[property] === previousAnchor[property]) &&
-					PROPERTIES.every(property => content[property] === previousContent[property])
-				) {
-					floatable.frame = requestAnimationFrame(run);
-
-					return;
-				}
-			}
-		} else {
-			calculated = true;
-		}
-
-		update(anchor, content);
-	}
-
-	function update(anchor: DOMRect, content: DOMRect): void {
-		previousAnchor = anchor;
-		previousContent = content;
-
-		const left = getX(anchor, content, position, margin);
-		const top = getY(anchor, content, position, margin, floatable.options.preferAbove);
-
-		setAttribute(position, anchor, floatable.options.content, top, left);
-
-		if (top + content.height > window.innerHeight) {
-			floatable.options.content.style.height = `${window.innerHeight - top}px`;
-		} else {
-			floatable.options.content.style.height = '';
-		}
-
-		if (left + content.width > window.innerWidth) {
-			floatable.options.content.style.width = `${window.innerWidth - left}px`;
-		} else {
-			floatable.options.content.style.width = '';
-		}
-
-		// floatable.options.content.style.inset = `${top}px auto auto ${left}px`;
-		floatable.options.content.style.transform = `translate3d(${left}px, ${top}px, 0)`;
-
-		floatable.frame = requestAnimationFrame(run);
-
-		if (!runOnAfter) {
-			runOnAfter = true;
-
-			floatable.options.onAfter?.(true);
-		}
-	}
-
-	floatable.frame = requestAnimationFrame(run);
-}
-
 //
+
+const AREAS: Record<Position, string> = {
+	above: 'block-start',
+	'above-end': 'start span-start',
+	'above-start': 'start span-end',
+	below: 'block-end',
+	'below-end': 'end span-start',
+	'below-start': 'end span-end',
+	end: 'center end',
+	'end-bottom': 'span-start end',
+	'end-top': 'span-end end',
+	start: 'center start',
+	'start-bottom': 'span-start start',
+	'start-top': 'span-end start',
+};
 
 const ATTRIBUTE_ANCHOR = 'oui-floatable-anchor';
 
 const ATTRIBUTE_CONTENT = 'oui-floatable-content';
 
+const ATTRIBUTE_POSITION = 'oui-position';
+
 const INSERT_AFTEREND = 'afterend';
 
-const POSITIONS: Set<Position> = new Set([
-	'above',
-	'above-end',
-	'above-start',
-	'below',
-	'below-end',
-	'below-start',
-	'end',
-	'end-bottom',
-	'end-top',
-	'horizontal',
-	'horizontal-bottom',
-	'horizontal-top',
-	'start',
-	'start-bottom',
-	'start-top',
-	'vertical',
-	'vertical-end',
-	'vertical-start',
-]);
-
-const PROPERTIES: (keyof DOMRect)[] = ['bottom', 'left', 'right', 'top'];
+const POSITIONS = Object.fromEntries(
+	Object.entries(AREAS).map(([position, area]) => [area, position]),
+) as Record<string, Position>;
 
 const SELECTOR_ALL = `[${ATTRIBUTE_ANCHOR}], [${ATTRIBUTE_CONTENT}]`;
 
 const SELECTOR_CONTENT = `[${ATTRIBUTE_CONTENT}]`;
+
+let index = 0;
 
 //
 

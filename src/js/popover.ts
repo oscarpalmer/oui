@@ -52,7 +52,7 @@ export class OuiPopoverElement extends HTMLElement {
 			defaultPosition: 'below-start',
 			interactive: true,
 			positionAttribute: 'position',
-			preferAbove: false,
+			reusable: false,
 			onAfter: (active: boolean): void => {
 				if (active) {
 					focus(content);
