@@ -83,8 +83,8 @@ function closeTooltip(instance?: Tooltip): void {
 		clearTimeout(instance.timer);
 	}
 
-	instance.content.hidePopover();
-	instance.content.removeAttribute(ATTRIBUTE_CONTENT_ACTIVE);
+	instance.content?.hidePopover();
+	instance.content?.removeAttribute(ATTRIBUTE_CONTENT_ACTIVE);
 }
 
 function createTooltip(anchor: HTMLElement): void {
