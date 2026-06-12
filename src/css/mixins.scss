@@ -54,26 +54,28 @@
 @mixin floatable() {
 	@include shadow-overlay;
 
-	--margin-left: 0;
-	--margin-top: 0;
+	--margin-bottom: 0.5em;
+	--margin-left: 0.5em;
+	--margin-right: 0.5em;
+	--margin-top: 0.5em;
 
-	margin: var(--margin-top, 0) 0 0 var(--margin-left, 0);
-	pointer-events: all !important;
+	inset-block: var(--margin-top) var(--margin-bottom);
+	inset-inline: var(--margin-left) var(--margin-right);
 
-	&[oui-position^='above'] {
-		margin: 0 0 0.5em;
+	&[oui-position$='bottom'] {
+		--margin-bottom: 0;
 	}
 
-	&[oui-position^='below'] {
-		margin: 0.5em 0 0;
+	&[oui-position$='end'] {
+		--margin-right: 0;
 	}
 
-	&[oui-position^='end'] {
-		margin: 0 0 0 0.5em;
+	&[oui-position$='start'] {
+		--margin-left: 0;
 	}
 
-	&[oui-position^='start'] {
-		margin: 0 0.5em 0 0;
+	&[oui-position$='top'] {
+		--margin-top: 0;
 	}
 }
 

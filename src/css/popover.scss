@@ -4,15 +4,7 @@
 	@include mixins.floatable;
 
 	padding: 1rem;
-	overscroll-behavior: contain;
 	background-color: var(--oui-absolute);
+	border: none;
 	border-radius: 0.25rem;
-
-	&:focus {
-		outline: none;
-	}
-
-	* {
-		overscroll-behavior: contain;
-	}
 }

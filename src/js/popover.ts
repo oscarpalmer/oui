@@ -1,158 +1,96 @@
-import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
-import {getFocusable} from '@oscarpalmer/toretto/focusable';
-import {Floatable} from './internal/floatable';
-import {createFocusTrap, type FocusTrap} from './focus-trap/embedded';
+import {on} from '@oscarpalmer/toretto/event';
+import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
+import {createFocusTrap, removeFocusTrap, type FocusTrap} from './focus-trap/embedded';
+import {attributable} from './internal/attributable';
+import {
+	createFloatable,
+	removeFloatable,
+	type Floatable,
+	type FloatableOptions,
+} from './internal/floatable';
 
-declare global {
-	// biome-ignore lint/nursery/useConsistentTypeDefinitions: Extending builtins to allow custom element type help
-	interface HTMLElementTagNameMap {
-		'oui-popover': OuiPopoverElement;
-	}
-}
+class Popover {
+	anchor: HTMLElement | null;
+	floatable?: Floatable;
+	focusTrap?: FocusTrap;
+	listener: RemovableEventListener;
 
-let index = 0;
+	constructor(public element: HTMLElement) {
+		this.anchor = element.ownerDocument.querySelector(`[popovertarget="${element.id}"]`);
 
-export class OuiPopoverElement extends HTMLElement {
-	readonly #floatable: Floatable;
-	readonly #focusTrap: FocusTrap;
+		this.floatable = createFloatable(this.anchor as HTMLElement, element, options);
 
-	constructor() {
-		super();
-
-		const content = this.querySelector(SELECTOR_CONTENT);
-		const toggle = this.querySelector(SELECTOR_TOGGLE);
-
-		if (!(content instanceof HTMLElement)) {
-			throw new Error(
-				'A oui-popover must have a direct child element with the [oui-popover-content]-attribute',
-			);
-		}
-
-		if (!(toggle instanceof HTMLButtonElement)) {
-			throw new Error(
-				'A oui-popover must have a direct child element with the [oui-popover-toggle]-attribute and be a button',
-			);
-		}
-
-		content.hidden = true;
-
-		content.setAttribute('role', 'dialog');
-		content.setAttribute('aria-modal', 'true');
-
-		if (isNullableOrWhitespace(content.id)) {
-			content.setAttribute('id', `${ATTRIBUTE_ID_PREFIX}_${++index}`);
-		}
-
-		toggle.setAttribute('aria-controls', content.id);
-		toggle.setAttribute('aria-haspopup', 'dialog');
-
-		this.#floatable = new Floatable({
-			content,
-			anchor: toggle,
-			defaultPosition: 'below-start',
-			interactive: true,
-			positionAttribute: 'position',
-			reusable: false,
-			onAfter: (active: boolean): void => {
-				if (active) {
-					focus(content);
-				} else if (!this.#floatable.ignoreFocus) {
-					toggle.focus();
-				}
-			},
-		});
-
-		this.#focusTrap = createFocusTrap(content, {
+		this.focusTrap = createFocusTrap(element, {
 			noescape: true,
 		});
 
-		POPOVERS.set(toggle, this.#floatable);
-		POPOVERS.set(content, this.#floatable);
-	}
+		this.listener = on(element, EVENT_TOGGLE, event => {
+			if (event.newState === STATE_OPEN) {
+				ignoreFocus = false;
 
-	close(): void {
-		this.hidePopover();
-	}
+				this.floatable?.update();
 
-	connectedCallback(): void {
-		this.#floatable.enable();
-		this.#focusTrap.connect();
-	}
-
-	disconnectedCallback(): void {
-		this.#floatable.disable();
-		this.#focusTrap.disconnect();
-	}
-
-	override hidePopover(): void {
-		if (this.#floatable.active && this.isConnected) {
-			this.#floatable.toggle(false);
-		}
-	}
-
-	open(): void {
-		this.showPopover();
-	}
-
-	override showPopover(): void {
-		if (!this.#floatable.active && this.isConnected) {
-			this.#floatable.toggle(true);
-		}
-	}
-
-	toggle(): void {
-		this.togglePopover();
-	}
-
-	override togglePopover(options?: boolean): boolean {
-		if (typeof options === 'boolean') {
-			if (options === true) {
-				this.showPopover();
-			} else {
-				this.hidePopover();
+				element.focus();
+			} else if (!ignoreFocus) {
+				this.anchor?.focus();
 			}
+		});
 
-			return options;
-		}
+		this.element.setAttribute(ATTRIBUTE_CONTENT, '');
 
-		if (this.#floatable.active) {
-			this.hidePopover();
+		this.floatable?.update();
+	}
 
-			return false;
-		}
+	destroy(): void {
+		this.focusTrap?.destroy();
 
-		this.showPopover();
+		removeFloatable(this.element);
+		removeFocusTrap(this.element);
 
-		return true;
+		this.element.removeAttribute(ATTRIBUTE_CONTENT);
+
+		this.anchor = null;
+		this.element = null as never;
 	}
 }
 
-//
-
-function focus(content: HTMLElement): void {
-	let target = getFocusable(content)[0];
-
-	if (!(target instanceof HTMLElement)) {
-		target = content;
+function onAdd(element: HTMLElement): void {
+	if (!instances.has(element) && element.getAttribute(ATTRIBUTE) !== POPOVER_HINT) {
+		instances.set(element, new Popover(element));
 	}
-
-	requestAnimationFrame(() => {
-		(target as HTMLElement).focus();
-	});
 }
 
-//
+function onPointerdown(): void {
+	ignoreFocus = true;
+}
 
-const ATTRIBUTE_ID_PREFIX = 'oui_popover_content_';
+function onRemove(element: HTMLElement): void {
+	instances.get(element)?.destroy();
 
-const POPOVERS: Map<HTMLElement, Floatable> = new Map();
+	instances.delete(element);
+}
 
-const SELECTOR = 'oui-popover';
+const ATTRIBUTE = 'popover';
 
-const SELECTOR_CONTENT = `:scope > [${SELECTOR}-content]`;
+const ATTRIBUTE_CONTENT = 'oui-popover-content';
 
-const SELECTOR_TOGGLE = `:scope > [${SELECTOR}-toggle]`;
+const EVENT_TOGGLE = 'toggle';
 
-//
+const POPOVER_HINT = 'hint';
 
-customElements.define(SELECTOR, OuiPopoverElement);
+const STATE_OPEN = 'open';
+
+const instances = new WeakMap<HTMLElement, Popover>();
+
+const options: FloatableOptions = {
+	attribute: 'position',
+	position: 'below-start',
+};
+
+let ignoreFocus = false;
+
+on(document, 'pointerdown', onPointerdown, {
+	capture: true,
+});
+
+attributable(ATTRIBUTE, onAdd, onRemove);

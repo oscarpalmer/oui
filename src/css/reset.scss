@@ -353,6 +353,14 @@
  * Attributes
  */
 
+:where([aria-busy='true' i]) {
+	cursor: progress;
+}
+
+:where([aria-controls]) {
+	cursor: pointer;
+}
+
 :where([disabled], [aria-disabled='true' i]) {
 	cursor: default;
 }
@@ -361,12 +369,16 @@
 	display: none !important;
 }
 
-:where([aria-busy='true' i]) {
-	cursor: progress;
+:where([popover]) {
+	display: none !important;
+	overflow: visible;
+	overscroll-behavior: contain;
+	border: none;
+	color: currentcolor;
 }
 
-:where([aria-controls]) {
-	cursor: pointer;
+:where([popover]:popover-open) {
+	display: inherit !important;
 }
 
 /**

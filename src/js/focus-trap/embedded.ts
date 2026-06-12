@@ -179,6 +179,11 @@ function onTab(event: KeyboardEvent): void {
 	}
 }
 
+export function removeFocusTrap(element: HTMLElement): void {
+	FOCUSTRAPS_ALL.get(element)?.destroy();
+	FOCUSTRAPS_ALL.delete(element);
+}
+
 function setConnected(focusTrap: FocusTrap, value: boolean): void {
 	if (!focusTrap.embedded || focusTrap.connected === value) {
 		return;
@@ -262,7 +267,7 @@ export const FOCUS_TRAP_CONTAIN = `${FOCUS_TRAP_SELECTOR}-contain`;
 
 export const FOCUS_TRAP_NOESCAPE = `${FOCUS_TRAP_SELECTOR}-noescape`;
 
-export const FOCUSTRAPS_ALL: WeakMap<HTMLElement, FocusTrap> = new WeakMap();
+const FOCUSTRAPS_ALL: WeakMap<HTMLElement, FocusTrap> = new WeakMap();
 
 const FOCUSTRAPS_DISABLED: Set<FocusTrap> = new Set();
 
