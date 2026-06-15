@@ -2,8 +2,9 @@ import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import {createElement} from '@oscarpalmer/toretto/create';
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
+import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import {attributable} from './internal/attributable';
-import {Floatable, type FloatableOptions} from './internal/floatable';
+import {Floatable, type FloatableOptions} from './floatable';
 
 class Tooltip {
 	floatable: Floatable;
@@ -18,7 +19,7 @@ class Tooltip {
 
 		anchor.insertAdjacentElement('afterend', content);
 
-		this.floatable = new Floatable(anchor, content, options);
+		this.floatable = new Floatable(anchor, content, options, false);
 
 		this.floatable.update();
 	}
@@ -61,7 +62,7 @@ function activate(event: Event, focus: boolean): void {
 	instance.timer = setTimeout(
 		() => {
 			instance.content.showPopover({
-				source: instance.anchor,
+				source: instance.anchor as HTMLElement,
 			});
 
 			setTimeout(() => {
@@ -106,7 +107,7 @@ function findElements(attribute: string | null): HTMLElement[] {
 
 		const element = document.querySelector(`#${id}`);
 
-		if (element instanceof HTMLElement) {
+		if (isHTMLOrSVGElement(element)) {
 			const cloned = element.cloneNode(true) as HTMLElement;
 
 			cloned.hidden = false;
@@ -212,6 +213,12 @@ function onRemove(element: HTMLElement): void {
 	instances.delete(element);
 }
 
+/**
+ * Set the delay before showing the tooltip, in milliseconds
+ *
+ * _(Default delay is half a second, or 500 milliseconds)_
+ * @param value Delay in milliseconds
+ */
 export function setTooltipDelay(value: number): void {
 	if (typeof value === 'number' && !Number.isNaN(value) && value >= 0) {
 		delay = value;
@@ -243,7 +250,7 @@ const SELECTOR_CONTENT = `[${ATTRIBUTE_CONTENT}]`;
 const instances = new WeakMap<HTMLElement, Tooltip>();
 
 const options: FloatableOptions = {
-	attribute: 'oui-tooltip-position',
+	attribute: `${ATTRIBUTE}-position`,
 	position: 'above',
 };
 

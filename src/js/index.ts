@@ -3,5 +3,6 @@ import './movable';
 import './popover';
 import './sortable';
 
+export {getFloatable} from './floatable'
 export * from './splitter';
-export * from './tooltip';
+export {setTooltipDelay} from './tooltip';

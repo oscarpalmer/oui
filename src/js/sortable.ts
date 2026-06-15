@@ -2,6 +2,7 @@ import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
 import {createElement} from '@oscarpalmer/toretto/create';
 import {getPosition} from '@oscarpalmer/toretto/event';
 import {findAncestor, getElementFromPosition} from '@oscarpalmer/toretto/find';
+import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import {attributable} from './internal/attributable';
 import {
 	addDraggable,
@@ -333,17 +334,19 @@ function setPlaceholder(state: DraggableState, sortable: Sortable, origin: HTMLE
 			parent: sortable.element,
 			placeholder: element,
 			create: (value: unknown) => {
-				if (!(value instanceof HTMLElement)) {
+				if (!isHTMLOrSVGElement(value)) {
 					return;
 				}
 
-				placeholder.drag.custom = value;
+				const element = value as HTMLElement;
 
-				updatePlaceholder(sortable, value);
+				placeholder.drag.custom = element;
+
+				updatePlaceholder(sortable, element);
 
 				state.element = {
-					rectangle: value.getBoundingClientRect(),
-					node: value,
+					rectangle: element.getBoundingClientRect(),
+					node: element,
 				};
 			},
 		},

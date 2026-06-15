@@ -1,3 +1,5 @@
+import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
+
 export function attributable(
 	attribute: string,
 	add: (element: HTMLElement) => void,
@@ -9,7 +11,7 @@ export function attributable(
 		for (let index = 0; index < length; index += 1) {
 			const entry = entries[index];
 
-			if (entry.type === 'attributes' && entry.target instanceof HTMLElement) {
+			if (entry.type === 'attributes' && isHTMLOrSVGElement(entry.target)) {
 				if (entry.target.hasAttribute(attribute)) {
 					handleAdded(attribute, [entry.target], add);
 				} else {
@@ -39,7 +41,7 @@ function handleAdded(
 	nodes: Node[] | NodeList,
 	add: (element: HTMLElement) => void,
 ): void {
-	const elements = [...nodes].filter(node => node instanceof HTMLElement) as HTMLElement[];
+	const elements = [...nodes].filter(isHTMLOrSVGElement) as HTMLElement[];
 
 	const {length} = elements;
 
@@ -57,7 +59,7 @@ function handleAdded(
 }
 
 function handleRemoved(nodes: Node[] | NodeList, remove: (element: HTMLElement) => void): void {
-	const elements = [...nodes].filter(node => node instanceof HTMLElement) as HTMLElement[];
+	const elements = [...nodes].filter(isHTMLOrSVGElement) as HTMLElement[];
 
 	const {length} = elements;
 

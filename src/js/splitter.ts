@@ -12,8 +12,21 @@ declare global {
 	}
 }
 
+const ATTRIBUTE_MAX = 'max';
+
+const ATTRIBUTE_MIN = 'min';
+
+const ATTRIBUTE_SIZE = 'size';
+
+const ATTRIBUTE_TYPE = 'type';
+
 export class OuiSplitterElement extends HTMLElement {
-	static readonly observedAttributes = ['max', 'min', 'size', 'type'];
+	static readonly observedAttributes = [
+		ATTRIBUTE_MAX,
+		ATTRIBUTE_MIN,
+		ATTRIBUTE_SIZE,
+		ATTRIBUTE_TYPE,
+	];
 
 	readonly #splitter: Splitter;
 
@@ -24,7 +37,7 @@ export class OuiSplitterElement extends HTMLElement {
 	}
 
 	set max(value: number) {
-		this.setAttribute('max', String(value));
+		this.setAttribute(ATTRIBUTE_MAX, String(value));
 	}
 
 	get min(): number {
@@ -77,13 +90,13 @@ export class OuiSplitterElement extends HTMLElement {
 
 	attributeChangedCallback(name: string): void {
 		switch (name) {
-			case 'max':
-			case 'min':
-			case 'size':
+			case ATTRIBUTE_MAX:
+			case ATTRIBUTE_MIN:
+			case ATTRIBUTE_SIZE:
 				this.#splitter.updateValues();
 				break;
 
-			case 'type':
+			case ATTRIBUTE_TYPE:
 				this.#splitter.updateOrientation();
 				break;
 
@@ -271,15 +284,19 @@ function getValue(element: HTMLElement, name: string, defaultValue: number): num
 
 function getValues(element: OuiSplitterElement): Values {
 	const values: Values = {
-		max: getValue(element, 'max', NAVIGATION_MAXIMUM_PERCENTAGE),
-		min: getValue(element, 'min', NAVIGATION_MINIMUM_PERCENTAGE),
+		max: getValue(element, ATTRIBUTE_MAX, NAVIGATION_MAXIMUM_PERCENTAGE),
+		min: getValue(element, ATTRIBUTE_MIN, NAVIGATION_MINIMUM_PERCENTAGE),
 		now: {
 			current: 0.5,
 			previous: 0.5,
 		},
 	};
 
-	const value = getContained(values.min, getValue(element, 'size', values.now.current), values.max);
+	const value = getContained(
+		values.min,
+		getValue(element, ATTRIBUTE_SIZE, values.now.current),
+		values.max,
+	);
 
 	values.now.current = value;
 	values.now.previous = value;

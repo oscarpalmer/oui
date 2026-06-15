@@ -1,13 +1,15 @@
 import {on} from '@oscarpalmer/toretto/event';
+import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
-import {createFocusTrap, removeFocusTrap, type FocusTrap} from './focus-trap/embedded';
-import {attributable} from './internal/attributable';
 import {
+	ATTRIBUTE_FLOATABLE,
 	createFloatable,
 	removeFloatable,
 	type Floatable,
 	type FloatableOptions,
-} from './internal/floatable';
+} from './floatable';
+import {createFocusTrap, removeFocusTrap, type FocusTrap} from './focus-trap/embedded';
+import {attributable} from './internal/attributable';
 
 class Popover {
 	anchor: HTMLElement | null;
@@ -16,9 +18,19 @@ class Popover {
 	listener: RemovableEventListener;
 
 	constructor(public element: HTMLElement) {
-		this.anchor = element.ownerDocument.querySelector(`[popovertarget="${element.id}"]`);
+		const anchor = element.ownerDocument.querySelector(`[popovertarget="${element.id}"]`);
 
-		this.floatable = createFloatable(this.anchor as HTMLElement, element, options);
+		if (!isHTMLOrSVGElement(anchor)) {
+			throw new Error(`No anchor found for popover with id '${element.id}'.`);
+		}
+
+		if (element.contains(anchor)) {
+			throw new Error('Popover content cannot contain its anchor.');
+		}
+
+		this.anchor = anchor as HTMLElement;
+
+		this.floatable = createFloatable(this.anchor, element, options, false);
 
 		this.focusTrap = createFocusTrap(element, {
 			noescape: true,
@@ -55,7 +67,11 @@ class Popover {
 }
 
 function onAdd(element: HTMLElement): void {
-	if (!instances.has(element) && element.getAttribute(ATTRIBUTE) !== POPOVER_HINT) {
+	if (
+		!instances.has(element) &&
+		element.getAttribute(ATTRIBUTE) !== POPOVER_HINT &&
+		!element.hasAttribute(ATTRIBUTE_FLOATABLE)
+	) {
 		instances.set(element, new Popover(element));
 	}
 }
@@ -83,7 +99,7 @@ const STATE_OPEN = 'open';
 const instances = new WeakMap<HTMLElement, Popover>();
 
 const options: FloatableOptions = {
-	attribute: 'position',
+	attribute: `${ATTRIBUTE}position`,
 	position: 'below-start',
 };
 
