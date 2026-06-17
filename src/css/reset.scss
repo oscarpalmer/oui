@@ -121,6 +121,23 @@
 	display: list-item;
 }
 
+:where(dialog) {
+	display: none !important;
+	overscroll-behavior: contain;
+	border: none;
+	color: currentcolor;
+}
+
+:where([oui-dialog][aria-modal='true' i]) {
+	position: fixed;
+	inset: 50% auto auto 50%;
+	transform: translate3d(-50%, -50%, 0);
+}
+
+:where(dialog[open]) {
+	display: inherit !important;
+}
+
 :where(dl, ol, ul) :where(dl, ol, ul) {
 	/** Remove the margin on nested lists in Chrome, Edge, and Safari [SE] */
 	margin: 0;

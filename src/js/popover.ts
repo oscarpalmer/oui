@@ -4,75 +4,133 @@ import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import {
 	ATTRIBUTE_FLOATABLE,
 	createFloatable,
-	removeFloatable,
-	type Floatable,
-	type FloatableOptions,
-} from './floatable';
-import {createFocusTrap, removeFocusTrap, type FocusTrap} from './focus-trap/embedded';
+	getOnBeforeToggleListener,
+	type OuiFloatable,
+	type OuiFloatableOptions,
+} from './floatable/embedded';
+import {createFocusTrap, type FocusTrap} from './focus-trap/embedded';
 import {attributable} from './internal/attributable';
 
-class Popover {
-	anchor: HTMLElement | null;
-	floatable?: Floatable;
-	focusTrap?: FocusTrap;
-	listener: RemovableEventListener;
+// #region Types
 
-	constructor(public element: HTMLElement) {
-		const anchor = element.ownerDocument.querySelector(`[popovertarget="${element.id}"]`);
+class OuiPopover {
+	readonly #state: OuiPopoverState;
 
-		if (!isHTMLOrSVGElement(anchor)) {
-			throw new Error(`No anchor found for popover with id '${element.id}'.`);
-		}
-
-		if (element.contains(anchor)) {
-			throw new Error('Popover content cannot contain its anchor.');
-		}
-
-		this.anchor = anchor as HTMLElement;
-
-		this.floatable = createFloatable(this.anchor, element, options, false);
-
-		this.focusTrap = createFocusTrap(element, {
-			noescape: true,
-		});
-
-		this.listener = on(element, EVENT_TOGGLE, event => {
-			if (event.newState === STATE_OPEN) {
-				ignoreFocus = false;
-
-				this.floatable?.update();
-
-				element.focus();
-			} else if (!ignoreFocus) {
-				this.anchor?.focus();
-			}
-		});
-
-		this.element.setAttribute(ATTRIBUTE_CONTENT, '');
-
-		this.floatable?.update();
+	/**
+	 * Is the popover open?
+	 */
+	get open(): boolean {
+		return this.#state.content.checkVisibility();
 	}
 
-	destroy(): void {
-		this.focusTrap?.destroy();
+	constructor(state: OuiPopoverState) {
+		this.#state = state;
 
-		removeFloatable(this.element);
-		removeFocusTrap(this.element);
+		this.#state.floatable.update();
+	}
 
-		this.element.removeAttribute(ATTRIBUTE_CONTENT);
+	/**
+	 * Closes the popover
+	 */
+	hide(): void {
+		this.#state.floatable.hide();
+	}
 
-		this.anchor = null;
-		this.element = null as never;
+	/**
+	 * Opens the popover
+	 */
+	show(): void {
+		this.#state.floatable.show();
 	}
 }
 
+type OuiPopoverState = {
+	anchor: HTMLElement;
+	content: HTMLElement;
+	floatable: OuiFloatable;
+	focusTrap?: FocusTrap;
+	listeners: RemovableEventListener[];
+	popover: OuiPopover;
+};
+
+// #endregion
+
+// #region Functions
+
+function destroyPopover(state: OuiPopoverState): void {
+	state.floatable.destroy();
+	state.focusTrap?.destroy();
+
+	for (const listener of state.listeners) {
+		listener();
+	}
+
+	state.anchor = undefined as never;
+	state.content = undefined as never;
+	state.floatable = undefined as never;
+	state.focusTrap = undefined as never;
+	state.listeners = undefined as never;
+	state.popover = undefined as never;
+}
+
+/**
+ * Get the _OuiPopover_ for an element
+ *
+ * @param element Element to get _OuiPopover_ for
+ * @returns _OuiPopover_ instance
+ */
+function getPopover(element: HTMLElement): OuiPopover | undefined {
+	return states.get(element)?.popover;
+}
+
+function getState(anchor: HTMLElement, content: HTMLElement): OuiPopoverState {
+	const state: OuiPopoverState = {
+		anchor,
+		content,
+		floatable: createFloatable(anchor, content, options, false),
+		focusTrap:
+			content.getAttribute(ARIA_MODAL) === TRUE
+				? createFocusTrap(content, {
+						noescape: true,
+					})
+				: undefined,
+		listeners: [
+			getOnBeforeToggleListener(content),
+			on(content, EVENT_TOGGLE, event => {
+				if (event.newState === STATE_OPEN) {
+					ignoreFocus = false;
+
+					state.floatable?.update();
+
+					content.setAttribute(ATTRIBUTE_OPEN, '');
+
+					content.focus();
+				} else {
+					content.removeAttribute(ATTRIBUTE_OPEN);
+
+					if (!ignoreFocus) {
+						anchor?.focus();
+					}
+				}
+			}),
+		],
+		popover: undefined as never,
+	};
+
+	state.popover = new OuiPopover(state);
+
+	return state;
+}
+
 function onAdd(element: HTMLElement): void {
-	if (
-		!instances.has(element) &&
-		element.getAttribute(ATTRIBUTE) !== POPOVER_HINT &&
-		!element.hasAttribute(ATTRIBUTE_FLOATABLE)
-	) {
-		instances.set(element, new Popover(element));
+	if (states.has(element) || element.hasAttribute(ATTRIBUTE_FLOATABLE)) {
+		return;
+	}
+
+	const anchor = element.ownerDocument.querySelector(`[popovertarget="${element.id}"]`);
+
+	if (isHTMLOrSVGElement(anchor)) {
+		states.set(element, getState(anchor, element));
 	}
 }
 
@@ -81,32 +139,56 @@ function onPointerdown(): void {
 }
 
 function onRemove(element: HTMLElement): void {
-	instances.get(element)?.destroy();
+	const state = states.get(element);
 
-	instances.delete(element);
+	if (state == null) {
+		return;
+	}
+
+	destroyPopover(state);
+
+	states.delete(element);
 }
 
-const ATTRIBUTE = 'popover';
+// #endregion
 
-const ATTRIBUTE_CONTENT = 'oui-popover-content';
+// #region Variables
+
+const ATTRIBUTE = 'oui-popover';
+
+const ARIA_MODAL = 'aria-modal';
+
+const ATTRIBUTE_OPEN = `${ATTRIBUTE}-open`;
 
 const EVENT_TOGGLE = 'toggle';
 
-const POPOVER_HINT = 'hint';
-
 const STATE_OPEN = 'open';
 
-const instances = new WeakMap<HTMLElement, Popover>();
+const TRUE = 'true';
 
-const options: FloatableOptions = {
+const options: OuiFloatableOptions = {
 	attribute: `${ATTRIBUTE}position`,
 	position: 'below-start',
 };
 
+const states = new WeakMap<HTMLElement, OuiPopoverState>();
+
 let ignoreFocus = false;
+
+// #endregion
+
+// #region Initialization
 
 on(document, 'pointerdown', onPointerdown, {
 	capture: true,
 });
 
 attributable(ATTRIBUTE, onAdd, onRemove);
+
+// #endregion
+
+// #region Exports
+
+export {getPopover, type OuiPopover};
+
+// #endregion

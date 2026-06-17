@@ -3,34 +3,53 @@ import {createElement} from '@oscarpalmer/toretto/create';
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
+import {createFloatable, type OuiFloatable, type OuiFloatableOptions} from './floatable/embedded';
 import {attributable} from './internal/attributable';
-import {Floatable, type FloatableOptions} from './floatable';
 
-class Tooltip {
-	floatable: Floatable;
+// #region Types
 
-	timer: number | undefined;
+class OuiTooltip {
+	readonly #state: OuiTooltipState;
 
-	constructor(
-		public anchor: HTMLElement,
-		public content: HTMLElement,
-	) {
-		instances.set(content, this);
-
-		anchor.insertAdjacentElement('afterend', content);
-
-		this.floatable = new Floatable(anchor, content, options, false);
-
-		this.floatable.update();
+	/**
+	 * Is the tooltip open?
+	 */
+	get open(): boolean {
+		return this.#state.content.checkVisibility();
 	}
 
-	destroy(): void {
-		instances.delete(this.content);
+	constructor(state: OuiTooltipState) {
+		this.#state = state;
 
-		this.anchor = null as never;
-		this.content = null as never;
+		state.floatable.update();
+	}
+
+	/**
+	 * Closes the tooltip
+	 */
+	hide(): void {
+		this.#state.floatable.hide();
+	}
+
+	/**
+	 * Opens the tooltip
+	 */
+	show(): void {
+		this.#state.floatable.show();
 	}
 }
+
+type OuiTooltipState = {
+	anchor: HTMLElement;
+	content: HTMLElement;
+	floatable: OuiFloatable;
+	timer?: number;
+	tooltip: OuiTooltip;
+};
+
+// #endregion
+
+// #region Functions
 
 function activate(event: Event, focus: boolean): void {
 	const anchor = findAncestor(event, SELECTOR) as HTMLElement | null;
@@ -38,62 +57,81 @@ function activate(event: Event, focus: boolean): void {
 
 	if (anchor == null && content == null) {
 		if (!focused) {
-			closeTooltip(active);
+			closeTooltip(activeState);
 
-			active = undefined;
+			activeState = undefined;
+			activeTooltip = undefined;
 		}
 
 		return;
 	}
 
-	const instance = instances.get((anchor ?? content)!);
+	const state = states.get((anchor ?? content)!);
 
-	if (instance == null || instance === active) {
+	if (state == null || state.tooltip === activeTooltip) {
 		return;
 	}
 
-	const shouldDelay = active == null;
+	const shouldDelay = activeTooltip == null;
 
-	closeTooltip(active);
+	closeTooltip(activeState);
 
-	active = instance;
+	activeState = state;
+	activeTooltip = state.tooltip;
+
 	focused = focus;
 
-	instance.timer = setTimeout(
+	state.timer = setTimeout(
 		() => {
-			instance.content.showPopover({
-				source: instance.anchor as HTMLElement,
+			state.content.showPopover({
+				source: state.anchor as HTMLElement,
 			});
 
 			setTimeout(() => {
-				instance.floatable.update();
+				state.floatable.update();
 
-				instance.content.setAttribute(ATTRIBUTE_CONTENT_ACTIVE, '');
+				state.content.setAttribute(ATTRIBUTE_CONTENT_OPEN, '');
 			});
 		},
 		shouldDelay ? delay : 0,
 	);
 }
 
-function closeTooltip(instance?: Tooltip): void {
-	if (instance == null) {
+function closeTooltip(state?: OuiTooltipState): void {
+	if (state == null) {
 		return;
 	}
 
-	if (instance.timer != null) {
-		clearTimeout(instance.timer);
+	if (state.timer != null) {
+		clearTimeout(state.timer);
 	}
 
-	instance.content?.hidePopover();
-	instance.content?.removeAttribute(ATTRIBUTE_CONTENT_ACTIVE);
+	state.content?.hidePopover();
+	state.content?.removeAttribute(ATTRIBUTE_CONTENT_OPEN);
 }
 
 function createTooltip(anchor: HTMLElement): void {
 	const content = getContent(anchor);
 
-	if (content != null) {
-		instances.set(anchor, new Tooltip(anchor, content));
+	if (content == null) {
+		return;
 	}
+
+	anchor.insertAdjacentElement('afterend', content);
+
+	states.set(anchor, getState(anchor, content));
+}
+
+function destroyTooltip(state: OuiTooltipState): void {
+	clearTimeout(state.timer);
+
+	state.content.remove();
+	state.floatable.destroy();
+
+	state.anchor = undefined as never;
+	state.content = undefined as never;
+	state.floatable = undefined as never;
+	state.tooltip = undefined as never;
 }
 
 function findElements(attribute: string | null): HTMLElement[] {
@@ -169,8 +207,25 @@ function getElements(anchor: HTMLElement): HTMLElement[] | undefined {
 	return [paragraph];
 }
 
+function getState(anchor: HTMLElement, content: HTMLElement): OuiTooltipState {
+	const state: OuiTooltipState = {
+		anchor,
+		content,
+		floatable: createFloatable(anchor, content, options, false),
+		tooltip: null as never,
+	};
+
+	state.tooltip = new OuiTooltip(state);
+
+	return state;
+}
+
+function getTooltip(element: HTMLElement): OuiTooltip | undefined {
+	return states.get(element)?.tooltip;
+}
+
 function onAdd(element: HTMLElement): void {
-	if (!instances.has(element)) {
+	if (!states.has(element)) {
 		createTooltip(element);
 	}
 }
@@ -180,7 +235,7 @@ function onFocusin(event: Event): void {
 }
 
 function onFocusout(): void {
-	if (active == null) {
+	if (activeTooltip == null) {
 		return;
 	}
 
@@ -190,16 +245,17 @@ function onFocusout(): void {
 
 	focusTimer = setTimeout(() => {
 		if (
-			active == null ||
+			activeTooltip == null ||
 			document.activeElement == null ||
 			findAncestor(document.activeElement, SELECTOR) != null
 		) {
 			return;
 		}
 
-		closeTooltip(active);
+		closeTooltip(activeState);
 
-		active = undefined;
+		activeState = undefined;
+		activeTooltip = undefined;
 	});
 }
 
@@ -208,9 +264,15 @@ function onPointermove(event: Event): void {
 }
 
 function onRemove(element: HTMLElement): void {
-	instances.get(element)?.destroy();
+	const state = states.get(element);
 
-	instances.delete(element);
+	if (state == null) {
+		return;
+	}
+
+	destroyTooltip(state);
+
+	states.delete(element);
 }
 
 /**
@@ -219,11 +281,15 @@ function onRemove(element: HTMLElement): void {
  * _(Default delay is half a second, or 500 milliseconds)_
  * @param value Delay in milliseconds
  */
-export function setTooltipDelay(value: number): void {
+function setTooltipDelay(value: number): void {
 	if (typeof value === 'number' && !Number.isNaN(value) && value >= 0) {
 		delay = value;
 	}
 }
+
+// #endregion
+
+// #region Variables
 
 const ARIA_DESCRIBEDBY = 'aria-describedby';
 
@@ -241,15 +307,15 @@ const ATTRIBUTE = 'oui-tooltip';
 
 const ATTRIBUTE_CONTENT = `${ATTRIBUTE}-content`;
 
-const ATTRIBUTE_CONTENT_ACTIVE = `${ATTRIBUTE_CONTENT}-active`;
+const ATTRIBUTE_CONTENT_OPEN = `${ATTRIBUTE_CONTENT}-open`;
 
 const SELECTOR = `[${ATTRIBUTE}]`;
 
 const SELECTOR_CONTENT = `[${ATTRIBUTE_CONTENT}]`;
 
-const instances = new WeakMap<HTMLElement, Tooltip>();
+const states = new WeakMap<HTMLElement, OuiTooltipState>();
 
-const options: FloatableOptions = {
+const options: OuiFloatableOptions = {
 	attribute: `${ATTRIBUTE}-position`,
 	position: 'above',
 };
@@ -258,12 +324,26 @@ let delay = 500;
 
 let focused = false;
 
-let active: Tooltip | undefined;
+let activeState: OuiTooltipState | undefined;
+
+let activeTooltip: OuiTooltip | undefined;
 
 let focusTimer: number | undefined;
+
+// #endregion
+
+// #region Initialization
 
 on(document, 'focusin', onFocusin);
 on(document, 'focusout', onFocusout);
 on(document, 'pointermove', onPointermove);
 
 attributable(ATTRIBUTE, onAdd, onRemove);
+
+// #endregion
+
+// #region Exports
+
+export {getTooltip, setTooltipDelay, type OuiTooltip};
+
+// #endregion

@@ -1,5 +1,51 @@
 @use 'mixins.scss' as mixins;
 
+:where([oui-dialog], [oui-popover], [oui-tooltip-content]),
+:where([oui-dialog])::backdrop {
+	opacity: 0;
+	transition: 0.125s ease-in-out;
+	transition-property: opacity, scale;
+}
+
+:where([oui-dialog], [oui-popover], [oui-tooltip-content]) {
+	@include mixins.shadow-overlay;
+
+	background-color: var(--oui-absolute);
+	scale: 0.9;
+}
+
+:where([oui-dialog]:focus, [oui-popover]:focus, [oui-tooltip-content]:focus) {
+	outline: none;
+}
+
+:where(
+	[oui-dialog][oui-dialog-open],
+	[oui-popover][oui-popover-open],
+	[oui-tooltip-content][oui-tooltip-content-open]
+),
+:where([oui-dialog][oui-dialog-open])::backdrop {
+	opacity: 1;
+}
+
+:where(
+	[oui-dialog][oui-dialog-open],
+	[oui-popover][oui-popover-open],
+	[oui-tooltip-content][oui-tooltip-content-open]
+) {
+	scale: 1;
+	transition-delay: 0.125s;
+}
+
+:where([oui-popover], [oui-tooltip-content]) {
+	@include mixins.floatable;
+}
+
+:where([oui-popover]) {
+	padding: 1rem;
+	background-color: var(--oui-absolute);
+	border-radius: 0.25rem;
+}
+
 :where(
 	[oui-tooltip]:is(
 		abbr,
@@ -29,8 +75,6 @@
 }
 
 :where([oui-tooltip-content]) {
-	@include mixins.floatable;
-
 	max-width: 48ch;
 	padding: 0.75em 1em;
 	overflow: visible;
@@ -39,8 +83,6 @@
 	border-radius: 0.25rem;
 	font-size: 0.875rem;
 	pointer-events: none;
-	transition: opacity 0.125s ease-in-out 0s;
-	transition-behavior: allow-discrete;
 
 	&::after {
 		content: '';
@@ -97,7 +139,7 @@
 	}
 }
 
-:where([oui-tooltip-content][oui-tooltip-content-active]) {
+:where([oui-tooltip-content][oui-tooltip-content-open]) {
 	opacity: 1;
 	pointer-events: all;
 }

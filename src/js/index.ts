@@ -1,8 +1,9 @@
-import './focus-trap/standalone';
 import './movable';
-import './popover';
 import './sortable';
 
-export {getFloatable} from './floatable'
+export * from './dialog';
+export * from './floatable/standalone';
+export * from './focus-trap/standalone';
+export * from './popover';
 export * from './splitter';
-export {setTooltipDelay} from './tooltip';
+export * from './tooltip';
