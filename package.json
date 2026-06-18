@@ -1,6 +1,6 @@
 {
 	"name": "@oscarpalmer/oui",
-	"version": "0.25.0",
+	"version": "0.26.0",
 	"description": "Styles, components, and utilities for building websites and applications.",
 	"keywords": [
 		"css",
@@ -33,6 +33,14 @@
 			"types": "./dist/js/index.d.mts",
 			"default": "./dist/js/index.mjs"
 		},
+		"./dialog": {
+			"types": "./dist/js/dialog.d.mts",
+			"default": "./dist/js/dialog.mjs"
+		},
+		"./floatable": {
+			"types": "./dist/js/floatable/standalone.d.mts",
+			"default": "./dist/js/floatable/standalone.mjs"
+		},
 		"./focus-trap": {
 			"types": "./dist/js/focus-trap/standalone.d.mts",
 			"default": "./dist/js/focus-trap/standalone.mjs"
@@ -52,6 +60,10 @@
 		"./splitter": {
 			"types": "./dist/js/splitter.d.mts",
 			"default": "./dist/js/splitter.mjs"
+		},
+		"./toolbar": {
+			"types": "./dist/js/toolbar.d.mts",
+			"default": "./dist/js/toolbar.mjs"
 		},
 		"./tooltip": {
 			"types": "./dist/js/tooltip.d.mts",

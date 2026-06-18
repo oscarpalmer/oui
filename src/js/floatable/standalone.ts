@@ -1,1 +1,1 @@
-export {getFloatable, type OuiFloatable, type OuiFloatablePosition} from './embedded';
+export {createFloatable, type OuiFloatable, type OuiFloatablePosition} from './embedded';

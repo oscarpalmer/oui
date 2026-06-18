@@ -3,7 +3,7 @@ import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {attributable} from './internal/attributable';
 import {
 	addDraggable,
-	Draggable,
+	OuiDraggable,
 	removeDraggable,
 	type DraggableBound,
 	type DraggableState,
@@ -12,7 +12,7 @@ import {
 
 // #region Types
 
-export class Movable extends Draggable {
+export class OuiMovable extends OuiDraggable {
 	inset: string;
 
 	moved = false;
@@ -73,15 +73,15 @@ export class Movable extends Draggable {
 
 // #region Functions
 
-function afterDirection(draggable: Draggable): void {
+function afterDirection(draggable: OuiDraggable): void {
 	const container = draggable.container?.getBoundingClientRect();
 
 	if (container != null) {
-		setOffset(draggable as Movable, container);
+		setOffset(draggable as OuiMovable, container);
 	}
 }
 
-function destroyContainer(_: Draggable, container: HTMLElement, empty: boolean): void {
+function destroyContainer(_: OuiDraggable, container: HTMLElement, empty: boolean): void {
 	if (empty) {
 		resizer.unobserve(container);
 	}
@@ -89,7 +89,7 @@ function destroyContainer(_: Draggable, container: HTMLElement, empty: boolean):
 
 function getOffsetPosition(
 	state: DraggableState,
-	_: Draggable,
+	_: OuiDraggable,
 	__: HTMLElement,
 	position: EventPosition,
 ): EventPosition {
@@ -106,14 +106,14 @@ function getOriginalPosition(state: DraggableState): EventPosition {
 	};
 }
 
-function initializeContainer(draggable: Draggable): void {
+function initializeContainer(draggable: OuiDraggable): void {
 	resizer.observe(draggable.container!);
 }
 
 function onBegin(): void {}
 
-function onCancel(state: DraggableState, draggable: Draggable): void {
-	const movable = draggable as Movable;
+function onCancel(state: DraggableState, draggable: OuiDraggable): void {
+	const movable = draggable as OuiMovable;
 
 	const {element, inset, moved, position} = movable;
 	const {x, y} = state.original ?? {x: 0, y: 0};
@@ -129,10 +129,10 @@ function onCancel(state: DraggableState, draggable: Draggable): void {
 function onEnd(
 	event: MouseEvent | TouchEvent,
 	state: DraggableState,
-	draggable: Draggable,
+	draggable: OuiDraggable,
 	reset: () => void,
 ): void {
-	const movable = draggable as Movable;
+	const movable = draggable as OuiMovable;
 
 	if (!movable.moved) {
 		movable.moved = true;
@@ -170,7 +170,7 @@ function onEnd(
 function onMove(
 	_: MouseEvent | TouchEvent,
 	state: DraggableState,
-	__: Draggable,
+	__: OuiDraggable,
 	position: DragMovePosition,
 ): PlainObject | undefined {
 	return {
@@ -202,7 +202,7 @@ function onScroll(): void {
 	}
 }
 
-function reposition(movable: Movable): void {
+function reposition(movable: OuiMovable): void {
 	if (!movable.moved || movable.container == null) {
 		return;
 	}
@@ -215,7 +215,7 @@ function reposition(movable: Movable): void {
 	movable.element.style.inset = `${y}px auto auto ${x}px`;
 }
 
-function setOffset(movable: Movable, container: DOMRect): void {
+function setOffset(movable: OuiMovable, container: DOMRect): void {
 	movable.offset = {};
 
 	const element = movable.element.getBoundingClientRect();
@@ -234,16 +234,16 @@ const ATTRIBUTE_CONTAINER = `${ATTRIBUTE}-container`;
 
 const ATTRIBUTE_DIRECTION = `${ATTRIBUTE}-direction`;
 
-const CONTAINERS = new Map<HTMLElement, Set<Movable>>();
+const CONTAINERS = new Map<HTMLElement, Set<OuiMovable>>();
 
 const EVENT_END = 'move:end';
 
-const MOVED = new Set<Movable>();
+const MOVED = new Set<OuiMovable>();
 
 const SELECTOR_HANDLE = `[${ATTRIBUTE}-handle]`;
 
 const bound: DraggableBound = {
-	constructor: Movable,
+	constructor: OuiMovable,
 	property: 'movable',
 };
 

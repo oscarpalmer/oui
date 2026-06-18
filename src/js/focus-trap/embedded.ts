@@ -1,118 +1,239 @@
+import {isPlainObject} from '@oscarpalmer/atoms/is';
 import {clamp} from '@oscarpalmer/atoms/number';
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {getFocusable} from '@oscarpalmer/toretto/focusable';
+import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 
-export class FocusTrap {
-	disabled = false;
+// #region Types
 
-	connected = true;
+export class OuiFocusTrap {
+	#destroyed = false;
+	#tabIndex: number;
 
-	element: HTMLElement;
+	readonly #state: OuiFocusTrapState;
 
-	embedded: boolean;
-
+	/**
+	 * Is focused maintained within the _FocusTrap_ when clicking outside of it?
+	 */
 	get contain(): boolean {
-		return this.element.hasAttribute(FOCUS_TRAP_CONTAIN);
+		return this.#state.element.hasAttribute(ATTRIBUTE_FOCUSTRAP_CONTAIN);
 	}
 
+	/**
+	 * Should focus be maintained within the _FocusTrap_ when clicking outside of it?
+	 */
+	set contain(value: boolean) {
+		if (value === true) {
+			this.#state.element.setAttribute(ATTRIBUTE_FOCUSTRAP_CONTAIN, '');
+		} else if (value === false) {
+			this.#state.element.removeAttribute(ATTRIBUTE_FOCUSTRAP_CONTAIN);
+		}
+	}
+
+	/**
+	 * Is the _FocusTrap_ disabled?
+	 */
+	get disabled(): boolean {
+		return this.#state.disabled;
+	}
+
+	/**
+	 * Should the _FocusTrap_ be disabled?
+	 */
+	set disabled(value: boolean) {
+		if (value === true) {
+			this.disable();
+		} else if (value === false) {
+			this.enable();
+		}
+	}
+
+	/**
+	 * Is focus allowed to escape when pressing _Escape_ within the _FocusTrap_?
+	 */
 	get noescape(): boolean {
-		return this.element.hasAttribute(FOCUS_TRAP_NOESCAPE);
+		return this.#state.element.hasAttribute(ATTRIBUTE_FOCUSTRAP_NOESCAPE);
 	}
 
-	constructor(element: HTMLElement, options?: Options) {
-		this.element = element;
-		this.embedded = options != null;
-
-		element.setAttribute('tabindex', '-1');
-
-		if (options != null) {
-			element.setAttribute(FOCUS_TRAP_SELECTOR, '');
-		}
-
-		if (options?.noescape) {
-			element.setAttribute(FOCUS_TRAP_NOESCAPE, '');
+	/**
+	 * Should the _FocusTrap_ allow focus to escape when pressing _Escape_?
+	 */
+	set noescape(value: boolean) {
+		if (value === true) {
+			this.#state.element.setAttribute(ATTRIBUTE_FOCUSTRAP_NOESCAPE, '');
+		} else if (value === false) {
+			this.#state.element.removeAttribute(ATTRIBUTE_FOCUSTRAP_NOESCAPE);
 		}
 	}
 
-	connect(): void {
-		setConnected(this, true);
+	constructor(state: OuiFocusTrapState) {
+		this.#state = state;
+		this.#tabIndex = state.element.tabIndex;
+
+		state.element.tabIndex = -1;
+
+		state.element.setAttribute(ATTRIBUTE_FOCUSTRAP, '');
+
+		this.contain = state.options.contain;
+		this.noescape = state.options.noescape;
+
+		states.set(this, state);
 	}
 
+	/**
+	 * Destroys the _FocusTrap_
+	 */
 	destroy(): void {
-		this.element = undefined as never;
-	}
-
-	disable(): void {
-		if (!(this.disabled || this.noescape)) {
-			setDisabled(this, true);
-		}
-	}
-
-	disconnect(): void {
-		setConnected(this, false);
-	}
-
-	enable(): void {
-		if (this.disabled) {
-			setDisabled(this, false);
-		}
-	}
-
-	focus(last: boolean): void {
-		tabToTrap(this, getFocusable(this.element), this.element, last ? -1 : 0);
-	}
-}
-
-type Options = {
-	noescape: boolean;
-};
-
-//
-
-export function createFocusTrap(element: HTMLElement, options?: Options): FocusTrap {
-	let focusTrap = FOCUSTRAPS_ALL.get(element);
-
-	if (focusTrap == null) {
-		focusTrap = new FocusTrap(element, options);
-
-		FOCUSTRAPS_ALL.set(element, focusTrap);
-	}
-
-	return focusTrap;
-}
-
-function onEscape(event: KeyboardEvent): void {
-	let element = findAncestor(event, ATTRIBUTE_SELECTOR) as HTMLElement;
-
-	let focusTrap = FOCUSTRAPS_ALL.get(element);
-
-	if (element == null || focusTrap == null) {
-		return;
-	}
-
-	while (focusTrap.disabled) {
-		element = findAncestor(
-			focusTrap.element.parentElement as HTMLElement,
-			ATTRIBUTE_SELECTOR,
-		) as HTMLElement;
-
-		focusTrap = FOCUSTRAPS_ALL.get(element);
-
-		if (element == null || focusTrap == null) {
+		if (this.#destroyed) {
 			return;
 		}
 
-		if (!focusTrap.disabled) {
+		this.#destroyed = true;
+
+		disabled.delete(this);
+		instances.delete(this.#state.element);
+		states.delete(this);
+
+		this.#state.element.tabIndex = this.#tabIndex;
+
+		this.#state.element.removeAttribute(ATTRIBUTE_FOCUSTRAP);
+		this.#state.element.removeAttribute(ATTRIBUTE_FOCUSTRAP_CONTAIN);
+		this.#state.element.removeAttribute(ATTRIBUTE_FOCUSTRAP_NOESCAPE);
+
+		this.#state.element = undefined as never;
+	}
+
+	/**
+	 * Disables the _FocusTrap_
+	 */
+	disable(): void {
+		if (!this.#destroyed && !(this.disabled || this.#state.options.noescape)) {
+			setDisabled(this, this.#state, true);
+		}
+	}
+
+	/**
+	 * Enables the _FocusTrap_
+	 */
+	enable(): void {
+		if (!this.#destroyed && this.disabled) {
+			setDisabled(this, this.#state, false);
+		}
+	}
+
+	/**
+	 * Focuses the _FocusTrap_
+	 *
+	 * @param last When `true`, focuses the last focusable element within the _FocusTrap_ instead of the first
+	 */
+	focus(last: boolean): void {
+		if (!this.#destroyed && !this.disabled) {
+			tabToTrap(this, getFocusable(this.#state.element), this.#state.element, last ? -1 : 0);
+		}
+	}
+}
+
+type OuiFocusTrapOptions = {
+	/**
+	 * Should focus be maintained within the _FocusTrap_ when clicking outside of it?
+	 */
+	contain?: boolean;
+	/**
+	 * Should the _FocusTrap_ allow focus to escape when pressing _Escape_?
+	 */
+	noescape?: boolean;
+};
+
+type OuiFocusTrapState = {
+	disabled: boolean;
+	element: HTMLElement;
+	options: Required<OuiFocusTrapOptions>;
+};
+
+// #endregion
+
+// #region Functions
+
+/**
+ * Creates _(or retrieves)_ a _FocusTrap_ for an element
+ *
+ * @param element Element to trap focus within
+ * @param options _FocusTrap_ options
+ * @returns _FocusTrap_ instance
+ */
+export function createFocusTrap(element: HTMLElement, options?: OuiFocusTrapOptions): OuiFocusTrap {
+	if (!isHTMLOrSVGElement(element)) {
+		throw new TypeError(MESSAGE);
+	}
+
+	let instance = instances.get(element);
+
+	if (instance == null) {
+		instance = new OuiFocusTrap(getState(element, options));
+
+		instances.set(element, instance);
+	}
+
+	return instance;
+}
+
+function getOptions(
+	element: HTMLElement,
+	input?: OuiFocusTrapOptions,
+): Required<OuiFocusTrapOptions> {
+	const options = isPlainObject(input) ? input : {};
+
+	return {
+		contain:
+			typeof options.contain === 'boolean'
+				? options.contain
+				: element.hasAttribute(ATTRIBUTE_FOCUSTRAP_CONTAIN),
+		noescape:
+			typeof options.noescape === 'boolean'
+				? options.noescape
+				: element.hasAttribute(ATTRIBUTE_FOCUSTRAP_NOESCAPE),
+	};
+}
+
+function getState(element: HTMLElement, options?: OuiFocusTrapOptions): OuiFocusTrapState {
+	return {
+		element,
+		disabled: false,
+		options: getOptions(element, options),
+	};
+}
+
+function onEscape(event: KeyboardEvent): void {
+	let element = findAncestor(event, SELECTOR) as HTMLElement;
+
+	let instance = instances.get(element);
+	let state = states.get(instance!);
+
+	if (element == null || instance == null || state == null) {
+		return;
+	}
+
+	while (state.disabled) {
+		element = findAncestor(state.element.parentElement as HTMLElement, SELECTOR) as HTMLElement;
+
+		instance = instances.get(element);
+		state = states.get(instance!);
+
+		if (element == null || instance == null || state == null) {
+			return;
+		}
+
+		if (!state.disabled) {
 			break;
 		}
 	}
 
-	focusTrap?.disable();
+	instance?.disable();
 }
 
 function onFocusIn(event: Event): void {
-	const focusTrap = FOCUSTRAPS_ALL.get(findAncestor(event, ATTRIBUTE_SELECTOR) as HTMLElement);
+	const focusTrap = instances.get(findAncestor(event, SELECTOR) as HTMLElement);
 
 	lastTarget = focusTrap == null ? undefined : (event.target as HTMLElement);
 }
@@ -133,38 +254,40 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 function onPointerdown(event: MouseEvent | TouchEvent): void {
-	const lastFocusTrap = findAncestor(lastTarget as HTMLElement, ATTRIBUTE_SELECTOR) as HTMLElement;
-	const nextFocusTrap = findAncestor(event, ATTRIBUTE_SELECTOR) as HTMLElement;
+	const last = findAncestor(lastTarget as HTMLElement, SELECTOR) as HTMLElement;
+	const next = findAncestor(event, SELECTOR) as HTMLElement;
 
-	if (lastFocusTrap != null && nextFocusTrap !== lastFocusTrap) {
-		if (FOCUSTRAPS_ALL.get(lastFocusTrap)?.contain ?? false) {
+	if (last != null && next !== last) {
+		if (states.get(instances.get(last)!)?.options.contain ?? false) {
 			event.preventDefault();
 
 			lastTarget?.focus();
 		}
 	}
 
-	if (FOCUSTRAPS_DISABLED.size === 0) {
+	if (disabled.size === 0) {
 		return;
 	}
 
-	for (const focusTrap of FOCUSTRAPS_DISABLED) {
-		if (focusTrap.element !== nextFocusTrap) {
+	for (const focusTrap of disabled) {
+		const state = states.get(focusTrap);
+
+		if (state != null && state.element !== next) {
 			focusTrap.enable();
 		}
 	}
 }
 
 function onTab(event: KeyboardEvent): void {
-	const element = findAncestor(event, ATTRIBUTE_SELECTOR) as HTMLElement;
+	const element = findAncestor(event, SELECTOR) as HTMLElement;
 
-	const focusTrap = FOCUSTRAPS_ALL.get(element);
+	const instance = instances.get(element);
 
-	if (focusTrap == null) {
+	if (instance == null) {
 		return;
 	}
 
-	if (!focusTrap.disabled) {
+	if (!instance.disabled) {
 		event.preventDefault();
 	}
 
@@ -173,37 +296,30 @@ function onTab(event: KeyboardEvent): void {
 	const index = elements.indexOf(event.target as HTMLElement);
 
 	if (index === -1 || elements.length === 0) {
-		tabToTrap(focusTrap, elements, element);
+		tabToTrap(instance, elements, element);
 	} else {
-		tabToElement(focusTrap, elements, index, event.shiftKey ? -1 : 1);
+		tabToElement(instance, elements, index, event.shiftKey ? -1 : 1);
 	}
 }
 
 export function removeFocusTrap(element: HTMLElement): void {
-	FOCUSTRAPS_ALL.get(element)?.destroy();
-	FOCUSTRAPS_ALL.delete(element);
+	instances.get(element)?.destroy();
+
+	instances.delete(element);
 }
 
-function setConnected(focusTrap: FocusTrap, value: boolean): void {
-	if (!focusTrap.embedded || focusTrap.connected === value) {
-		return;
-	}
-
-	focusTrap.connected = value;
-}
-
-function setDisabled(focusTrap: FocusTrap, value: boolean): void {
-	focusTrap.disabled = value;
+function setDisabled(focusTrap: OuiFocusTrap, state: OuiFocusTrapState, value: boolean): void {
+	state.disabled = value;
 
 	if (value) {
-		FOCUSTRAPS_DISABLED.add(focusTrap);
+		disabled.add(focusTrap);
 	} else {
-		FOCUSTRAPS_DISABLED.delete(focusTrap);
+		disabled.delete(focusTrap);
 	}
 }
 
 function tabToElement(
-	focusTrap: FocusTrap,
+	instance: OuiFocusTrap,
 	elements: Element[],
 	index: number,
 	modifier: number,
@@ -211,18 +327,18 @@ function tabToElement(
 	const {length} = elements;
 	const next = clamp(index + modifier, 0, length - 1, true);
 
-	if (focusTrap.disabled) {
+	if (instance.disabled) {
 		if ((index === length - 1 && next === 0) || (index === 0 && next === length - 1)) {
 			lastTarget = undefined;
 
-			focusTrap.enable();
+			instance.enable();
 		}
 
 		return;
 	}
 
 	const element = elements[next] as HTMLElement;
-	const elementFocusTrap = FOCUSTRAPS_ALL.get(element);
+	const elementFocusTrap = instances.get(element);
 
 	if (elementFocusTrap != null) {
 		elementFocusTrap.focus(modifier === -1);
@@ -234,15 +350,15 @@ function tabToElement(
 }
 
 function tabToTrap(
-	focusTrap: FocusTrap,
+	instance: OuiFocusTrap,
 	elements: Element[],
 	element: HTMLElement,
 	index?: number,
 ): void {
-	if (focusTrap.disabled) {
+	if (instance.disabled) {
 		lastTarget = undefined;
 
-		focusTrap.enable();
+		instance.enable();
 	} else {
 		const next = elements.length === 0 ? element : elements.at(index ?? 0);
 
@@ -252,30 +368,40 @@ function tabToTrap(
 	}
 }
 
-//
+// #endregion
 
-export const FOCUS_TRAP_SELECTOR = 'oui-focus-trap';
+// #region Variables
 
-const ATTRIBUTE_SELECTOR = `[${FOCUS_TRAP_SELECTOR}]`;
+export const ATTRIBUTE_FOCUSTRAP = 'oui-focus-trap';
+
+export const ATTRIBUTE_FOCUSTRAP_CONTAIN = `${ATTRIBUTE_FOCUSTRAP}-contain`;
+
+export const ATTRIBUTE_FOCUSTRAP_NOESCAPE = `${ATTRIBUTE_FOCUSTRAP}-noescape`;
 
 const EVENT_OPTIONS: AddEventListenerOptions = {
 	capture: true,
 	passive: false,
 };
 
-export const FOCUS_TRAP_CONTAIN = `${FOCUS_TRAP_SELECTOR}-contain`;
+const MESSAGE = 'Element must be an HTMLElement or SVGElement';
 
-export const FOCUS_TRAP_NOESCAPE = `${FOCUS_TRAP_SELECTOR}-noescape`;
+const SELECTOR = `[${ATTRIBUTE_FOCUSTRAP}]`;
 
-const FOCUSTRAPS_ALL: WeakMap<HTMLElement, FocusTrap> = new WeakMap();
+const disabled = new Set<OuiFocusTrap>();
 
-const FOCUSTRAPS_DISABLED: Set<FocusTrap> = new Set();
+const instances = new WeakMap<HTMLElement, OuiFocusTrap>();
+
+const states = new WeakMap<OuiFocusTrap, OuiFocusTrapState>();
 
 let lastTarget: HTMLElement | undefined;
 
-//
+// #endregion
+
+// #region Initialization
 
 on(document, 'focusin', onFocusIn, EVENT_OPTIONS);
 on(document, 'keydown', onKeydown, EVENT_OPTIONS);
 on(document, 'mousedown', onPointerdown, EVENT_OPTIONS);
 on(document, 'touchstart', onPointerdown, EVENT_OPTIONS);
+
+// #endregion

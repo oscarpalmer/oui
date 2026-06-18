@@ -1,5 +1,6 @@
 import './movable';
 import './sortable';
+import './toolbar';
 
 export * from './dialog';
 export * from './floatable/standalone';

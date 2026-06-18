@@ -5,16 +5,38 @@ import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 
 // #region Types
 
+type CreateOuiFloatableOptions = {
+	/**
+	 * Open the _OuiFloatable_ when created? _(defaults to `true`)_
+	 */
+	open?: boolean;
+	/**
+	 * Position of the _OuiFloatable_ _(defaults to `below`)_
+	 */
+	position?: OuiFloatablePosition;
+};
+
 export class OuiFloatable {
 	#destroyed = false;
 
 	readonly #state: OuiFloatableState;
 
 	/**
-	 * Is the _Floatable_ open?
+	 * Is the _OuiFloatable_ open?
 	 */
 	get open(): boolean {
 		return this.#state.content.checkVisibility();
+	}
+
+	/**
+	 * Open or close the _OuiFloatable_
+	 */
+	set open(value: boolean) {
+		if (value === true) {
+			this.show();
+		} else if (value === false) {
+			this.hide();
+		}
 	}
 
 	constructor(state: OuiFloatableState, standalone: boolean) {
@@ -105,41 +127,9 @@ type OuiFloatableState = {
 	options: OuiFloatableOptions;
 };
 
-type GetOuiFloatableOptions = {
-	/**
-	 * Open the _OuiFloatable_ when created? _(defaults to `true`)_
-	 */
-	open?: boolean;
-	/**
-	 * Position of the _OuiFloatable_ _(defaults to `below`)_
-	 */
-	position?: OuiFloatablePosition;
-};
-
 // #endregion
 
 // #region Functions
-
-export function createFloatable(
-	anchor: HTMLElement,
-	content: HTMLElement,
-	options: OuiFloatableOptions,
-	standalone: boolean,
-): OuiFloatable {
-	if (!isHTMLOrSVGElement(anchor) || !isHTMLOrSVGElement(content)) {
-		throw new TypeError('Anchor and content must be an HTMLElement or SVGElement.');
-	}
-
-	let floatable = instances.get(content);
-
-	if (floatable == null) {
-		floatable = new OuiFloatable(getState(anchor, content, options), standalone);
-
-		instances.set(content, floatable);
-	}
-
-	return floatable;
-}
 
 function getAnchorName(anchor: HTMLElement): string {
 	let {anchorName} = anchor.style;
@@ -153,24 +143,32 @@ function getAnchorName(anchor: HTMLElement): string {
 	return `--oui-floatable-anchor-${index}`;
 }
 
+export function createEmbeddedFloatable(
+	anchor: HTMLElement,
+	content: HTMLElement,
+	options: OuiFloatableOptions,
+): OuiFloatable {
+	return createInstance(anchor, content, options, false);
+}
+
 /**
- * Create a _Floatable_ for an anchor and content element
+ * Create a _OuiFloatable_ for an anchor and content element
  *
  * @param anchor Anchor element
  * @param content Content element
- * @param options _Floatable_ options
- * @returns _Floatable_ instance
+ * @param options _OuiFloatable_ options
+ * @returns _OuiFloatable_ instance
  */
-export function getFloatable(
-	anchor: HTMLElement | SVGElement,
-	content: HTMLElement | SVGElement,
-	options?: GetOuiFloatableOptions,
+export function createFloatable(
+	anchor: HTMLElement,
+	content: HTMLElement,
+	options?: CreateOuiFloatableOptions,
 ): OuiFloatable {
 	const {open, position} = getOptions(options);
 
-	const floatable = createFloatable(
-		anchor as HTMLElement,
-		content as HTMLElement,
+	const floatable = createInstance(
+		anchor,
+		content,
 		{
 			position,
 		},
@@ -181,6 +179,27 @@ export function getFloatable(
 
 	if (open) {
 		floatable?.show();
+	}
+
+	return floatable;
+}
+
+function createInstance(
+	anchor: HTMLElement,
+	content: HTMLElement,
+	options: OuiFloatableOptions,
+	standalone: boolean,
+): OuiFloatable {
+	if (!isHTMLOrSVGElement(anchor) || !isHTMLOrSVGElement(content)) {
+		throw new TypeError(MESSAGE);
+	}
+
+	let floatable = instances.get(content);
+
+	if (floatable == null) {
+		floatable = new OuiFloatable(getState(anchor, content, options), standalone);
+
+		instances.set(content, floatable);
 	}
 
 	return floatable;
@@ -203,7 +222,7 @@ export function getOnBeforeToggleListener(element: HTMLElement): RemovableEventL
 	);
 }
 
-function getOptions(input?: GetOuiFloatableOptions): Required<GetOuiFloatableOptions> {
+function getOptions(input?: CreateOuiFloatableOptions): Required<CreateOuiFloatableOptions> {
 	const object = isPlainObject(input) ? input : {};
 
 	return {
@@ -286,6 +305,8 @@ export const ATTRIBUTE_FLOATABLE = 'oui-floatable';
 const ATTRIBUTE_POSITION = 'oui-position';
 
 const EVENT_BEFORE = 'beforetoggle';
+
+const MESSAGE = 'Anchor and content must be an HTMLElement or SVGElement';
 
 const POSITIONS = Object.fromEntries(
 	Object.entries(AREAS).map(([position, area]) => [area, position]),

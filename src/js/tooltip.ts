@@ -3,7 +3,11 @@ import {createElement} from '@oscarpalmer/toretto/create';
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
-import {createFloatable, type OuiFloatable, type OuiFloatableOptions} from './floatable/embedded';
+import {
+	createEmbeddedFloatable,
+	type OuiFloatable,
+	type OuiFloatableOptions,
+} from './floatable/embedded';
 import {attributable} from './internal/attributable';
 
 // #region Types
@@ -95,6 +99,12 @@ function activate(event: Event, focus: boolean): void {
 		},
 		shouldDelay ? delay : 0,
 	);
+}
+
+function addTooltip(element: HTMLElement): void {
+	if (!states.has(element)) {
+		createTooltip(element);
+	}
 }
 
 function closeTooltip(state?: OuiTooltipState): void {
@@ -211,7 +221,7 @@ function getState(anchor: HTMLElement, content: HTMLElement): OuiTooltipState {
 	const state: OuiTooltipState = {
 		anchor,
 		content,
-		floatable: createFloatable(anchor, content, options, false),
+		floatable: createEmbeddedFloatable(anchor, content, options),
 		tooltip: null as never,
 	};
 
@@ -222,12 +232,6 @@ function getState(anchor: HTMLElement, content: HTMLElement): OuiTooltipState {
 
 function getTooltip(element: HTMLElement): OuiTooltip | undefined {
 	return states.get(element)?.tooltip;
-}
-
-function onAdd(element: HTMLElement): void {
-	if (!states.has(element)) {
-		createTooltip(element);
-	}
 }
 
 function onFocusin(event: Event): void {
@@ -263,7 +267,7 @@ function onPointermove(event: Event): void {
 	activate(event, false);
 }
 
-function onRemove(element: HTMLElement): void {
+function removeTooltip(element: HTMLElement): void {
 	const state = states.get(element);
 
 	if (state == null) {
@@ -338,7 +342,7 @@ on(document, 'focusin', onFocusin);
 on(document, 'focusout', onFocusout);
 on(document, 'pointermove', onPointermove);
 
-attributable(ATTRIBUTE, onAdd, onRemove);
+attributable(ATTRIBUTE, addTooltip, removeTooltip);
 
 // #endregion
 

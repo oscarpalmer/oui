@@ -20,95 +20,7 @@ const ATTRIBUTE_SIZE = 'size';
 
 const ATTRIBUTE_TYPE = 'type';
 
-export class OuiSplitterElement extends HTMLElement {
-	static readonly observedAttributes = [
-		ATTRIBUTE_MAX,
-		ATTRIBUTE_MIN,
-		ATTRIBUTE_SIZE,
-		ATTRIBUTE_TYPE,
-	];
-
-	readonly #splitter: Splitter;
-
-	// Getters and setters
-
-	get max(): number {
-		return this.#splitter.values.max;
-	}
-
-	set max(value: number) {
-		this.setAttribute(ATTRIBUTE_MAX, String(value));
-	}
-
-	get min(): number {
-		return this.#splitter.values.min;
-	}
-
-	set min(value: number) {
-		this.setAttribute('min', String(value));
-	}
-
-	get size(): number {
-		return this.#splitter.values.now.current;
-	}
-
-	set size(value: number) {
-		this.setAttribute('size', String(value));
-	}
-
-	get type(): string {
-		return this.getAttribute('type') ?? 'vertical';
-	}
-
-	set type(value: string) {
-		this.setAttribute('type', value);
-	}
-
-	// Constructor
-
-	constructor() {
-		super();
-
-		const panels = [...this.children].filter(child => child instanceof HTMLElement);
-
-		if (panels.length !== 2) {
-			throw new Error(`${SELECTOR} must have exactly two panels.`);
-		}
-
-		this.#splitter = new Splitter(this, panels);
-	}
-
-	// Methods
-
-	connectedCallback(): void {
-		this.#splitter.updateConnections(1);
-	}
-
-	disconnectedCallback(): void {
-		this.#splitter.updateConnections(0);
-	}
-
-	attributeChangedCallback(name: string): void {
-		switch (name) {
-			case ATTRIBUTE_MAX:
-			case ATTRIBUTE_MIN:
-			case ATTRIBUTE_SIZE:
-				this.#splitter.updateValues();
-				break;
-
-			case ATTRIBUTE_TYPE:
-				this.#splitter.updateOrientation();
-				break;
-
-			default:
-				break;
-		}
-	}
-}
-
-let index = 0;
-
-class Splitter {
+class OuiSplitter {
 	element: OuiSplitterElement;
 
 	handle: HTMLSpanElement;
@@ -119,9 +31,9 @@ class Splitter {
 
 	separator: HTMLDivElement;
 
-	types!: Types;
+	types!: OuiSplitterTypes;
 
-	values: Values;
+	values: OuiSplitterValues;
 
 	constructor(element: OuiSplitterElement, panels: HTMLElement[]) {
 		this.element = element;
@@ -185,18 +97,104 @@ class Splitter {
 	}
 }
 
-type Types = {
+export class OuiSplitterElement extends HTMLElement {
+	static readonly observedAttributes = [
+		ATTRIBUTE_MAX,
+		ATTRIBUTE_MIN,
+		ATTRIBUTE_SIZE,
+		ATTRIBUTE_TYPE,
+	];
+
+	readonly #splitter: OuiSplitter;
+
+	// Getters and setters
+
+	get max(): number {
+		return this.#splitter.values.max;
+	}
+
+	set max(value: number) {
+		this.setAttribute(ATTRIBUTE_MAX, String(value));
+	}
+
+	get min(): number {
+		return this.#splitter.values.min;
+	}
+
+	set min(value: number) {
+		this.setAttribute('min', String(value));
+	}
+
+	get size(): number {
+		return this.#splitter.values.now.current;
+	}
+
+	set size(value: number) {
+		this.setAttribute('size', String(value));
+	}
+
+	get type(): string {
+		return this.getAttribute('type') ?? 'vertical';
+	}
+
+	set type(value: string) {
+		this.setAttribute('type', value);
+	}
+
+	// Constructor
+
+	constructor() {
+		super();
+
+		const panels = [...this.children].filter(child => child instanceof HTMLElement);
+
+		if (panels.length !== 2) {
+			throw new Error(MESSAGE);
+		}
+
+		this.#splitter = new OuiSplitter(this, panels);
+	}
+
+	// Methods
+
+	connectedCallback(): void {
+		this.#splitter.updateConnections(1);
+	}
+
+	disconnectedCallback(): void {
+		this.#splitter.updateConnections(0);
+	}
+
+	attributeChangedCallback(name: string): void {
+		switch (name) {
+			case ATTRIBUTE_MAX:
+			case ATTRIBUTE_MIN:
+			case ATTRIBUTE_SIZE:
+				this.#splitter.updateValues();
+				break;
+
+			case ATTRIBUTE_TYPE:
+				this.#splitter.updateOrientation();
+				break;
+
+			default:
+				break;
+		}
+	}
+}
+
+type OuiSplitterTypes = {
 	auto: boolean;
 	horizontal: boolean;
 };
 
-type Values = {
+type OuiSplitterValues = {
 	max: number;
 	min: number;
-	now: ValuesNow;
+	now: OuiSplitterValuesNow;
 };
 
-type ValuesNow = {
+type OuiSplitterValuesNow = {
 	current: number;
 	previous: number;
 };
@@ -212,7 +210,7 @@ function createHandle(): HTMLSpanElement {
 	return handle;
 }
 
-function createSeparator(splitter: Splitter): HTMLDivElement {
+function createSeparator(splitter: OuiSplitter): HTMLDivElement {
 	const separator = document.createElement('div');
 
 	separator.role = 'separator';
@@ -229,7 +227,7 @@ function getContained(min: number, value: number, max: number): number {
 	return round(clamp(value, min, max), VALUE_DECIMALS);
 }
 
-function getSize(splitter: Splitter, value: number): number {
+function getSize(splitter: OuiSplitter, value: number): number {
 	const {height, left, top, width} = splitter.rectangle;
 
 	const offset = value - (splitter.types.horizontal ? top : left);
@@ -239,7 +237,7 @@ function getSize(splitter: Splitter, value: number): number {
 	return getContained(splitter.values.min, fraction, splitter.values.max);
 }
 
-function getTypes(splitter: Splitter, width?: number, height?: number): Types {
+function getTypes(splitter: OuiSplitter, width?: number, height?: number): OuiSplitterTypes {
 	const type = splitter.element.getAttribute('type')?.trim() ?? '';
 
 	if (type === 'horizontal') {
@@ -282,8 +280,8 @@ function getValue(element: HTMLElement, name: string, defaultValue: number): num
 	return parsed > 1 ? parsed / NAVIGATION_MAXIMUM_TOTAL : parsed;
 }
 
-function getValues(element: OuiSplitterElement): Values {
-	const values: Values = {
+function getValues(element: OuiSplitterElement): OuiSplitterValues {
+	const values: OuiSplitterValues = {
 		max: getValue(element, ATTRIBUTE_MAX, NAVIGATION_MAXIMUM_PERCENTAGE),
 		min: getValue(element, ATTRIBUTE_MIN, NAVIGATION_MINIMUM_PERCENTAGE),
 		now: {
@@ -445,21 +443,21 @@ function onPointerup(): void {
 	}
 }
 
-function setAriaOrientation(splitter: Splitter): void {
+function setAriaOrientation(splitter: OuiSplitter): void {
 	splitter.separator.setAttribute(
 		'aria-orientation',
 		splitter.types.horizontal ? 'horizontal' : 'vertical',
 	);
 }
 
-function setAriaValue(splitter: Splitter): void {
+function setAriaValue(splitter: OuiSplitter): void {
 	splitter.separator.setAttribute('aria-valuemax', String(splitter.values.max));
 	splitter.separator.setAttribute('aria-valuemin', String(splitter.values.min));
 
 	splitter.separator.setAttribute('aria-valuenow', String(splitter.values.now.current));
 }
 
-function setSize(splitter: Splitter, size: number, previous?: boolean): void {
+function setSize(splitter: OuiSplitter, size: number, previous?: boolean): void {
 	splitter.values.now.current = size;
 
 	if (previous) {
@@ -493,7 +491,9 @@ const KEYS_VERTICAL: Set<string> = new Set(['ArrowLeft', 'ArrowRight']);
 
 const KEYS_ALL: Set<string> = new Set([...KEYS_ABSOLUTE, ...KEYS_HORIZONTAL, ...KEYS_VERTICAL]);
 
-const MAPPED_ELEMENTS: WeakMap<HTMLElement, Splitter> = new WeakMap();
+const MAPPED_ELEMENTS: WeakMap<HTMLElement, OuiSplitter> = new WeakMap();
+
+const MESSAGE = `<${SELECTOR}> must have exactly two panels.`;
 
 const METHODS_CONNECT = ['delete', 'set'] as const;
 
@@ -519,9 +519,11 @@ const STYLING_TOGGLER: StyleToggler = toggleStyles(document.body, {
 
 const VALUE_DECIMALS = 6;
 
+let index = 0;
+
 let frame: DOMHighResTimeStamp | undefined;
 
-let splitter: Splitter | undefined;
+let splitter: OuiSplitter | undefined;
 
 //
 

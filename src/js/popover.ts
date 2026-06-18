@@ -3,12 +3,12 @@ import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import {
 	ATTRIBUTE_FLOATABLE,
-	createFloatable,
+	createEmbeddedFloatable,
 	getOnBeforeToggleListener,
 	type OuiFloatable,
 	type OuiFloatableOptions,
 } from './floatable/embedded';
-import {createFocusTrap, type FocusTrap} from './focus-trap/embedded';
+import {createFocusTrap, type OuiFocusTrap} from './focus-trap/embedded';
 import {attributable} from './internal/attributable';
 
 // #region Types
@@ -48,7 +48,7 @@ type OuiPopoverState = {
 	anchor: HTMLElement;
 	content: HTMLElement;
 	floatable: OuiFloatable;
-	focusTrap?: FocusTrap;
+	focusTrap?: OuiFocusTrap;
 	listeners: RemovableEventListener[];
 	popover: OuiPopover;
 };
@@ -56,6 +56,18 @@ type OuiPopoverState = {
 // #endregion
 
 // #region Functions
+
+function addPopover(element: HTMLElement): void {
+	if (states.has(element) || element.hasAttribute(ATTRIBUTE_FLOATABLE)) {
+		return;
+	}
+
+	const anchor = element.ownerDocument.querySelector(`[popovertarget="${element.id}"]`);
+
+	if (isHTMLOrSVGElement(anchor)) {
+		states.set(element, getState(anchor, element));
+	}
+}
 
 function destroyPopover(state: OuiPopoverState): void {
 	state.floatable.destroy();
@@ -87,7 +99,7 @@ function getState(anchor: HTMLElement, content: HTMLElement): OuiPopoverState {
 	const state: OuiPopoverState = {
 		anchor,
 		content,
-		floatable: createFloatable(anchor, content, options, false),
+		floatable: createEmbeddedFloatable(anchor, content, options),
 		focusTrap:
 			content.getAttribute(ARIA_MODAL) === TRUE
 				? createFocusTrap(content, {
@@ -122,23 +134,11 @@ function getState(anchor: HTMLElement, content: HTMLElement): OuiPopoverState {
 	return state;
 }
 
-function onAdd(element: HTMLElement): void {
-	if (states.has(element) || element.hasAttribute(ATTRIBUTE_FLOATABLE)) {
-		return;
-	}
-
-	const anchor = element.ownerDocument.querySelector(`[popovertarget="${element.id}"]`);
-
-	if (isHTMLOrSVGElement(anchor)) {
-		states.set(element, getState(anchor, element));
-	}
-}
-
 function onPointerdown(): void {
 	ignoreFocus = true;
 }
 
-function onRemove(element: HTMLElement): void {
+function removePopover(element: HTMLElement): void {
 	const state = states.get(element);
 
 	if (state == null) {
@@ -183,7 +183,7 @@ on(document, 'pointerdown', onPointerdown, {
 	capture: true,
 });
 
-attributable(ATTRIBUTE, onAdd, onRemove);
+attributable(ATTRIBUTE, addPopover, removePopover);
 
 // #endregion
 

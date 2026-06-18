@@ -4,14 +4,14 @@ import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {toggleStyles} from '@oscarpalmer/toretto/style';
 import supportsTouch from '@oscarpalmer/toretto/touch';
-import type {Movable} from '../movable';
-import type {Sortable} from '../sortable';
+import type {OuiMovable} from '../movable';
+import type {OuiSortable} from '../sortable';
 
 // #region Types
 
 type Direction = 'horizontal' | 'vertical' | 'x' | 'y';
 
-export abstract class Draggable {
+export abstract class OuiDraggable {
 	container: HTMLElement | undefined;
 
 	hasHandles: boolean | undefined;
@@ -45,25 +45,25 @@ export abstract class Draggable {
 type DragBegin = (
 	event: MouseEvent | TouchEvent,
 	state: DraggableState,
-	draggable: Draggable,
+	draggable: OuiDraggable,
 	element: HTMLElement,
 	handle: HTMLElement,
 	position: EventPosition,
 ) => void;
 
-type DragCancel = (state: DraggableState, draggable: Draggable) => void;
+type DragCancel = (state: DraggableState, draggable: OuiDraggable) => void;
 
 type DragEnd = (
 	event: MouseEvent | TouchEvent,
 	state: DraggableState,
-	draggable: Draggable,
+	draggable: OuiDraggable,
 	reset: () => void,
 ) => void;
 
 type DragMove = (
 	event: MouseEvent | TouchEvent,
 	state: DraggableState,
-	draggable: Draggable,
+	draggable: OuiDraggable,
 	position: DragMovePosition,
 ) => PlainObject | undefined;
 
@@ -81,8 +81,8 @@ export type DraggableBound<
 };
 
 type DraggableInstances = {
-	movable?: Movable;
-	sortable?: Sortable;
+	movable?: OuiMovable;
+	sortable?: OuiSortable;
 };
 
 type DraggableOptions = {
@@ -94,25 +94,25 @@ type DraggableOptions = {
 
 type DraggableOptionsContainer = {
 	attribute: string;
-	map: Map<HTMLElement, Set<Draggable>>;
+	map: Map<HTMLElement, Set<OuiDraggable>>;
 	onDestroy?: DraggableOptionsContainerOnDestroy;
 	onInitialize?: DraggableOptionsContainerOnInitialize;
 };
 
 type DraggableOptionsContainerOnDestroy = (
-	draggable: Draggable,
+	draggable: OuiDraggable,
 	container: HTMLElement,
 	empty: boolean,
 ) => void;
 
-type DraggableOptionsContainerOnInitialize = (draggable: Draggable) => void;
+type DraggableOptionsContainerOnInitialize = (draggable: OuiDraggable) => void;
 
 type DraggableOptionsDirection = {
 	attribute: string;
 	onAfter?: DraggableOptionsDirectionOnAfter;
 };
 
-type DraggableOptionsDirectionOnAfter = (draggable: Draggable) => void;
+type DraggableOptionsDirectionOnAfter = (draggable: OuiDraggable) => void;
 
 type DraggableOptionsDrag = {
 	onBegin: DragBegin;
@@ -128,14 +128,14 @@ type DraggableOptionsPosition = {
 
 type DraggableOptionsPositionGetOffset = (
 	state: DraggableState,
-	draggable: Draggable,
+	draggable: OuiDraggable,
 	element: HTMLElement,
 	position: EventPosition,
 ) => EventPosition;
 
 type DraggableOptionsPositionGetOriginal = (
 	state: DraggableState,
-	draggable: Draggable,
+	draggable: OuiDraggable,
 	position: EventPosition,
 ) => EventPosition;
 
@@ -178,7 +178,7 @@ function getHandle(event: Event, isMovable: boolean): HTMLElement | null {
 	) as HTMLElement;
 }
 
-function getNextPosition(draggable: Draggable, position: EventPosition): EventPosition {
+function getNextPosition(draggable: OuiDraggable, position: EventPosition): EventPosition {
 	let x = state.original?.x ?? 0;
 	let y = state.original?.y ?? 0;
 
@@ -394,7 +394,7 @@ function reset(): void {
 	styleToggler.remove();
 }
 
-function setContainer(draggable: Draggable, options: DraggableOptions): void {
+function setContainer(draggable: OuiDraggable, options: DraggableOptions): void {
 	const selector = draggable.element.getAttribute(options.container.attribute);
 
 	if (typeof selector !== 'string') {
@@ -420,7 +420,7 @@ function setContainer(draggable: Draggable, options: DraggableOptions): void {
 	options.container.onInitialize?.(draggable);
 }
 
-function setDirection(draggable: Draggable, options: DraggableOptions): void {
+function setDirection(draggable: OuiDraggable, options: DraggableOptions): void {
 	const direction = draggable.element.getAttribute(options.direction.attribute);
 
 	if (horizontals.has(direction as Direction)) {
@@ -432,7 +432,7 @@ function setDirection(draggable: Draggable, options: DraggableOptions): void {
 	options.direction.onAfter?.(draggable);
 }
 
-function unsetContainer(draggable: Draggable, options: DraggableOptions): void {
+function unsetContainer(draggable: OuiDraggable, options: DraggableOptions): void {
 	const {container} = draggable;
 
 	if (container == null) {
@@ -499,7 +499,7 @@ const styleToggler = toggleStyles(document.body, {
 
 const verticals = new Set<Direction>(['vertical', 'y']);
 
-let current: Movable | Sortable | undefined;
+let current: OuiMovable | OuiSortable | undefined;
 
 // #endregion
 

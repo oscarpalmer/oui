@@ -1,4 +1,6 @@
 import {attributable} from '../internal/attributable';
-import {createFocusTrap, FOCUS_TRAP_SELECTOR, removeFocusTrap} from './embedded';
+import {ATTRIBUTE_FOCUSTRAP, createFocusTrap, removeFocusTrap, type OuiFocusTrap} from './embedded';
 
-attributable(FOCUS_TRAP_SELECTOR, createFocusTrap, removeFocusTrap);
+attributable(ATTRIBUTE_FOCUSTRAP, createFocusTrap, removeFocusTrap);
+
+export {createFocusTrap, type OuiFocusTrap};
