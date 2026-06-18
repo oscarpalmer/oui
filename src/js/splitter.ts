@@ -109,36 +109,60 @@ export class OuiSplitterElement extends HTMLElement {
 
 	// Getters and setters
 
+	/**
+	 * Maximum size for the first panel
+	 */
 	get max(): number {
 		return this.#splitter.values.max;
 	}
 
+	/**
+	 * Maximum size for the first panel
+	 */
 	set max(value: number) {
 		this.setAttribute(ATTRIBUTE_MAX, String(value));
 	}
 
+	/**
+	 * Minimum size for the first panel
+	 */
 	get min(): number {
 		return this.#splitter.values.min;
 	}
 
+	/**
+	 * Minimum size for the first panel
+	 */
 	set min(value: number) {
-		this.setAttribute('min', String(value));
+		this.setAttribute(ATTRIBUTE_MIN, String(value));
 	}
 
+	/**
+	 * Current size for the first panel
+	 */
 	get size(): number {
 		return this.#splitter.values.now.current;
 	}
 
+	/**
+	 * Current size for the first panel
+	 */
 	set size(value: number) {
-		this.setAttribute('size', String(value));
+		this.setAttribute(ATTRIBUTE_SIZE, String(value));
 	}
 
+	/**
+	 * Orientation of the splitter
+	 */
 	get type(): string {
-		return this.getAttribute('type') ?? 'vertical';
+		return this.getAttribute(ATTRIBUTE_TYPE) ?? 'vertical';
 	}
 
+	/**
+	 * Orientation of the splitter
+	 */
 	set type(value: string) {
-		this.setAttribute('type', value);
+		this.setAttribute(ATTRIBUTE_TYPE, value);
 	}
 
 	// Constructor

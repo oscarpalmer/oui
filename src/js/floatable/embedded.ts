@@ -7,11 +7,11 @@ import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 
 type CreateOuiFloatableOptions = {
 	/**
-	 * Open the _OuiFloatable_ when created? _(defaults to `true`)_
+	 * Open the floatable when created? _(defaults to `true`)_
 	 */
 	open?: boolean;
 	/**
-	 * Position of the _OuiFloatable_ _(defaults to `below`)_
+	 * Position of the floatable _(defaults to `below`)_
 	 */
 	position?: OuiFloatablePosition;
 };
@@ -22,14 +22,14 @@ export class OuiFloatable {
 	readonly #state: OuiFloatableState;
 
 	/**
-	 * Is the _OuiFloatable_ open?
+	 * Is the floatable open?
 	 */
 	get open(): boolean {
 		return this.#state.content.checkVisibility();
 	}
 
 	/**
-	 * Open or close the _OuiFloatable_
+	 * Open or close the floatable
 	 */
 	set open(value: boolean) {
 		if (value === true) {
@@ -57,7 +57,7 @@ export class OuiFloatable {
 	}
 
 	/**
-	 * Destroy the _OuiFloatable_, removing it from the DOM and cleaning up references
+	 * Destroy the floatable, removing it from the DOM and cleaning up references
 	 */
 	destroy(): void {
 		if (this.#destroyed) {
@@ -73,7 +73,7 @@ export class OuiFloatable {
 	}
 
 	/**
-	 * Closes the _OuiFloatable_
+	 * Closes the floatable
 	 */
 	hide(): void {
 		if (!this.#destroyed && this.open) {
@@ -82,7 +82,7 @@ export class OuiFloatable {
 	}
 
 	/**
-	 * Opens the _OuiFloatable_
+	 * Opens the floatable
 	 */
 	show(): void {
 		if (!this.#destroyed && !this.open) {
@@ -91,7 +91,7 @@ export class OuiFloatable {
 	}
 
 	/**
-	 * Update the position of the _OuiFloatable_, with an optional new position
+	 * Update the position of the floatable, with an optional new position
 	 *
 	 * @param position Optional new position
 	 */

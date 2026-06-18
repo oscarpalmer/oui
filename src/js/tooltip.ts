@@ -22,6 +22,17 @@ class OuiTooltip {
 		return this.#state.content.checkVisibility();
 	}
 
+	/**
+	 * Open or close the tooltip
+	 */
+	set open(value: boolean) {
+		if (value === true) {
+			this.show();
+		} else if (value === false) {
+			this.hide();
+		}
+	}
+
 	constructor(state: OuiTooltipState) {
 		this.#state = state;
 
@@ -230,6 +241,12 @@ function getState(anchor: HTMLElement, content: HTMLElement): OuiTooltipState {
 	return state;
 }
 
+/**
+ * Get the _OuiTooltip_ for an element
+ *
+ * @param element Element to get _OuiTooltip_ for
+ * @returns _OuiTooltip_ instance
+ */
 function getTooltip(element: HTMLElement): OuiTooltip | undefined {
 	return states.get(element)?.tooltip;
 }

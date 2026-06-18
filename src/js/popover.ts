@@ -23,6 +23,14 @@ class OuiPopover {
 		return this.#state.content.checkVisibility();
 	}
 
+	set open(value: boolean) {
+		if (value === true) {
+			this.show();
+		} else if (value === false) {
+			this.hide();
+		}
+	}
+
 	constructor(state: OuiPopoverState) {
 		this.#state = state;
 

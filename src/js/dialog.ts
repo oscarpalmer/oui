@@ -15,6 +15,17 @@ class OuiDialog {
 		return this.#state.element.open;
 	}
 
+	/**
+	 * Open or close the dialog
+	 */
+	set open(value: boolean) {
+		if (value === true) {
+			this.show();
+		} else if (value === false) {
+			this.hide();
+		}
+	}
+
 	constructor(state: OuiDialogState) {
 		this.#state = state;
 	}
