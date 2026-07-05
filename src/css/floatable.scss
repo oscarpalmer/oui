@@ -77,8 +77,6 @@
 :where([oui-tooltip-content]) {
 	max-width: 48ch;
 	padding: 0.75em 1em;
-	overflow: visible;
-	opacity: 0;
 	background-color: var(--oui-absolute);
 	border-radius: 0.25rem;
 	font-size: 0.875rem;

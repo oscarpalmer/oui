@@ -1,7 +1,9 @@
 import {on} from '@oscarpalmer/toretto/event';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
-import {getOnBeforeToggleListener} from './floatable/embedded';
+import {getOnBeforeToggleListener} from './floatable/floatable.embedded';
 import {attributable} from './internal/attributable';
+import {ATTRIBUTE_MOVABLE_HANDLE} from './movable/movable.embedded';
+import {createMovable, type OuiMovable} from './movable/movable.standalone';
 
 // #region Types
 
@@ -79,6 +81,7 @@ type OuiDialogState = {
 	element: HTMLDialogElement;
 	listeners: RemovableEventListener[];
 	modal: boolean;
+	movable?: OuiMovable;
 };
 
 // #endregion
@@ -120,6 +123,22 @@ function getDialog(element: HTMLDialogElement): OuiDialog | undefined {
 	return states.get(element)?.dialog;
 }
 
+function getMovable(element: HTMLDialogElement): OuiMovable | undefined {
+	const handles = element.querySelectorAll(SELECTOR_MOVER);
+
+	if (handles.length === 0) {
+		return;
+	}
+
+	for (const handle of handles) {
+		handle.setAttribute(ATTRIBUTE_MOVABLE_HANDLE, '');
+	}
+
+	return createMovable(element, {
+		container: element.getAttribute(ATTRIBUTE_CONTAINER) ?? undefined,
+	});
+}
+
 function getState(element: HTMLDialogElement): OuiDialogState {
 	const state: OuiDialogState = {
 		element,
@@ -136,9 +155,15 @@ function getState(element: HTMLDialogElement): OuiDialogState {
 
 					element.setAttribute(ARIA_MODAL, String(modal));
 					element.setAttribute(ATTRIBUTE_OPEN, '');
+
+					element.focus();
 				} else {
 					element.removeAttribute(ATTRIBUTE_OPEN);
 					element.setAttribute(ARIA_MODAL, String(state.modal));
+
+					element.style.inset = '';
+					element.style.position = '';
+					element.style.transform = '';
 				}
 			}),
 		],
@@ -146,6 +171,7 @@ function getState(element: HTMLDialogElement): OuiDialogState {
 	};
 
 	state.dialog = new OuiDialog(state);
+	state.movable = getMovable(element);
 
 	return state;
 }
@@ -170,6 +196,8 @@ const ARIA_MODAL = 'aria-modal';
 
 const ATTRIBUTE = 'oui-dialog';
 
+const ATTRIBUTE_CONTAINER = `${ATTRIBUTE}-container`;
+
 const ATTRIBUTE_OPEN = `${ATTRIBUTE}-open`;
 
 const COMMAND_SHOW_MODAL = 'show-modal';
@@ -177,6 +205,8 @@ const COMMAND_SHOW_MODAL = 'show-modal';
 const EVENT_TOGGLE = 'toggle';
 
 const MESSAGE = 'The element must be an instance of HTMLDialogElement';
+
+const SELECTOR_MOVER = `[${ATTRIBUTE}-mover]`;
 
 const SELECTOR_MODAL = ':modal';
 

@@ -24,6 +24,7 @@
 	}
 
 	:where(& h2, & h3, & h4, & h5, & h6) {
+		color: var(--oui-foreground, var(--oui-gray-10));
 		font-size: 1em;
 		font-weight: bold;
 	}

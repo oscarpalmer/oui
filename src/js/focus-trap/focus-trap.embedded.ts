@@ -4,6 +4,7 @@ import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {getFocusable} from '@oscarpalmer/toretto/focusable';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
+import {attributable} from '../internal/attributable';
 
 // #region Types
 
@@ -14,14 +15,14 @@ export class OuiFocusTrap {
 	readonly #state: OuiFocusTrapState;
 
 	/**
-	 * Is focused maintained within the _FocusTrap_ when clicking outside of it?
+	 * Is focused maintained within the _focus trap_ when clicking outside of it?
 	 */
 	get contain(): boolean {
 		return this.#state.element.hasAttribute(ATTRIBUTE_FOCUSTRAP_CONTAIN);
 	}
 
 	/**
-	 * Should focus be maintained within the _FocusTrap_ when clicking outside of it?
+	 * Should focus be maintained within the _focus trap_ when clicking outside of it?
 	 */
 	set contain(value: boolean) {
 		if (value === true) {
@@ -32,14 +33,14 @@ export class OuiFocusTrap {
 	}
 
 	/**
-	 * Is the _FocusTrap_ disabled?
+	 * Is the _focus trap_ disabled?
 	 */
 	get disabled(): boolean {
 		return this.#state.disabled;
 	}
 
 	/**
-	 * Should the _FocusTrap_ be disabled?
+	 * Should the _focus trap_ be disabled?
 	 */
 	set disabled(value: boolean) {
 		if (value === true) {
@@ -50,14 +51,14 @@ export class OuiFocusTrap {
 	}
 
 	/**
-	 * Is focus allowed to escape when pressing _Escape_ within the _FocusTrap_?
+	 * Is focus allowed to escape when pressing _Escape_ within the _focus trap_?
 	 */
 	get noescape(): boolean {
 		return this.#state.element.hasAttribute(ATTRIBUTE_FOCUSTRAP_NOESCAPE);
 	}
 
 	/**
-	 * Should the _FocusTrap_ allow focus to escape when pressing _Escape_?
+	 * Should the _focus trap_ allow focus to escape when pressing _Escape_?
 	 */
 	set noescape(value: boolean) {
 		if (value === true) {
@@ -82,7 +83,7 @@ export class OuiFocusTrap {
 	}
 
 	/**
-	 * Destroys the _FocusTrap_
+	 * Destroys the _focus trap_
 	 */
 	destroy(): void {
 		if (this.#destroyed) {
@@ -105,7 +106,7 @@ export class OuiFocusTrap {
 	}
 
 	/**
-	 * Disables the _FocusTrap_
+	 * Disables the _focus trap_
 	 */
 	disable(): void {
 		if (!this.#destroyed && !(this.disabled || this.#state.options.noescape)) {
@@ -114,7 +115,7 @@ export class OuiFocusTrap {
 	}
 
 	/**
-	 * Enables the _FocusTrap_
+	 * Enables the _focus trap_
 	 */
 	enable(): void {
 		if (!this.#destroyed && this.disabled) {
@@ -123,9 +124,9 @@ export class OuiFocusTrap {
 	}
 
 	/**
-	 * Focuses the _FocusTrap_
+	 * Focuses the _focus trap_
 	 *
-	 * @param last When `true`, focuses the last focusable element within the _FocusTrap_ instead of the first
+	 * @param last When `true`, focuses the last focusable element within the _focus trap_ instead of the first
 	 */
 	focus(last: boolean): void {
 		if (!this.#destroyed && !this.disabled) {
@@ -134,13 +135,13 @@ export class OuiFocusTrap {
 	}
 }
 
-type OuiFocusTrapOptions = {
+export type OuiFocusTrapOptions = {
 	/**
-	 * Should focus be maintained within the _FocusTrap_ when clicking outside of it?
+	 * Should focus be maintained within the _focus trap_ when clicking outside of it?
 	 */
 	contain?: boolean;
 	/**
-	 * Should the _FocusTrap_ allow focus to escape when pressing _Escape_?
+	 * Should the _focus trap_ allow focus to escape when pressing _Escape_?
 	 */
 	noescape?: boolean;
 };
@@ -156,11 +157,11 @@ type OuiFocusTrapState = {
 // #region Functions
 
 /**
- * Creates _(or retrieves)_ a _FocusTrap_ for an element
+ * Creates _(or retrieves)_ a _focus trap_ for an element
  *
  * @param element Element to trap focus within
- * @param options _FocusTrap_ options
- * @returns _FocusTrap_ instance
+ * @param options _Focus trap_ options
+ * @returns _Focus trap_ instance
  */
 export function createFocusTrap(element: HTMLElement, options?: OuiFocusTrapOptions): OuiFocusTrap {
 	if (!isHTMLOrSVGElement(element)) {
@@ -398,6 +399,8 @@ let lastTarget: HTMLElement | undefined;
 // #endregion
 
 // #region Initialization
+
+attributable(ATTRIBUTE_FOCUSTRAP, createFocusTrap, removeFocusTrap);
 
 on(document, 'focusin', onFocusIn, EVENT_OPTIONS);
 on(document, 'keydown', onKeydown, EVENT_OPTIONS);

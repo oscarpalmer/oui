@@ -5,7 +5,7 @@ import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 
 // #region Types
 
-type CreateOuiFloatableOptions = {
+export type CreateOuiFloatableOptions = {
 	/**
 	 * Open the floatable when created? _(defaults to `true`)_
 	 */
@@ -50,10 +50,8 @@ export class OuiFloatable {
 			content.popover = 'manual';
 		}
 
-		const anchorName = getAnchorName(anchor);
-
-		anchor.style.anchorName = anchorName;
-		content.style.positionAnchor = anchorName;
+		anchor.style.anchorName = state.name;
+		content.style.positionAnchor = state.name;
 	}
 
 	/**
@@ -105,6 +103,7 @@ export class OuiFloatable {
 export type OuiFloatableOptions = {
 	attribute?: string;
 	position: OuiFloatablePosition;
+	reusable: boolean;
 };
 
 export type OuiFloatablePosition =
@@ -124,6 +123,7 @@ export type OuiFloatablePosition =
 type OuiFloatableState = {
 	anchor: HTMLElement;
 	content: HTMLElement;
+	name: string;
 	options: OuiFloatableOptions;
 };
 
@@ -171,6 +171,7 @@ export function createFloatable(
 		content,
 		{
 			position,
+			reusable: false,
 		},
 		true,
 	);
@@ -194,12 +195,14 @@ function createInstance(
 		throw new TypeError(MESSAGE);
 	}
 
-	let floatable = instances.get(content);
+	let floatable = options.reusable ? undefined : instances.get(content);
 
 	if (floatable == null) {
 		floatable = new OuiFloatable(getState(anchor, content, options), standalone);
 
-		instances.set(content, floatable);
+		if (!options.reusable) {
+			instances.set(content, floatable);
+		}
 	}
 
 	return floatable;
@@ -212,7 +215,7 @@ export function getOnBeforeToggleListener(element: HTMLElement): RemovableEventL
 		event => {
 			const {newState, source} = event;
 
-			if (newState === STATE_OPEN && source?.getAttribute(ARIA_DISABLED) === TRUE) {
+			if (newState === FLOATABLE_STATE_OPEN && source?.getAttribute(ARIA_DISABLED) === TRUE) {
 				event.preventDefault();
 			}
 		},
@@ -255,9 +258,12 @@ function getState(
 	content: HTMLElement,
 	options: OuiFloatableOptions,
 ): OuiFloatableState {
+	const name = getAnchorName(anchor);
+
 	const state: OuiFloatableState = {
 		anchor,
 		content,
+		name,
 		options,
 	};
 
@@ -266,6 +272,7 @@ function getState(
 
 export function removeFloatable(content: HTMLElement): void {
 	instances.get(content)?.destroy();
+
 	instances.delete(content);
 }
 
@@ -274,6 +281,7 @@ function setPosition(state: OuiFloatableState, override?: OuiFloatablePosition):
 
 	const area = AREAS[position];
 
+	state.content.style.positionAnchor = state.name;
 	state.content.style.positionArea = area;
 
 	state.content.setAttribute(ATTRIBUTE_POSITION, POSITIONS[area]);
@@ -306,13 +314,13 @@ const ATTRIBUTE_POSITION = 'oui-position';
 
 const EVENT_BEFORE = 'beforetoggle';
 
+export const FLOATABLE_STATE_OPEN = 'open';
+
 const MESSAGE = 'Anchor and content must be an HTMLElement or SVGElement';
 
 const POSITIONS = Object.fromEntries(
 	Object.entries(AREAS).map(([position, area]) => [area, position]),
 ) as Record<string, OuiFloatablePosition>;
-
-const STATE_OPEN = 'open';
 
 const TRUE = 'true';
 

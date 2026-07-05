@@ -7,8 +7,8 @@ import {
 	getOnBeforeToggleListener,
 	type OuiFloatable,
 	type OuiFloatableOptions,
-} from './floatable/embedded';
-import {createFocusTrap, type OuiFocusTrap} from './focus-trap/embedded';
+} from './floatable/floatable.embedded';
+import {createFocusTrap, type OuiFocusTrap} from './focus-trap/focus-trap.embedded';
 import {attributable} from './internal/attributable';
 
 // #region Types
@@ -177,6 +177,7 @@ const TRUE = 'true';
 const options: OuiFloatableOptions = {
 	attribute: `${ATTRIBUTE}position`,
 	position: 'below-start',
+	reusable: false,
 };
 
 const states = new WeakMap<HTMLElement, OuiPopoverState>();

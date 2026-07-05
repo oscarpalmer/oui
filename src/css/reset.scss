@@ -123,6 +123,7 @@
 
 :where(dialog) {
 	display: none !important;
+	overflow: visible;
 	overscroll-behavior: contain;
 	border: none;
 	color: currentcolor;

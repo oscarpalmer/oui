@@ -3,49 +3,56 @@ import {createElement} from '@oscarpalmer/toretto/create';
 import {getPosition} from '@oscarpalmer/toretto/event';
 import {findAncestor, getElementFromPosition} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
-import {attributable} from './internal/attributable';
+import {attributable} from '../internal/attributable';
 import {
 	addDraggable,
+	getDraggableStates,
 	OuiDraggable,
 	removeDraggable,
-	type DraggableBound,
-	type DraggableState,
-	type DragMovePosition,
-} from './internal/draggable';
+	type CreateOuiDraggableOptions,
+	type OuiDraggableBound,
+	type OuiDraggableGlobals,
+	type OuiDraggableItem,
+	type OuiDraggableState,
+	type OuiDragMovePosition,
+} from '../internal/draggable';
 
 // #region Types
 
-export class OuiSortable extends OuiDraggable {
-	connections: string | null;
-
-	origin: HTMLElement | undefined;
-
-	get dragged(): HTMLElement {
-		return getDragPlaceholder();
-	}
-
-	constructor(element: HTMLElement) {
-		super('sort', element, {
-			container: {
-				attribute: ATTRIBUTE_CONTAINER,
-				map: CONTAINERS,
+export class OuiSortable extends OuiDraggable<OuiSortableState> {
+	constructor(element: HTMLElement, options?: CreateOuiDraggableOptions) {
+		super(
+			'sortable',
+			'sort',
+			ATTRIBUTE,
+			element,
+			{
+				container: {
+					attribute: ATTRIBUTE_CONTAINER,
+					map: CONTAINERS,
+				},
+				direction: {
+					attribute: ATTRIBUTE_DIRECTION,
+				},
+				drag: {
+					onBegin,
+					onCancel,
+					onEnd,
+					onMove,
+				},
+				input: options,
+				position: {
+					getOffset: getOffsetPosition,
+					getOriginal: getOriginalPosition,
+				},
+				getDragged: getDragPlaceholder,
+				getOrigin: () =>
+					(getDraggableStates(element)?.sortable as OuiDraggableState & OuiSortableState)?.origin,
 			},
-			direction: {
-				attribute: ATTRIBUTE_DIRECTION,
+			{
+				connections: element.getAttribute(ATTRIBUTE_CONNECTIONS),
 			},
-			drag: {
-				onBegin,
-				onCancel,
-				onEnd,
-				onMove,
-			},
-			position: {
-				getOffset: getOffsetPosition,
-				getOriginal: getOriginalPosition,
-			},
-		});
-
-		this.connections = this.element.getAttribute(ATTRIBUTE_CONNECTIONS);
+		);
 	}
 }
 
@@ -59,13 +66,18 @@ type OuiSortablePlaceholderDrag = {
 	default: HTMLElement | undefined;
 };
 
+type OuiSortableState = {
+	connections: string | null;
+	origin?: HTMLElement;
+};
+
 // #endregion
 
 // #region Functions
 
 function afterEnd(
 	insert: 'append' | 'insert' | 'prepend' | undefined,
-	from: OuiSortable,
+	from: OuiDraggableItem<OuiSortableState>,
 	events: CustomEvent[],
 	elements: {origin?: HTMLElement; target: HTMLElement},
 	position: EventPosition | undefined,
@@ -73,7 +85,7 @@ function afterEnd(
 ): void {
 	elements.origin?.removeAttribute(ATTRIBUTE_ORIGIN);
 
-	from.origin = undefined;
+	from.state.origin = undefined;
 
 	resetPlaceholders();
 
@@ -106,6 +118,23 @@ function afterEnd(
 	document.body.removeAttribute(ATTRIBUTE_ACTIVE);
 }
 
+/**
+ * Creates _(or retrieves)_ a _OuiSortable_ instance for an element
+ *
+ * @param element Element to make sortable
+ * @returns _OuiSortable_ instance
+ */
+export function createSortable(
+	element: HTMLElement,
+	options?: CreateOuiDraggableOptions,
+): OuiSortable {
+	if (!isHTMLOrSVGElement(element)) {
+		throw new TypeError(MESSAGE);
+	}
+
+	return addSortable(element, options) as OuiSortable;
+}
+
 function getDragPlaceholder(): HTMLElement {
 	placeholder.drag.default ??= createElement('div');
 
@@ -113,36 +142,36 @@ function getDragPlaceholder(): HTMLElement {
 }
 
 function getOffsetPosition(
-	_: DraggableState,
-	draggable: OuiDraggable,
+	_: OuiDraggableGlobals,
+	item: OuiDraggableItem,
 	element: HTMLElement,
 	position: EventPosition,
 ): EventPosition {
 	const rectangle = element.getBoundingClientRect();
 
 	return {
-		x: draggable.horizontal ? 0 : position.x - rectangle.left,
-		y: draggable.vertical ? 0 : position.y - rectangle.top,
+		x: item.state.horizontal ? 0 : position.x - rectangle.left,
+		y: item.state.vertical ? 0 : position.y - rectangle.top,
 	};
 }
 
 function getOriginalPosition(
-	_: DraggableState,
-	__: OuiDraggable,
+	_: OuiDraggableGlobals,
+	__: OuiDraggableItem,
 	position: EventPosition,
 ): EventPosition {
 	return position;
 }
 
-function getPositionPlaceholder(sortable: OuiSortable): HTMLElement {
+function getPositionPlaceholder(item: OuiDraggableItem<OuiSortableState>): HTMLElement {
 	placeholder.position ??= createElement('div');
 
 	placeholder.position.setAttribute(ATTRIBUTE_PLACEHOLDER_POSITION, '');
 
-	if (sortable.origin != null) {
+	if (item.state.origin != null) {
 		placeholder.position.style.setProperty(
 			'--placeholder-height',
-			`${sortable.origin.getBoundingClientRect().height}px`,
+			`${item.state.origin.getBoundingClientRect().height}px`,
 		);
 	}
 
@@ -151,43 +180,36 @@ function getPositionPlaceholder(sortable: OuiSortable): HTMLElement {
 
 function onBegin(
 	_: MouseEvent | TouchEvent,
-	state: DraggableState,
-	draggable: OuiDraggable,
+	globals: OuiDraggableGlobals,
+	item: OuiDraggableItem<OuiSortableState>,
 	element: HTMLElement,
 ): void {
-	const sortable = draggable as OuiSortable;
+	item.state.origin = element;
 
-	sortable.origin = element;
-
-	setPlaceholder(state, sortable, element);
+	setPlaceholder(globals, item, element);
 
 	element.setAttribute(ATTRIBUTE_ORIGIN, '');
 
 	document.body.setAttribute(ATTRIBUTE_ACTIVE, '');
 }
 
-function onCancel(_: DraggableState, draggable: OuiDraggable): void {
-	const sortable = draggable as OuiSortable;
-
-	const {origin} = sortable;
-
-	origin?.removeAttribute(ATTRIBUTE_ORIGIN);
+function onCancel(_: OuiDraggableGlobals, item: OuiDraggableItem<OuiSortableState>): void {
+	item.state.origin?.removeAttribute(ATTRIBUTE_ORIGIN);
 
 	document.body.removeAttribute(ATTRIBUTE_ACTIVE);
 
 	resetPlaceholders();
 
-	sortable.origin = undefined;
+	item.state.origin = undefined;
 }
 
 function onEnd(
 	event: MouseEvent | TouchEvent,
-	state: DraggableState,
-	draggable: OuiDraggable,
+	globals: OuiDraggableGlobals,
+	item: OuiDraggableItem<OuiSortableState>,
 	reset: () => void,
 ): void {
-	const from = draggable as OuiSortable;
-	const {origin} = from;
+	const {origin} = item.state;
 
 	const position = getPosition(event) ?? {x: 0, y: 0};
 
@@ -206,25 +228,38 @@ function onEnd(
 	}
 
 	let insert: 'append' | 'insert' | 'prepend' | undefined = 'insert';
-	let to: OuiSortable | undefined;
+	let toInstance: OuiSortable | undefined;
+	let toState: OuiDraggableState | undefined;
 
 	if (element == null) {
 		element = findAncestor(target, SELECTOR) as HTMLElement;
 
-		to = state.instances.get(element)?.sortable;
+		toInstance = globals.instances.get(element)?.sortable;
+		toState = globals.states.get(element)?.sortable;
 
 		insert = element == null ? undefined : element.children.length === 0 ? 'append' : 'prepend';
 	} else {
-		to = state.instances.get(element.parentElement!)?.sortable;
+		toInstance = globals.instances.get(element.parentElement!)?.sortable;
+		toState = globals.states.get(element.parentElement!)?.sortable;
 	}
 
-	const valid = insert != null && validatePosition(state, from, to, position);
+	const valid =
+		insert != null &&
+		validatePosition(
+			globals,
+			item,
+			{
+				instance: toInstance as OuiDraggable<OuiSortableState>,
+				state: toState as OuiDraggableState & OuiSortableState,
+			},
+			position,
+		);
 
 	const detail = valid
 		? {
 				from: {
 					element: origin,
-					position: {...state.original},
+					position: {...globals.original},
 				},
 				to: {
 					element: element,
@@ -242,14 +277,14 @@ function onEnd(
 	const fromEvent = new CustomEvent(EVENT_END, options);
 	const toEvent = new CustomEvent(EVENT_END, options);
 
-	from.element.dispatchEvent(fromEvent);
+	item.instance.element.dispatchEvent(fromEvent);
 
-	if (from !== to) {
-		to?.element.dispatchEvent(toEvent);
+	if (item.instance !== toInstance) {
+		toInstance?.element.dispatchEvent(toEvent);
 	}
 
 	setTimeout(() => {
-		afterEnd(insert, from, [fromEvent, toEvent], {origin, target: element}, position, valid);
+		afterEnd(insert, item, [fromEvent, toEvent], {origin, target: element}, position, valid);
 
 		reset();
 	});
@@ -257,28 +292,42 @@ function onEnd(
 
 function onMove(
 	event: MouseEvent | TouchEvent,
-	state: DraggableState,
-	draggable: OuiDraggable,
-	position: DragMovePosition,
+	globals: OuiDraggableGlobals,
+	item: OuiDraggableItem<OuiSortableState>,
+	position: OuiDragMovePosition,
 ): PlainObject | undefined {
-	const from = draggable as OuiSortable;
-
-	const fromElement = from.origin;
+	const fromElement = item.state.origin;
 	const toElement = findAncestor(event, SELECTOR_ITEM) as HTMLElement;
 
-	let to: OuiSortable | undefined;
+	let toInstance: OuiSortable | undefined;
+	let toState: OuiDraggableState | undefined;
 
 	if (toElement == null) {
-		to = state.instances.get(findAncestor(event, SELECTOR) as HTMLElement)?.sortable;
+		const element = findAncestor(event, SELECTOR) as HTMLElement;
+
+		toInstance = globals.instances.get(element)?.sortable;
+		toState = globals.states.get(element)?.sortable;
 	} else {
-		to = state.instances.get(toElement.parentElement!)?.sortable;
+		toInstance = globals.instances.get(toElement.parentElement!)?.sortable;
+		toState = globals.states.get(toElement.parentElement!)?.sortable;
 	}
 
-	if (!validatePosition(state, from, to, position.original)) {
+	if (
+		toInstance == null ||
+		!validatePosition(
+			globals,
+			item,
+			{
+				instance: toInstance as OuiDraggable<OuiSortableState>,
+				state: toState as OuiDraggableState & OuiSortableState,
+			},
+			position.original,
+		)
+	) {
 		return;
 	}
 
-	const placeholder = getPositionPlaceholder(from);
+	const placeholder = getPositionPlaceholder(item);
 
 	if (toElement != null && toElement !== fromElement) {
 		const {height, top} = toElement.getBoundingClientRect();
@@ -303,7 +352,7 @@ function onMove(
 	return {
 		from: {
 			element: fromElement,
-			position: {...state.original},
+			position: {...globals.original},
 		},
 		to: {
 			element: toElement,
@@ -320,18 +369,22 @@ function resetPlaceholders(): void {
 	placeholder.drag.custom = undefined;
 }
 
-function setPlaceholder(state: DraggableState, sortable: OuiSortable, origin: HTMLElement): void {
+function setPlaceholder(
+	state: OuiDraggableGlobals,
+	item: OuiDraggableItem<OuiSortableState>,
+	origin: HTMLElement,
+): void {
 	const element = getDragPlaceholder();
 
 	placeholder.drag.default!.innerHTML = '';
 
-	updatePlaceholder(sortable, element);
+	updatePlaceholder(item, element);
 
 	const event = new CustomEvent(EVENT_PLACEHOLDER, {
 		cancelable: true,
 		detail: {
 			origin,
-			parent: sortable.element,
+			parent: item.state.element,
 			placeholder: element,
 			create: (value: unknown) => {
 				if (!isHTMLOrSVGElement(value)) {
@@ -342,7 +395,7 @@ function setPlaceholder(state: DraggableState, sortable: OuiSortable, origin: HT
 
 				placeholder.drag.custom = element;
 
-				updatePlaceholder(sortable, element);
+				updatePlaceholder(item, element);
 
 				state.element = {
 					rectangle: element.getBoundingClientRect(),
@@ -352,7 +405,7 @@ function setPlaceholder(state: DraggableState, sortable: OuiSortable, origin: HT
 		},
 	});
 
-	sortable.element.dispatchEvent(event);
+	item.instance.element.dispatchEvent(event);
 
 	setTimeout(() => {
 		if (!event.defaultPrevented && placeholder.drag.custom == null) {
@@ -363,18 +416,24 @@ function setPlaceholder(state: DraggableState, sortable: OuiSortable, origin: HT
 	});
 }
 
-function updatePlaceholder(sortable: OuiSortable, element: HTMLElement): void {
+function updatePlaceholder(item: OuiDraggableItem<OuiSortableState>, element: HTMLElement): void {
 	element.style.position = 'fixed';
 
 	element.setAttribute(ATTRIBUTE_PLACEHOLDER_DRAG, '');
 
-	if (sortable.horizontal) {
+	const state = getDraggableStates(item.state.element)?.sortable;
+
+	if (state == null) {
+		return;
+	}
+
+	if (state.horizontal) {
 		element.setAttribute(ATTRIBUTE_HORIZONTAL, '');
 	} else {
 		element.removeAttribute(ATTRIBUTE_HORIZONTAL);
 	}
 
-	if (sortable.vertical) {
+	if (state.vertical) {
 		element.setAttribute(ATTRIBUTE_VERTICAL, '');
 	} else {
 		element.removeAttribute(ATTRIBUTE_VERTICAL);
@@ -382,29 +441,31 @@ function updatePlaceholder(sortable: OuiSortable, element: HTMLElement): void {
 }
 
 function validatePosition(
-	_: DraggableState,
-	from: OuiSortable,
-	to: OuiSortable | undefined,
+	_: OuiDraggableGlobals,
+	from: OuiDraggableItem<OuiSortableState>,
+	to: OuiDraggableItem<OuiSortableState> | undefined,
 	position: EventPosition,
 ): boolean {
 	let valid = true;
 
-	const rectangle = from.origin?.getBoundingClientRect();
+	const rectangle = from.state.origin?.getBoundingClientRect();
 
-	if (rectangle != null && !from.horizontal) {
+	const fromState = getDraggableStates(from.state.element)?.sortable;
+
+	if (rectangle != null && !(fromState?.horizontal ?? true)) {
 		valid = position.x >= rectangle.left && position.x <= rectangle.right;
 	}
 
-	if (valid && rectangle != null && !from.vertical) {
+	if (valid && rectangle != null && !(fromState?.vertical ?? true)) {
 		valid = position.y >= rectangle.top && position.y <= rectangle.bottom;
 	}
 
-	if (valid && from.connections != null) {
-		valid = to?.element.matches(from.connections) ?? true;
+	if (valid && from.state.connections != null) {
+		valid = to?.state.element.matches(from.state.connections) ?? true;
 	}
 
-	if (valid && to?.connections != null) {
-		valid = from.element.matches(to.connections);
+	if (valid && to?.state.connections != null) {
+		valid = from.state.element.matches(to.state.connections);
 	}
 
 	return valid;
@@ -444,11 +505,13 @@ const INSERT_AFTER = 'afterend';
 
 const INSERT_BEFORE = 'beforebegin';
 
+const MESSAGE = 'The element must be an instance of HTMLElement or SVGElement';
+
 const SELECTOR = `[${ATTRIBUTE}]`;
 
 const SELECTOR_ITEM = `[${ATTRIBUTE}] > *`;
 
-const bound: DraggableBound = {
+const bound: OuiDraggableBound = {
 	constructor: OuiSortable,
 	property: 'sortable',
 };
@@ -461,10 +524,14 @@ const placeholder: OuiSortablePlaceholder = {
 	position: undefined,
 };
 
+const addSortable = addDraggable.bind(bound);
+
+const removeSortable = removeDraggable.bind(bound);
+
 // #endregion
 
 // #region Initialization
 
-attributable(ATTRIBUTE, addDraggable.bind(bound), removeDraggable.bind(bound));
+attributable(ATTRIBUTE, addSortable, removeSortable);
 
 // #endregion

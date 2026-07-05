@@ -2,154 +2,230 @@ import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
 import {clamp} from '@oscarpalmer/atoms/number';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
-import {toggleStyles} from '@oscarpalmer/toretto/style';
+import {toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
 import supportsTouch from '@oscarpalmer/toretto/touch';
-import type {OuiMovable} from '../movable';
-import type {OuiSortable} from '../sortable';
+import type {OuiMovable} from '../movable/movable.embedded';
+import type {OuiSortable} from '../sortable/sortable.embedded';
+import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 
 // #region Types
 
-type Direction = 'horizontal' | 'vertical' | 'x' | 'y';
+export type CreateOuiDraggableOptions = {
+	/**
+	 * Container to hold the draggable element and restrict its movement within. Can be `body`, `document`, `window`, a _CSS_ selector, or an element. _(If not provided, the draggable element will not have any constraints)_
+	 */
+	container?: string | HTMLElement;
+	/**
+	 * Direction in which the element can be dragged. _(If not provided, the element can be dragged in any direction)_
+	 */
+	direction?: OuiDraggableDirection;
+};
 
-export abstract class OuiDraggable {
-	container: HTMLElement | undefined;
+type OuiDraggableDirection = 'horizontal' | 'vertical' | 'x' | 'y';
 
-	hasHandles: boolean | undefined;
+export abstract class OuiDraggable<ExtraState extends PlainObject = PlainObject> {
+	#destroyed = false;
 
-	horizontal = true;
+	#name: keyof OuiDraggableStates;
 
-	vertical = true;
+	readonly #state: OuiDraggableState & ExtraState;
 
-	abstract readonly dragged: HTMLElement;
-
-	abstract origin: HTMLElement | undefined;
+	get element(): HTMLElement {
+		return this.#state.element;
+	}
 
 	constructor(
-		public prefix: string,
-		public element: HTMLElement,
-		public options: DraggableOptions,
+		name: keyof OuiDraggableStates,
+		event: string,
+		attribute: string,
+		element: HTMLElement,
+		options: OuiDraggableOptions<ExtraState>,
+		extras: ExtraState,
 	) {
-		setContainer(this, options);
-		setDirection(this, options);
+		this.#name = name;
+
+		this.#state = {
+			...extras,
+			attribute,
+			element,
+			event,
+			options,
+			horizontal: true,
+			vertical: true,
+			styling: toggleStyles(element, styles),
+		} as OuiDraggableState & ExtraState;
+
+		const item = {
+			instance: this,
+			state: this.#state,
+		};
+
+		setContainer(item);
+		setDirection(item);
+
+		element.setAttribute(attribute, '');
+
+		let states = globals.states.get(element);
+
+		states ??= {};
+
+		states[this.#name] = this.#state;
+
+		globals.states.set(element, states);
 	}
 
 	destroy(): void {
-		unsetContainer(this, this.options);
+		if (this.#destroyed) {
+			return;
+		}
 
-		this.container = undefined;
-		this.element = undefined!;
-		this.options = undefined!;
+		this.#destroyed = true;
+
+		destroyInstance(this, this.#state);
 	}
 }
 
-type DragBegin = (
+type OuiDragBegin<State extends PlainObject = PlainObject> = (
 	event: MouseEvent | TouchEvent,
-	state: DraggableState,
-	draggable: OuiDraggable,
+	globals: OuiDraggableGlobals,
+	item: OuiDraggableItem<State>,
 	element: HTMLElement,
 	handle: HTMLElement,
 	position: EventPosition,
 ) => void;
 
-type DragCancel = (state: DraggableState, draggable: OuiDraggable) => void;
+type OuiDragCancel<State extends PlainObject = PlainObject> = (
+	globals: OuiDraggableGlobals,
+	item: OuiDraggableItem<State>,
+) => void;
 
-type DragEnd = (
+type OuiDragEnd<State extends PlainObject = PlainObject> = (
 	event: MouseEvent | TouchEvent,
-	state: DraggableState,
-	draggable: OuiDraggable,
+	globals: OuiDraggableGlobals,
+	item: OuiDraggableItem<State>,
 	reset: () => void,
 ) => void;
 
-type DragMove = (
+type OuiDragMove<State extends PlainObject = PlainObject> = (
 	event: MouseEvent | TouchEvent,
-	state: DraggableState,
-	draggable: OuiDraggable,
-	position: DragMovePosition,
+	globals: OuiDraggableGlobals,
+	item: OuiDraggableItem<State>,
+	position: OuiDragMovePosition,
 ) => PlainObject | undefined;
 
-export type DragMovePosition = {
+export type OuiDragMovePosition = {
 	calculated: EventPosition;
 	original: EventPosition;
 };
 
-export type DraggableBound<
-	Property extends keyof DraggableInstances = keyof DraggableInstances,
-	Instance extends DraggableInstances[Property] = DraggableInstances[Property],
+export type OuiDraggableBound<
+	Property extends keyof OuiDraggableInstances = keyof OuiDraggableInstances,
+	Instance extends OuiDraggableInstances[Property] = OuiDraggableInstances[Property],
 > = {
-	constructor: new (element: HTMLElement) => Instance;
+	constructor: new (element: HTMLElement, options?: CreateOuiDraggableOptions) => Instance;
 	property: Property;
 };
 
-type DraggableInstances = {
+export type OuiDraggableGlobals = {
+	container?: DOMRect;
+	element?: OuiDraggableGlobalsElement;
+	instances: WeakMap<HTMLElement, OuiDraggableInstances>;
+	offset?: EventPosition;
+	original?: EventPosition;
+	states: WeakMap<HTMLElement, OuiDraggableStates>;
+};
+
+type OuiDraggableGlobalsElement = {
+	node: HTMLElement;
+	rectangle: DOMRect;
+};
+
+type OuiDraggableInstances = {
 	movable?: OuiMovable;
 	sortable?: OuiSortable;
 };
 
-type DraggableOptions = {
-	container: DraggableOptionsContainer;
-	direction: DraggableOptionsDirection;
-	drag: DraggableOptionsDrag;
-	position: DraggableOptionsPosition;
+export type OuiDraggableItem<ExtraState extends PlainObject = PlainObject> = {
+	instance: OuiDraggable<ExtraState>;
+	state: OuiDraggableState & ExtraState;
 };
 
-type DraggableOptionsContainer = {
+type OuiDraggableOptions<ExtraState extends PlainObject = PlainObject> = {
+	container: OuiDraggableOptionsContainer<ExtraState>;
+	direction: OuiDraggableOptionsDirection<ExtraState>;
+	drag: OuiDraggableOptionsDrag<ExtraState>;
+	input?: CreateOuiDraggableOptions;
+	position: OuiDraggableOptionsPosition<ExtraState>;
+	getDragged(): HTMLElement;
+	getOrigin(): HTMLElement | undefined;
+};
+
+type OuiDraggableOptionsContainer<ExtraState extends PlainObject = PlainObject> = {
 	attribute: string;
 	map: Map<HTMLElement, Set<OuiDraggable>>;
-	onDestroy?: DraggableOptionsContainerOnDestroy;
-	onInitialize?: DraggableOptionsContainerOnInitialize;
+	onDestroy?: OuiDraggableOptionsContainerOnDestroy<ExtraState>;
+	onInitialize?: OuiDraggableOptionsContainerOnInitialize;
 };
 
-type DraggableOptionsContainerOnDestroy = (
-	draggable: OuiDraggable,
+type OuiDraggableOptionsContainerOnDestroy<ExtraState extends PlainObject = PlainObject> = (
+	item: OuiDraggableItem<ExtraState>,
 	container: HTMLElement,
 	empty: boolean,
 ) => void;
 
-type DraggableOptionsContainerOnInitialize = (draggable: OuiDraggable) => void;
+type OuiDraggableOptionsContainerOnInitialize<ExtraState extends PlainObject = PlainObject> = (
+	item: OuiDraggableItem<ExtraState>,
+) => void;
 
-type DraggableOptionsDirection = {
+type OuiDraggableOptionsDirection<ExtraState extends PlainObject = PlainObject> = {
 	attribute: string;
-	onAfter?: DraggableOptionsDirectionOnAfter;
+	onAfter?: OuiDraggableOptionsDirectionOnAfter<ExtraState>;
 };
 
-type DraggableOptionsDirectionOnAfter = (draggable: OuiDraggable) => void;
+type OuiDraggableOptionsDirectionOnAfter<ExtraState extends PlainObject = PlainObject> = (
+	item: OuiDraggableItem<ExtraState>,
+) => void;
 
-type DraggableOptionsDrag = {
-	onBegin: DragBegin;
-	onCancel: DragCancel;
-	onEnd: DragEnd;
-	onMove: DragMove;
+type OuiDraggableOptionsDrag<ExtraState extends PlainObject = PlainObject> = {
+	onBegin: OuiDragBegin<ExtraState>;
+	onCancel: OuiDragCancel<ExtraState>;
+	onEnd: OuiDragEnd<ExtraState>;
+	onMove: OuiDragMove<ExtraState>;
 };
 
-type DraggableOptionsPosition = {
-	getOffset: DraggableOptionsPositionGetOffset;
-	getOriginal: DraggableOptionsPositionGetOriginal;
+type OuiDraggableOptionsPosition<ExtraState extends PlainObject = PlainObject> = {
+	getOffset: OuiDraggableOptionsPositionGetOffset<ExtraState>;
+	getOriginal: OuiDraggableOptionsPositionGetOriginal<ExtraState>;
 };
 
-type DraggableOptionsPositionGetOffset = (
-	state: DraggableState,
-	draggable: OuiDraggable,
+type OuiDraggableOptionsPositionGetOffset<ExtraState extends PlainObject = PlainObject> = (
+	globals: OuiDraggableGlobals,
+	item: OuiDraggableItem<ExtraState>,
 	element: HTMLElement,
 	position: EventPosition,
 ) => EventPosition;
 
-type DraggableOptionsPositionGetOriginal = (
-	state: DraggableState,
-	draggable: OuiDraggable,
+type OuiDraggableOptionsPositionGetOriginal<ExtraState extends PlainObject = PlainObject> = (
+	globals: OuiDraggableGlobals,
+	item: OuiDraggableItem<ExtraState>,
 	position: EventPosition,
 ) => EventPosition;
 
-export type DraggableState = {
-	container: DOMRect | undefined;
-	element: DraggableStateElement | undefined;
-	instances: WeakMap<HTMLElement, DraggableInstances>;
-	offset: EventPosition | undefined;
-	original: EventPosition | undefined;
+export type OuiDraggableState = {
+	attribute: string;
+	container?: HTMLElement;
+	element: HTMLElement;
+	event: string;
+	hasHandles?: boolean;
+	horizontal: boolean;
+	options: OuiDraggableOptions;
+	styling: StyleToggler;
+	vertical: boolean;
 };
 
-type DraggableStateElement = {
-	node: HTMLElement;
-	rectangle: DOMRect;
+type OuiDraggableStates = {
+	movable?: OuiDraggableState;
+	sortable?: OuiDraggableState;
 };
 
 // #endregion
@@ -157,18 +233,43 @@ type DraggableStateElement = {
 // #region Functions
 
 export function addDraggable<
-	Property extends keyof DraggableInstances,
-	Instance extends DraggableInstances[Property],
->(this: DraggableBound<Property, Instance>, element: HTMLElement): void {
-	let instances = state.instances.get(element);
+	Property extends keyof OuiDraggableInstances,
+	Instance extends OuiDraggableInstances[Property],
+>(
+	this: OuiDraggableBound<Property, Instance>,
+	element: HTMLElement,
+	options?: CreateOuiDraggableOptions,
+): Instance {
+	let instances = globals.instances.get(element);
 
 	if (instances == null) {
 		instances = {};
 
-		state.instances.set(element, instances);
+		globals.instances.set(element, instances);
 	}
 
-	instances[this.property] ??= new this.constructor(element);
+	instances[this.property] ??= new this.constructor(element, options);
+
+	return instances[this.property] as Instance;
+}
+
+function destroyInstance(instance: OuiDraggable, state: OuiDraggableState): void {
+	unsetContainer({
+		instance,
+		state,
+	});
+
+	state.element.removeAttribute(state.attribute);
+	state.styling.remove();
+
+	state.container = undefined;
+	state.element = undefined as never;
+	state.options = undefined as never;
+	state.styling = undefined as never;
+}
+
+export function getDraggableStates(element: HTMLElement): OuiDraggableStates | undefined {
+	return globals.states.get(element);
 }
 
 function getHandle(event: Event, isMovable: boolean): HTMLElement | null {
@@ -178,23 +279,31 @@ function getHandle(event: Event, isMovable: boolean): HTMLElement | null {
 	) as HTMLElement;
 }
 
-function getNextPosition(draggable: OuiDraggable, position: EventPosition): EventPosition {
-	let x = state.original?.x ?? 0;
-	let y = state.original?.y ?? 0;
+function getNextPosition(item: OuiDraggableItem, position: EventPosition): EventPosition {
+	let x = globals.original?.x ?? 0;
+	let y = globals.original?.y ?? 0;
 
-	if (draggable.horizontal) {
-		x = position.x - (state.offset?.x ?? 0);
+	if (item.state.horizontal) {
+		x = position.x - (globals.offset?.x ?? 0);
 
-		if (state.container != null && state.element != null) {
-			x = clamp(x, state.container.left, state.container.right - state.element.rectangle.width);
+		if (globals.container != null && globals.element != null) {
+			x = clamp(
+				x,
+				globals.container.left,
+				globals.container.right - globals.element.rectangle.width,
+			);
 		}
 	}
 
-	if (draggable.vertical) {
-		y = position.y - (state.offset?.y ?? 0);
+	if (item.state.vertical) {
+		y = position.y - (globals.offset?.y ?? 0);
 
-		if (state.container != null && state.element != null) {
-			y = clamp(y, state.container.top, state.container.bottom - state.element.rectangle.height);
+		if (globals.container != null && globals.element != null) {
+			y = clamp(
+				y,
+				globals.container.top,
+				globals.container.bottom - globals.element.rectangle.height,
+			);
 		}
 	}
 
@@ -206,14 +315,12 @@ function onKeydown(event: KeyboardEvent): void {
 		return;
 	}
 
-	const {origin} = current;
+	current.state.options.drag.onCancel?.(globals, current);
 
-	current.options.drag.onCancel?.(state, current);
-
-	current.element.dispatchEvent(
-		new CustomEvent(`${current.prefix}:cancel`, {
+	current.state.element.dispatchEvent(
+		new CustomEvent(`${current.state.event}:cancel`, {
 			detail: {
-				element: origin,
+				element: current.state.options.getOrigin(),
 			},
 		}),
 	);
@@ -235,17 +342,22 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 	}
 
 	const container = findAncestor(event, SELECTOR)! as HTMLElement;
-	const instances = state.instances.get(container!);
 
-	if (instances == null) {
+	const instances = globals.instances.get(container!);
+	const states = globals.states.get(container);
+
+	if (instances == null || states == null) {
 		return;
 	}
 
 	const isMovable = container.hasAttribute(ATTRIBUTE_MOVABLE);
 
-	const instance = isMovable ? instances.movable : instances.sortable;
+	const item: OuiDraggableItem = {
+		instance: (isMovable ? instances.movable : instances.sortable) as OuiDraggable,
+		state: (isMovable ? states.movable : states.sortable) as OuiDraggableState,
+	};
 
-	if (instance == null) {
+	if (item.instance == null || item.state == null) {
 		return;
 	}
 
@@ -265,9 +377,9 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 
 	let handle: HTMLElement | null = element;
 
-	instance.hasHandles ??= element.querySelector(SELECTOR_SORTABLE_HANDLE) != null;
+	item.state.hasHandles ??= element.querySelector(SELECTOR_SORTABLE_HANDLE) != null;
 
-	if (instance.hasHandles) {
+	if (item.state.hasHandles) {
 		handle = getHandle(event, isMovable);
 	}
 
@@ -275,50 +387,51 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		return;
 	}
 
-	const {dragged} = instance;
-
+	const dragged = item.state.options.getDragged();
 	const rectangle = dragged.getBoundingClientRect();
 
 	const position = getPosition(event) ?? {x: 0, y: 0};
 
-	current = instance;
+	current = item;
 
-	state.container = instance.container?.getBoundingClientRect();
+	globals.container = item.state.container?.getBoundingClientRect();
 
-	state.element = {
+	globals.element = {
 		rectangle,
 		node: dragged,
 	};
 
-	state.offset = instance.options.position.getOffset(state, instance, element, position);
-	state.original = instance.options.position.getOriginal(state, instance, position);
+	globals.offset = item.state.options.position.getOffset(globals, item, element, position);
+	globals.original = item.state.options.position.getOriginal(globals, item, position);
 
-	const begin = new CustomEvent(`${instance.prefix}:begin`, {
+	const begin = new CustomEvent(`${item.state.event}:begin`, {
 		detail: {
 			element,
-			position: {...state.original},
+			position: {...globals.original},
 		},
 		cancelable: true,
 	});
 
-	instance.element.dispatchEvent(begin);
+	item.state.element.dispatchEvent(begin);
 
 	setTimeout(() => {
 		if (begin.defaultPrevented) {
-			current?.options.drag.onCancel(state, instance);
+			item.state.options.drag.onCancel?.(globals, item);
 
 			reset();
 
 			return;
 		}
 
-		const next = getNextPosition(instance, position);
+		const next = getNextPosition(item, position);
 
 		dragged.style.position = 'fixed';
 		dragged.style.inset = `${next.y}px auto auto ${next.x}px`;
+		dragged.style.transform = 'translate3d(0, 0, 0)';
 
-		instance.options.drag.onBegin(event, state, instance, element, handle, next);
+		item.state.options.drag.onBegin?.(event, globals, item, element, handle, next);
 
+		item.state.styling.set();
 		styleToggler.set();
 	});
 }
@@ -336,29 +449,29 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 
 	const next = getNextPosition(current, position);
 
-	if (state.element != null) {
-		state.element.node.style.inset = `${next.y}px auto auto ${next.x}px`;
+	if (globals.element != null) {
+		globals.element.node.style.inset = `${next.y}px auto auto ${next.x}px`;
 	}
 
-	const detail = current.options.drag.onMove(event, state, current, {
+	const detail = current.state.options.drag.onMove(event, globals, current, {
 		calculated: next,
 		original: position,
 	});
 
-	current.element.dispatchEvent(
-		new CustomEvent(`${current.prefix}:move`, {
+	current.state.element.dispatchEvent(
+		new CustomEvent(`${current.state.event}:move`, {
 			detail,
 		}),
 	);
 }
 
 function onPointerup(event: MouseEvent | TouchEvent): void {
-	current?.options.drag.onEnd?.(event, state, current, reset);
+	current?.state.options.drag.onEnd?.(event, globals, current, reset);
 }
 
 export function removeDraggable<
-	Property extends keyof DraggableInstances,
-	Instance extends DraggableInstances[Property],
+	Property extends keyof OuiDraggableInstances,
+	Instance extends OuiDraggableInstances[Property],
 >(
 	this: {
 		constructor: new (element: HTMLElement) => Instance;
@@ -368,92 +481,117 @@ export function removeDraggable<
 ): void {
 	const {property} = this;
 
-	const instances = state.instances.get(element);
+	removeInstance(globals.instances, property, element);
+	removeInstance(globals.states, property, element);
+}
 
-	if (instances == null || instances[property] == null) {
+function removeInstance(
+	map: WeakMap<HTMLElement, OuiDraggableInstances | OuiDraggableStates>,
+	name: keyof OuiDraggableInstances | keyof OuiDraggableStates,
+	element: HTMLElement,
+): void {
+	const instances = map.get(element);
+
+	if (instances == null || instances[name] == null) {
 		return;
 	}
 
-	instances[property]?.destroy();
+	if (typeof (instances[name] as OuiDraggable).destroy === 'function') {
+		(instances[name] as OuiDraggable).destroy();
+	}
 
-	instances[property] = undefined;
+	instances[name] = undefined;
 
-	if (instances[properties[property]] == null) {
-		state.instances.delete(element);
+	if (instances[properties[name]] == null) {
+		map.delete(element);
 	}
 }
 
 function reset(): void {
+	current?.state.styling.remove();
+	styleToggler.remove();
+
 	current = undefined;
 
-	state.container = undefined;
-	state.element = undefined;
-	state.offset = undefined;
-	state.original = undefined;
-
-	styleToggler.remove();
+	globals.container = undefined;
+	globals.element = undefined;
+	globals.offset = undefined;
+	globals.original = undefined;
 }
 
-function setContainer(draggable: OuiDraggable, options: DraggableOptions): void {
-	const selector = draggable.element.getAttribute(options.container.attribute);
+function setContainer(item: OuiDraggableItem): void {
+	const {container} = item.state.options.input ?? {};
+
+	if (isHTMLOrSVGElement(container)) {
+		setContainerElement(item, container);
+
+		return;
+	}
+
+	const selector =
+		container ?? item.instance.element.getAttribute(item.state.options.container.attribute);
 
 	if (typeof selector !== 'string') {
 		return;
 	}
 
-	draggable.container = globals.has(selector)
-		? draggable.element.ownerDocument.body
+	const element = containers.has(selector)
+		? item.state.element.ownerDocument.body
 		: (document.querySelector(selector) ?? undefined);
 
-	if (draggable.container == null) {
-		return;
+	if (isHTMLOrSVGElement(element)) {
+		setContainerElement(item, element);
 	}
+}
 
-	const set = options.container.map.get(draggable.container);
+function setContainerElement(item: OuiDraggableItem, element: HTMLElement): void {
+	item.state.container = element;
+
+	const set = item.state.options.container.map.get(element);
 
 	if (set == null) {
-		options.container.map.set(draggable.container, new Set([draggable]));
+		item.state.options.container.map.set(element, new Set([item.instance]));
 	} else {
-		set.add(draggable);
+		set.add(item.instance);
 	}
 
-	options.container.onInitialize?.(draggable);
+	item.state.options.container.onInitialize?.(item);
 }
 
-function setDirection(draggable: OuiDraggable, options: DraggableOptions): void {
-	const direction = draggable.element.getAttribute(options.direction.attribute);
+function setDirection(item: OuiDraggableItem): void {
+	const direction = item.state.element.getAttribute(item.state.options.direction.attribute);
 
-	if (horizontals.has(direction as Direction)) {
-		draggable.vertical = false;
-	} else if (verticals.has(direction as Direction)) {
-		draggable.horizontal = false;
+	if (horizontals.has(direction as OuiDraggableDirection)) {
+		item.state.vertical = false;
+	} else if (verticals.has(direction as OuiDraggableDirection)) {
+		item.state.horizontal = false;
 	}
 
-	options.direction.onAfter?.(draggable);
+	item.state.options.direction.onAfter?.(item);
 }
 
-function unsetContainer(draggable: OuiDraggable, options: DraggableOptions): void {
-	const {container} = draggable;
+function unsetContainer(item: OuiDraggableItem): void {
+	const {container} = item.state;
 
 	if (container == null) {
 		return;
 	}
 
-	const set = options.container.map.get(container);
+	const set = item.state.options.container.map.get(container);
 
 	let empty = false;
 
 	if (set != null) {
-		set.delete(draggable);
+		set.delete(item.instance);
 
 		if (set.size === 0) {
 			empty = true;
 
-			options.container.map.delete(container);
+			item.state.options.container.map.delete(container);
 		}
 	}
 
-	options.container.onDestroy?.(draggable, container, empty);
+	item.state.options.container.onDestroy?.(item, container, empty);
 }
 
 // #endregion
@@ -474,32 +612,35 @@ const SELECTOR_SORTABLE_HANDLE = `[${ATTRIBUTE_SORTABLE}-handle]`;
 
 const SELECTOR_SORTABLE_ITEM = `[${ATTRIBUTE_SORTABLE}] > *`;
 
-const globals = new Set<string>(['body', 'document', 'window']);
+const containers = new Set<string>(['body', 'document', 'window']);
 
-const horizontals = new Set<Direction>(['horizontal', 'x']);
+const horizontals = new Set<OuiDraggableDirection>(['horizontal', 'x']);
 
-const properties: Record<keyof DraggableInstances, keyof DraggableInstances> = {
+const properties: Record<keyof OuiDraggableInstances, keyof OuiDraggableInstances> = {
 	movable: 'sortable',
 	sortable: 'movable',
 };
 
-const state: DraggableState = {
+const globals: OuiDraggableGlobals = {
 	container: undefined,
 	element: undefined,
 	instances: new WeakMap(),
 	offset: undefined,
 	original: undefined,
+	states: new WeakMap(),
 };
 
-const styleToggler = toggleStyles(document.body, {
+const styles = {
 	touchAction: 'none',
 	userSelect: 'none',
 	webkitUserSelect: 'none',
-});
+};
 
-const verticals = new Set<Direction>(['vertical', 'y']);
+const styleToggler = toggleStyles(document.body, styles);
 
-let current: OuiMovable | OuiSortable | undefined;
+const verticals = new Set<OuiDraggableDirection>(['vertical', 'y']);
+
+let current: OuiDraggableItem | undefined;
 
 // #endregion
 

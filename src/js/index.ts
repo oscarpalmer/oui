@@ -1,10 +1,10 @@
-import './movable';
-import './sortable';
+import './sortable/sortable.embedded';
 import './toolbar';
 
 export * from './dialog';
-export * from './floatable/standalone';
-export * from './focus-trap/standalone';
+export * from './floatable/floatable.standalone';
+export * from './focus-trap/focus-trap.standalone';
+export * from './movable/movable.standalone';
 export * from './popover';
 export * from './splitter';
 export * from './tooltip';
