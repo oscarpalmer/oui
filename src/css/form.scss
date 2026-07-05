@@ -173,9 +173,9 @@
 
 	:where(
 		&.oui-validate:not([disabled], [readonly], [aria-disabled='true' i]):is(
-				:user-invalid:not([aria-invalid='false' i]),
-				[aria-invalid='true' i]
-			)
+			:user-invalid:not([aria-invalid='false' i]),
+			[aria-invalid='true' i]
+		)
 	) {
 		@include invalid;
 
@@ -201,9 +201,9 @@
 
 	:where(
 		&.oui-validate:not([disabled], [readonly], [aria-disabled='true' i]):is(
-				:user-valid:not([aria-invalid='true' i]),
-				[aria-invalid='false' i]
-			)
+			:user-valid:not([aria-invalid='true' i]),
+			[aria-invalid='false' i]
+		)
 	) {
 		@include valid;
 

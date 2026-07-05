@@ -4,6 +4,8 @@ import {getOnBeforeToggleListener} from './floatable/floatable.embedded';
 import {attributable} from './internal/attributable';
 import {ATTRIBUTE_MOVABLE_HANDLE} from './movable/movable.embedded';
 import {createMovable, type OuiMovable} from './movable/movable.standalone';
+import {createResizable, RESIZABLE_ATTRIBUTE_HANDLE} from './resizable/resizable.embedded';
+import type {OuiResizable} from './resizable/resizable.standalone';
 
 // #region Types
 
@@ -82,6 +84,7 @@ type OuiDialogState = {
 	listeners: RemovableEventListener[];
 	modal: boolean;
 	movable?: OuiMovable;
+	resizable?: OuiResizable;
 };
 
 // #endregion
@@ -108,9 +111,14 @@ function destroyDialog(state: OuiDialogState): void {
 		listener();
 	}
 
+	state.movable?.destroy();
+	state.resizable?.destroy();
+
 	state.dialog = undefined as never;
 	state.element = undefined as never;
 	state.listeners = undefined as never;
+	state.movable = undefined;
+	state.resizable = undefined;
 }
 
 /**
@@ -139,6 +147,18 @@ function getMovable(element: HTMLDialogElement): OuiMovable | undefined {
 	});
 }
 
+function getResizable(element: HTMLDialogElement): OuiResizable | undefined {
+	const handle = element.querySelector(SELECTOR_RESIZER);
+
+	if (handle == null) {
+		return;
+	}
+
+	handle.setAttribute(RESIZABLE_ATTRIBUTE_HANDLE, '');
+
+	return createResizable(element);
+}
+
 function getState(element: HTMLDialogElement): OuiDialogState {
 	const state: OuiDialogState = {
 		element,
@@ -157,6 +177,10 @@ function getState(element: HTMLDialogElement): OuiDialogState {
 					element.setAttribute(ATTRIBUTE_OPEN, '');
 
 					element.focus();
+
+					setTimeout(() => {
+						state.resizable?.set();
+					}, 500);
 				} else {
 					element.removeAttribute(ATTRIBUTE_OPEN);
 					element.setAttribute(ARIA_MODAL, String(state.modal));
@@ -164,6 +188,8 @@ function getState(element: HTMLDialogElement): OuiDialogState {
 					element.style.inset = '';
 					element.style.position = '';
 					element.style.transform = '';
+
+					state.resizable?.reset();
 				}
 			}),
 		],
@@ -171,7 +197,9 @@ function getState(element: HTMLDialogElement): OuiDialogState {
 	};
 
 	state.dialog = new OuiDialog(state);
+
 	state.movable = getMovable(element);
+	state.resizable = getResizable(element);
 
 	return state;
 }
@@ -209,6 +237,8 @@ const MESSAGE = 'The element must be an instance of HTMLDialogElement';
 const SELECTOR_MOVER = `[${ATTRIBUTE}-mover]`;
 
 const SELECTOR_MODAL = ':modal';
+
+const SELECTOR_RESIZER = `[${ATTRIBUTE}-resizer]`;
 
 const TRUE = 'true';
 

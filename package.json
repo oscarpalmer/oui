@@ -1,6 +1,6 @@
 {
 	"name": "@oscarpalmer/oui",
-	"version": "0.27.0",
+	"version": "0.28.0",
 	"description": "Styles, components, and utilities for building websites and applications.",
 	"keywords": [
 		"css",
@@ -52,6 +52,10 @@
 		"./popover": {
 			"types": "./dist/js/popover.d.mts",
 			"default": "./dist/js/popover.mjs"
+		},
+		"./resizable": {
+			"types": "./dist/js/resizable/resizable.standalone.d.mts",
+			"default": "./dist/js/resizable/resizable.standalone.mjs"
 		},
 		"./sortable": {
 			"types": "./dist/js/sortable/sortable.standalone.d.mts",

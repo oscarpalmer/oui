@@ -557,5 +557,5 @@ on(document, 'keydown', onKeydown);
 on(document, 'mousedown', onPointerdown);
 on(document, 'pointermove', onPointermove);
 on(document, 'pointerup', onPointerup);
-on(document, 'touchcancel', onPointerup, {passive: false});
+on(document, 'touchcancel', onPointerup);
 on(document, 'touchstart', onPointerdown, {passive: false});

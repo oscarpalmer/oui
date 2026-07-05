@@ -36,6 +36,15 @@
 	transition-delay: 0.125s;
 }
 
+:where([oui-dialog]) {
+	position: relative;
+}
+
+:where([oui-dialog-resizer]) {
+	position: absolute;
+	inset: auto 0 0 auto;
+}
+
 :where([oui-popover], [oui-tooltip-content]) {
 	@include mixins.floatable;
 }
