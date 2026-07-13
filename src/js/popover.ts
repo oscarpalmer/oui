@@ -1,3 +1,5 @@
+import {getAria, setAria} from '@oscarpalmer/toretto/aria';
+import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {on} from '@oscarpalmer/toretto/event';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
@@ -33,6 +35,8 @@ class OuiPopover {
 
 	constructor(state: OuiPopoverState) {
 		this.#state = state;
+
+		initialize(state);
 
 		this.#state.floatable.update();
 	}
@@ -93,6 +97,18 @@ function destroyPopover(state: OuiPopoverState): void {
 	state.popover = undefined as never;
 }
 
+function getId(element: HTMLElement, value?: string): string {
+	let {id} = element;
+
+	if (id == null || id.trim().length === 0) {
+		id = value == null ? `oui_popover_${++index}` : `${value}_toggle`;
+
+		element.id = id;
+	}
+
+	return id;
+}
+
 /**
  * Get the _OuiPopover_ for an element
  *
@@ -109,29 +125,30 @@ function getState(anchor: HTMLElement, content: HTMLElement): OuiPopoverState {
 		content,
 		floatable: createEmbeddedFloatable(anchor, content, options),
 		focusTrap:
-			content.getAttribute(ARIA_MODAL) === TRUE
+			getAria(content, 'modal') === 'true'
 				? createFocusTrap(content, {
 						noescape: true,
 					})
 				: undefined,
 		listeners: [
 			getOnBeforeToggleListener(content),
-			on(content, EVENT_TOGGLE, event => {
-				if (event.newState === STATE_OPEN) {
+			on(content, 'toggle', event => {
+				const expanded = event.newState === 'open';
+
+				if (expanded) {
 					ignoreFocus = false;
 
 					state.floatable?.update();
 
-					content.setAttribute(ATTRIBUTE_OPEN, '');
-
 					content.focus();
 				} else {
-					content.removeAttribute(ATTRIBUTE_OPEN);
-
 					if (!ignoreFocus) {
 						anchor?.focus();
 					}
 				}
+
+				setAria(anchor, 'expanded', expanded);
+				setAttribute(content, ATTRIBUTE_OPEN, expanded ? '' : undefined);
 			}),
 		],
 		popover: undefined as never,
@@ -140,6 +157,21 @@ function getState(anchor: HTMLElement, content: HTMLElement): OuiPopoverState {
 	state.popover = new OuiPopover(state);
 
 	return state;
+}
+
+function initialize(state: OuiPopoverState): void {
+	const id = getId(state.content);
+
+	setAria(state.anchor, {
+		controls: id,
+		expanded: 'false',
+	});
+
+	const label = getAria(state.content, 'label') ?? getAria(state.content, 'labelledby');
+
+	if (label == null) {
+		setAria(state.content, 'labelledby', getId(state.anchor, id));
+	}
 }
 
 function onPointerdown(): void {
@@ -164,15 +196,7 @@ function removePopover(element: HTMLElement): void {
 
 const ATTRIBUTE = 'oui-popover';
 
-const ARIA_MODAL = 'aria-modal';
-
 const ATTRIBUTE_OPEN = `${ATTRIBUTE}-open`;
-
-const EVENT_TOGGLE = 'toggle';
-
-const STATE_OPEN = 'open';
-
-const TRUE = 'true';
 
 const options: OuiFloatableOptions = {
 	attribute: `${ATTRIBUTE}position`,
@@ -183,6 +207,8 @@ const options: OuiFloatableOptions = {
 const states = new WeakMap<HTMLElement, OuiPopoverState>();
 
 let ignoreFocus = false;
+
+let index = 0;
 
 // #endregion
 

@@ -1,3 +1,4 @@
+import './menu';
 import './toolbar';
 
 export * from './dialog';

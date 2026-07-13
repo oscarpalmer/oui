@@ -1,5 +1,6 @@
 import {isPlainObject} from '@oscarpalmer/atoms/is';
 import {clamp} from '@oscarpalmer/atoms/number';
+import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {getFocusable} from '@oscarpalmer/toretto/focusable';
@@ -26,9 +27,9 @@ export class OuiFocusTrap {
 	 */
 	set contain(value: boolean) {
 		if (value === true) {
-			this.#state.element.setAttribute(ATTRIBUTE_FOCUSTRAP_CONTAIN, '');
+			setAttribute(this.#state.element, ATTRIBUTE_FOCUSTRAP_CONTAIN, '');
 		} else if (value === false) {
-			this.#state.element.removeAttribute(ATTRIBUTE_FOCUSTRAP_CONTAIN);
+			setAttribute(this.#state.element, ATTRIBUTE_FOCUSTRAP_CONTAIN, undefined);
 		}
 	}
 
@@ -62,9 +63,9 @@ export class OuiFocusTrap {
 	 */
 	set noescape(value: boolean) {
 		if (value === true) {
-			this.#state.element.setAttribute(ATTRIBUTE_FOCUSTRAP_NOESCAPE, '');
+			setAttribute(this.#state.element, ATTRIBUTE_FOCUSTRAP_NOESCAPE, '');
 		} else if (value === false) {
-			this.#state.element.removeAttribute(ATTRIBUTE_FOCUSTRAP_NOESCAPE);
+			setAttribute(this.#state.element, ATTRIBUTE_FOCUSTRAP_NOESCAPE, undefined);
 		}
 	}
 
@@ -74,7 +75,7 @@ export class OuiFocusTrap {
 
 		state.element.tabIndex = -1;
 
-		state.element.setAttribute(ATTRIBUTE_FOCUSTRAP, '');
+		setAttribute(state.element, ATTRIBUTE_FOCUSTRAP, '');
 
 		this.contain = state.options.contain;
 		this.noescape = state.options.noescape;

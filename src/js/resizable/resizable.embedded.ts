@@ -1,10 +1,11 @@
 import {isPlainObject} from '@oscarpalmer/atoms/is';
 import type {EventPosition} from '@oscarpalmer/atoms/models';
 import {getNumber} from '@oscarpalmer/atoms/number';
+import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
-import {toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
+import {setStyles, toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
 import supportsTouch from '@oscarpalmer/toretto/touch';
 import {attributable} from '../internal/attributable';
 
@@ -38,8 +39,10 @@ export class OuiResizable {
 	}
 
 	reset(): void {
-		this.#state.element.style.height = '';
-		this.#state.element.style.width = '';
+		setStyles(this.#state.element, {
+			height: '',
+			width: '',
+		});
 	}
 }
 
@@ -134,8 +137,10 @@ function getAndSetDimensions(
 	}
 
 	if (element.checkVisibility()) {
-		element.style.height = `${height}px`;
-		element.style.width = `${width}px`;
+		setStyles(element, {
+			height: `${height}px`,
+			width: `${width}px`,
+		});
 	}
 
 	return [width, height];
@@ -186,7 +191,7 @@ function getState(
 	handle: HTMLElement,
 	input?: CreateOuiResizableOptions,
 ): OuiResizableState {
-	element.setAttribute(RESIZABLE_ATTRIBUTE, '');
+	setAttribute(element, RESIZABLE_ATTRIBUTE, '');
 
 	const options = getValidOptions(element, input);
 
@@ -211,11 +216,11 @@ function getValidOptions(
 	return {
 		...getRestrictions(
 			input == null
-				? (element.getAttribute(ATTRIBUTE_MAXIMUM) ??
+				? (getAttribute(element, ATTRIBUTE_MAXIMUM) ??
 						getProperties(element, 'maxWidth', 'maxHeight'))
 				: [original.maximumWidth, original.maximumHeight],
 			input == null
-				? (element.getAttribute(ATTRIBUTE_MINIMUM) ??
+				? (getAttribute(element, ATTRIBUTE_MINIMUM) ??
 						getProperties(element, 'minWidth', 'minHeight'))
 				: [original.minimumWidth, original.minimumHeight],
 		),
@@ -244,8 +249,10 @@ function onKeydown(event: KeyboardEvent): void {
 		return;
 	}
 
-	current.state.element.style.height = `${current.state.height}px`;
-	current.state.element.style.width = `${current.state.width}px`;
+	setStyles(current.state.element, {
+		height: `${current.state.height}px`,
+		width: `${current.state.width}px`,
+	});
 
 	resetResizable();
 }

@@ -1,7 +1,10 @@
 import {isPlainObject} from '@oscarpalmer/atoms/is';
+import {getAria} from '@oscarpalmer/toretto/aria';
+import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {on} from '@oscarpalmer/toretto/event';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
+import {setStyle, setStyles} from '@oscarpalmer/toretto/style';
 
 // #region Types
 
@@ -45,13 +48,15 @@ export class OuiFloatable {
 		const {anchor, content} = state;
 
 		if (standalone) {
-			content.setAttribute(ATTRIBUTE_FLOATABLE, '');
+			setAttribute(content, ATTRIBUTE_FLOATABLE, '');
 
 			content.popover = 'manual';
+		} else {
+			content.popover ??= 'auto';
 		}
 
-		anchor.style.anchorName = state.name;
-		content.style.positionAnchor = state.name;
+		setStyle(anchor, 'anchorName', state.name);
+		setStyle(content, 'positionAnchor', state.name);
 	}
 
 	/**
@@ -211,11 +216,11 @@ function createInstance(
 export function getOnBeforeToggleListener(element: HTMLElement): RemovableEventListener {
 	return on(
 		element,
-		EVENT_BEFORE,
+		'beforetoggle',
 		event => {
 			const {newState, source} = event;
 
-			if (newState === FLOATABLE_STATE_OPEN && source?.getAttribute(ARIA_DISABLED) === TRUE) {
+			if (newState === 'open' && source != null && getAria(source, 'disabled') === 'true') {
 				event.preventDefault();
 			}
 		},
@@ -248,9 +253,11 @@ function getPosition(
 		return options.position;
 	}
 
-	const attribute = anchor.getAttribute(options.attribute) ?? '';
+	const attribute = getAttribute(anchor, options.attribute);
 
-	return attribute in AREAS ? (attribute as OuiFloatablePosition) : options.position;
+	return attribute != null && attribute in AREAS
+		? (attribute as OuiFloatablePosition)
+		: options.position;
 }
 
 function getState(
@@ -281,10 +288,12 @@ function setPosition(state: OuiFloatableState, override?: OuiFloatablePosition):
 
 	const area = AREAS[position];
 
-	state.content.style.positionAnchor = state.name;
-	state.content.style.positionArea = area;
+	setAttribute(state.content, ATTRIBUTE_POSITION, POSITIONS[area]);
 
-	state.content.setAttribute(ATTRIBUTE_POSITION, POSITIONS[area]);
+	setStyles(state.content, {
+		positionAnchor: state.name,
+		positionArea: area,
+	});
 }
 
 // #endregion
@@ -306,23 +315,15 @@ const AREAS: Record<OuiFloatablePosition, string> = {
 	'start-top': 'span-end start',
 };
 
-const ARIA_DISABLED = 'aria-disabled';
-
 export const ATTRIBUTE_FLOATABLE = 'oui-floatable';
 
 const ATTRIBUTE_POSITION = 'oui-position';
-
-const EVENT_BEFORE = 'beforetoggle';
-
-export const FLOATABLE_STATE_OPEN = 'open';
 
 const MESSAGE = 'Anchor and content must be an HTMLElement or SVGElement';
 
 const POSITIONS = Object.fromEntries(
 	Object.entries(AREAS).map(([position, area]) => [area, position]),
 ) as Record<string, OuiFloatablePosition>;
-
-const TRUE = 'true';
 
 const instances = new WeakMap<HTMLElement, OuiFloatable>();
 

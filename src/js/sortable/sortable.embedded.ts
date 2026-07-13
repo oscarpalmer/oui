@@ -1,8 +1,10 @@
 import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
+import {getAttribute, setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createElement} from '@oscarpalmer/toretto/create';
 import {getPosition} from '@oscarpalmer/toretto/event';
 import {findAncestor, getElementFromPosition} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
+import {setStyle} from '@oscarpalmer/toretto/style';
 import {attributable} from '../internal/attributable';
 import {
 	addDraggable,
@@ -50,7 +52,7 @@ export class OuiSortable extends OuiDraggable<OuiSortableState> {
 					(getDraggableStates(element)?.sortable as OuiDraggableState & OuiSortableState)?.origin,
 			},
 			{
-				connections: element.getAttribute(ATTRIBUTE_CONNECTIONS),
+				connections: getAttribute(element, ATTRIBUTE_CONNECTIONS),
 			},
 		);
 	}
@@ -67,7 +69,7 @@ type OuiSortablePlaceholderDrag = {
 };
 
 type OuiSortableState = {
-	connections: string | null;
+	connections: string | null | undefined;
 	origin?: HTMLElement;
 };
 
@@ -166,10 +168,11 @@ function getOriginalPosition(
 function getPositionPlaceholder(item: OuiDraggableItem<OuiSortableState>): HTMLElement {
 	placeholder.position ??= createElement('div');
 
-	placeholder.position.setAttribute(ATTRIBUTE_PLACEHOLDER_POSITION, '');
+	setAttribute(placeholder.position, ATTRIBUTE_PLACEHOLDER_POSITION, '');
 
 	if (item.state.origin != null) {
-		placeholder.position.style.setProperty(
+		setStyle(
+			placeholder.position,
 			'--placeholder-height',
 			`${item.state.origin.getBoundingClientRect().height}px`,
 		);
@@ -188,9 +191,9 @@ function onBegin(
 
 	setPlaceholder(globals, item, element);
 
-	element.setAttribute(ATTRIBUTE_ORIGIN, '');
+	setAttribute(element, ATTRIBUTE_ORIGIN, '');
 
-	document.body.setAttribute(ATTRIBUTE_ACTIVE, '');
+	setAttribute(document.body, ATTRIBUTE_ACTIVE, '');
 }
 
 function onCancel(_: OuiDraggableGlobals, item: OuiDraggableItem<OuiSortableState>): void {
@@ -218,7 +221,7 @@ function onEnd(
 	let element = findAncestor(target, SELECTOR_ITEM) as HTMLElement;
 
 	if (element?.hasAttribute(ATTRIBUTE_PLACEHOLDER_POSITION)) {
-		const position = element.getAttribute(ATTRIBUTE_PLACEHOLDER_POSITION);
+		const position = getAttribute(element, ATTRIBUTE_PLACEHOLDER_POSITION);
 
 		if (position === 'after') {
 			element = element.previousElementSibling as HTMLElement;
@@ -344,7 +347,7 @@ function onMove(
 			toElement.insertAdjacentElement(INSERT_AFTER, placeholder);
 		}
 
-		placeholder.setAttribute(ATTRIBUTE_PLACEHOLDER_POSITION, place);
+		setAttribute(placeholder, ATTRIBUTE_PLACEHOLDER_POSITION, place);
 	} else {
 		placeholder.remove();
 	}
@@ -417,9 +420,8 @@ function setPlaceholder(
 }
 
 function updatePlaceholder(item: OuiDraggableItem<OuiSortableState>, element: HTMLElement): void {
-	element.style.position = 'fixed';
-
-	element.setAttribute(ATTRIBUTE_PLACEHOLDER_DRAG, '');
+	setAttribute(element, ATTRIBUTE_PLACEHOLDER_DRAG, '');
+	setStyle(element, 'position', 'fixed');
 
 	const state = getDraggableStates(item.state.element)?.sortable;
 
@@ -427,17 +429,10 @@ function updatePlaceholder(item: OuiDraggableItem<OuiSortableState>, element: HT
 		return;
 	}
 
-	if (state.horizontal) {
-		element.setAttribute(ATTRIBUTE_HORIZONTAL, '');
-	} else {
-		element.removeAttribute(ATTRIBUTE_HORIZONTAL);
-	}
-
-	if (state.vertical) {
-		element.setAttribute(ATTRIBUTE_VERTICAL, '');
-	} else {
-		element.removeAttribute(ATTRIBUTE_VERTICAL);
-	}
+	setAttributes(element, {
+		[ATTRIBUTE_HORIZONTAL]: state.horizontal ? '' : undefined,
+		[ATTRIBUTE_VERTICAL]: state.vertical ? '' : undefined,
+	});
 }
 
 function validatePosition(

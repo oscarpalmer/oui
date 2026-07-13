@@ -1,12 +1,13 @@
 import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
 import {clamp} from '@oscarpalmer/atoms/number';
+import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
-import {toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
+import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
+import {setStyle, setStyles, toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
 import supportsTouch from '@oscarpalmer/toretto/touch';
 import type {OuiMovable} from '../movable/movable.embedded';
 import type {OuiSortable} from '../sortable/sortable.embedded';
-import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 
 // #region Types
 
@@ -63,7 +64,7 @@ export abstract class OuiDraggable<ExtraState extends PlainObject = PlainObject>
 		setContainer(item);
 		setDirection(item);
 
-		element.setAttribute(attribute, '');
+		setAttribute(element, attribute, '');
 
 		let states = globals.states.get(element);
 
@@ -425,9 +426,11 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 
 		const next = getNextPosition(item, position);
 
-		dragged.style.position = 'fixed';
-		dragged.style.inset = `${next.y}px auto auto ${next.x}px`;
-		dragged.style.transform = 'translate3d(0, 0, 0)';
+		setStyles(dragged, {
+			position: 'fixed',
+			inset: `${next.y}px auto auto ${next.x}px`,
+			transform: 'translate3d(0, 0, 0)',
+		});
 
 		item.state.options.drag.onBegin?.(event, globals, item, element, handle, next);
 
@@ -450,7 +453,7 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 	const next = getNextPosition(current, position);
 
 	if (globals.element != null) {
-		globals.element.node.style.inset = `${next.y}px auto auto ${next.x}px`;
+		setStyle(globals.element.node, 'inset', `${next.y}px auto auto ${next.x}px`);
 	}
 
 	const detail = current.state.options.drag.onMove(event, globals, current, {
@@ -529,7 +532,7 @@ function setContainer(item: OuiDraggableItem): void {
 	}
 
 	const selector =
-		container ?? item.instance.element.getAttribute(item.state.options.container.attribute);
+		container ?? getAttribute(item.instance.element, item.state.options.container.attribute);
 
 	if (typeof selector !== 'string') {
 		return;
@@ -559,7 +562,7 @@ function setContainerElement(item: OuiDraggableItem, element: HTMLElement): void
 }
 
 function setDirection(item: OuiDraggableItem): void {
-	const direction = item.state.element.getAttribute(item.state.options.direction.attribute);
+	const direction = getAttribute(item.state.element, item.state.options.direction.attribute);
 
 	if (horizontals.has(direction as OuiDraggableDirection)) {
 		item.state.vertical = false;

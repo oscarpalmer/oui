@@ -1,9 +1,11 @@
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import {round} from '@oscarpalmer/atoms/math';
 import {clamp} from '@oscarpalmer/atoms/number';
+import {setAria} from '@oscarpalmer/toretto/aria';
+import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
-import {type StyleToggler, toggleStyles} from '@oscarpalmer/toretto/style';
+import {setStyle, type StyleToggler, toggleStyles} from '@oscarpalmer/toretto/style';
 import supportsTouch from '@oscarpalmer/toretto/touch';
 
 declare global {
@@ -78,11 +80,7 @@ class OuiSplitter {
 			RESIZE_OBSERVER.unobserve(this.element);
 		}
 
-		if (this.types.horizontal) {
-			this.element.setAttribute(ATTRIBUTE_HORIZONTAL, '');
-		} else {
-			this.element.removeAttribute(ATTRIBUTE_HORIZONTAL);
-		}
+		setAttribute(this.element, ATTRIBUTE_HORIZONTAL, this.types.horizontal ? '' : undefined);
 
 		setAriaOrientation(this);
 	}
@@ -120,7 +118,9 @@ export class OuiSplitterElement extends HTMLElement {
 	 * Maximum size for the first panel
 	 */
 	set max(value: number) {
-		this.setAttribute(ATTRIBUTE_MAX, String(value));
+		if (typeof value === 'number') {
+			setAttribute(this, ATTRIBUTE_MAX, value.toString());
+		}
 	}
 
 	/**
@@ -134,7 +134,9 @@ export class OuiSplitterElement extends HTMLElement {
 	 * Minimum size for the first panel
 	 */
 	set min(value: number) {
-		this.setAttribute(ATTRIBUTE_MIN, String(value));
+		if (typeof value === 'number') {
+			setAttribute(this, ATTRIBUTE_MIN, value.toString());
+		}
 	}
 
 	/**
@@ -148,21 +150,23 @@ export class OuiSplitterElement extends HTMLElement {
 	 * Current size for the first panel
 	 */
 	set size(value: number) {
-		this.setAttribute(ATTRIBUTE_SIZE, String(value));
+		if (typeof value === 'number') {
+			setAttribute(this, ATTRIBUTE_SIZE, value.toString());
+		}
 	}
 
 	/**
 	 * Orientation of the splitter
 	 */
 	get type(): string {
-		return this.getAttribute(ATTRIBUTE_TYPE) ?? 'vertical';
+		return getAttribute(this, ATTRIBUTE_TYPE) ?? 'vertical';
 	}
 
 	/**
 	 * Orientation of the splitter
 	 */
 	set type(value: string) {
-		this.setAttribute(ATTRIBUTE_TYPE, value);
+		setAttribute(this, ATTRIBUTE_TYPE, value);
 	}
 
 	// Constructor
@@ -170,7 +174,7 @@ export class OuiSplitterElement extends HTMLElement {
 	constructor() {
 		super();
 
-		const panels = [...this.children].filter(child => child instanceof HTMLElement);
+		const panels = [...this.children].filter(child => child instanceof Element) as HTMLElement[];
 
 		if (panels.length !== 2) {
 			throw new Error(MESSAGE);
@@ -228,8 +232,8 @@ type OuiSplitterValuesNow = {
 function createHandle(): HTMLSpanElement {
 	const handle = document.createElement('span');
 
-	handle.setAttribute('aria-hidden', 'true');
-	handle.setAttribute(ATTRIBUTE_HANDLE, '');
+	setAria(handle, 'hidden', 'true');
+	setAttribute(handle, ATTRIBUTE_HANDLE, '');
 
 	return handle;
 }
@@ -240,9 +244,12 @@ function createSeparator(splitter: OuiSplitter): HTMLDivElement {
 	separator.role = 'separator';
 	separator.tabIndex = 0;
 
-	separator.setAttribute('aria-controls', splitter.element.id);
-	separator.setAttribute('aria-label', 'Resize panels');
-	separator.setAttribute(ATTRIBUTE_SEPARATOR, '');
+	setAria(separator, {
+		controls: splitter.element.id,
+		label: 'Resize panels',
+	});
+
+	setAttribute(separator, ATTRIBUTE_SEPARATOR, '');
 
 	return separator;
 }
@@ -262,7 +269,7 @@ function getSize(splitter: OuiSplitter, value: number): number {
 }
 
 function getTypes(splitter: OuiSplitter, width?: number, height?: number): OuiSplitterTypes {
-	const type = splitter.element.getAttribute('type')?.trim() ?? '';
+	const type = getAttribute(splitter.element, 'type');
 
 	if (type === 'horizontal') {
 		return {
@@ -285,7 +292,7 @@ function getTypes(splitter: OuiSplitter, width?: number, height?: number): OuiSp
 }
 
 function getValue(element: HTMLElement, name: string, defaultValue: number): number {
-	const value = element.getAttribute(name);
+	const value = getAttribute(element, name);
 
 	if (isNullableOrWhitespace(value)) {
 		return defaultValue;
@@ -408,11 +415,11 @@ function onObservation(entries: ResizeObserverEntry[]): void {
 
 			splitter.types = getTypes(splitter, entry.contentRect.width, entry.contentRect.height);
 
-			if (splitter.types.horizontal) {
-				splitter.element.setAttribute(ATTRIBUTE_HORIZONTAL, '');
-			} else {
-				splitter.element.removeAttribute(ATTRIBUTE_HORIZONTAL);
-			}
+			setAttribute(
+				splitter.element,
+				ATTRIBUTE_HORIZONTAL,
+				splitter.types.horizontal ? '' : undefined,
+			);
 
 			setAriaOrientation(splitter);
 		}
@@ -436,8 +443,8 @@ function onPointerdown(event: Event): void {
 		event.preventDefault();
 	}
 
-	splitter.handle.setAttribute(ATTRIBUTE_ACTIVE, '');
-	splitter.separator.setAttribute(ATTRIBUTE_ACTIVE, '');
+	setAttribute(splitter.handle, ATTRIBUTE_ACTIVE, '');
+	setAttribute(splitter.separator, ATTRIBUTE_ACTIVE, '');
 
 	splitter.rectangle = splitter.element.getBoundingClientRect();
 
@@ -468,17 +475,15 @@ function onPointerup(): void {
 }
 
 function setAriaOrientation(splitter: OuiSplitter): void {
-	splitter.separator.setAttribute(
-		'aria-orientation',
-		splitter.types.horizontal ? 'horizontal' : 'vertical',
-	);
+	setAria(splitter.separator, 'orientation', splitter.types.horizontal ? 'horizontal' : 'vertical');
 }
 
 function setAriaValue(splitter: OuiSplitter): void {
-	splitter.separator.setAttribute('aria-valuemax', String(splitter.values.max));
-	splitter.separator.setAttribute('aria-valuemin', String(splitter.values.min));
-
-	splitter.separator.setAttribute('aria-valuenow', String(splitter.values.now.current));
+	setAria(splitter.separator, {
+		valuemax: splitter.values.max,
+		valuemin: splitter.values.min,
+		valuenow: splitter.values.now.current,
+	});
 }
 
 function setSize(splitter: OuiSplitter, size: number, previous?: boolean): void {
@@ -488,7 +493,7 @@ function setSize(splitter: OuiSplitter, size: number, previous?: boolean): void 
 		splitter.values.now.previous = size;
 	}
 
-	splitter.element.style.setProperty('--oui-splitter-size', `${size}`);
+	setStyle(splitter.element, '--oui-splitter-size', `${size}`);
 
 	setAriaValue(splitter);
 }

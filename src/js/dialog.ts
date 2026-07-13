@@ -1,3 +1,4 @@
+import {getAria, setAria} from '@oscarpalmer/toretto/aria';
 import {on} from '@oscarpalmer/toretto/event';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import {getOnBeforeToggleListener} from './floatable/floatable.embedded';
@@ -6,6 +7,8 @@ import {ATTRIBUTE_MOVABLE_HANDLE} from './movable/movable.embedded';
 import {createMovable, type OuiMovable} from './movable/movable.standalone';
 import {createResizable, RESIZABLE_ATTRIBUTE_HANDLE} from './resizable/resizable.embedded';
 import type {OuiResizable} from './resizable/resizable.standalone';
+import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
+import {setStyles} from '@oscarpalmer/toretto/style';
 
 // #region Types
 
@@ -68,7 +71,7 @@ class OuiDialog {
 
 		const isModal = modal !== false;
 
-		element.setAttribute(ARIA_MODAL, String(isModal));
+		setAria(element, 'modal', isModal);
 
 		if (isModal) {
 			element.showModal();
@@ -104,7 +107,8 @@ function addDialog(element: HTMLElement): void {
 function destroyDialog(state: OuiDialogState): void {
 	state.element.close();
 
-	state.element.setAttribute(ARIA_MODAL, String(state.modal));
+	setAria(state.element, 'modal', state.modal);
+
 	state.element.removeAttribute(ATTRIBUTE_OPEN);
 
 	for (const listener of state.listeners) {
@@ -139,11 +143,11 @@ function getMovable(element: HTMLDialogElement): OuiMovable | undefined {
 	}
 
 	for (const handle of handles) {
-		handle.setAttribute(ATTRIBUTE_MOVABLE_HANDLE, '');
+		setAttribute(handle, ATTRIBUTE_MOVABLE_HANDLE, '');
 	}
 
 	return createMovable(element, {
-		container: element.getAttribute(ATTRIBUTE_CONTAINER) ?? undefined,
+		container: getAttribute(element, ATTRIBUTE_CONTAINER),
 	});
 }
 
@@ -154,7 +158,7 @@ function getResizable(element: HTMLDialogElement): OuiResizable | undefined {
 		return;
 	}
 
-	handle.setAttribute(RESIZABLE_ATTRIBUTE_HANDLE, '');
+	setAttribute(handle, RESIZABLE_ATTRIBUTE_HANDLE, '');
 
 	return createResizable(element);
 }
@@ -165,16 +169,16 @@ function getState(element: HTMLDialogElement): OuiDialogState {
 		dialog: undefined as never,
 		listeners: [
 			getOnBeforeToggleListener(element),
-			on(element, EVENT_TOGGLE, event => {
+			on(element, 'toggle', event => {
 				const {source} = event;
 
 				if (element.open) {
 					const modal =
-						(source instanceof HTMLButtonElement && source.command === COMMAND_SHOW_MODAL) ||
-						element.matches(SELECTOR_MODAL);
+						(source instanceof HTMLButtonElement && source.command === 'show-modal') ||
+						element.matches(':modal');
 
-					element.setAttribute(ARIA_MODAL, String(modal));
-					element.setAttribute(ATTRIBUTE_OPEN, '');
+					setAria(element, 'modal', modal);
+					setAttribute(element, ATTRIBUTE_OPEN, '');
 
 					element.focus();
 
@@ -182,18 +186,20 @@ function getState(element: HTMLDialogElement): OuiDialogState {
 						state.resizable?.set();
 					}, 500);
 				} else {
-					element.removeAttribute(ATTRIBUTE_OPEN);
-					element.setAttribute(ARIA_MODAL, String(state.modal));
+					setAttribute(element, ATTRIBUTE_OPEN);
+					setAria(element, 'modal', state.modal);
 
-					element.style.inset = '';
-					element.style.position = '';
-					element.style.transform = '';
+					setStyles(element, {
+						inset: '',
+						position: '',
+						transform: '',
+					});
 
 					state.resizable?.reset();
 				}
 			}),
 		],
-		modal: element.getAttribute(ARIA_MODAL) === TRUE,
+		modal: getAria(element, 'modal') === 'true' || element.matches(':modal'),
 	};
 
 	state.dialog = new OuiDialog(state);
@@ -220,27 +226,17 @@ function removeDialog(element: HTMLElement): void {
 
 // #region Variables
 
-const ARIA_MODAL = 'aria-modal';
-
 const ATTRIBUTE = 'oui-dialog';
 
 const ATTRIBUTE_CONTAINER = `${ATTRIBUTE}-container`;
 
 const ATTRIBUTE_OPEN = `${ATTRIBUTE}-open`;
 
-const COMMAND_SHOW_MODAL = 'show-modal';
-
-const EVENT_TOGGLE = 'toggle';
-
 const MESSAGE = 'The element must be an instance of HTMLDialogElement';
 
 const SELECTOR_MOVER = `[${ATTRIBUTE}-mover]`;
 
-const SELECTOR_MODAL = ':modal';
-
 const SELECTOR_RESIZER = `[${ATTRIBUTE}-resizer]`;
-
-const TRUE = 'true';
 
 const states = new WeakMap<HTMLElement, OuiDialogState>();
 

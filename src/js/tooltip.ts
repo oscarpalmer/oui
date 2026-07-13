@@ -1,11 +1,11 @@
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
+import {getAria} from '@oscarpalmer/toretto/aria';
+import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {createElement} from '@oscarpalmer/toretto/create';
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
-import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import {
 	createEmbeddedFloatable,
-	FLOATABLE_STATE_OPEN,
 	type OuiFloatable,
 	type OuiFloatableOptions,
 } from './floatable/floatable.embedded';
@@ -154,7 +154,11 @@ function destroyTooltip(state: OuiTooltipState): void {
 	state.tooltip = undefined as never;
 }
 
-function findElements(attribute: string | null): HTMLElement[] {
+function findElements(attribute?: string): HTMLElement[] | undefined {
+	if (attribute == null) {
+		return;
+	}
+
 	const ids = attribute?.split(EXPRESSION_WHITESPACE) ?? [];
 	const elements: HTMLElement[] = [];
 
@@ -165,7 +169,7 @@ function findElements(attribute: string | null): HTMLElement[] {
 
 		const element = document.querySelector(`#${id}`);
 
-		if (isHTMLOrSVGElement(element)) {
+		if (element != null) {
 			const cloned = element.cloneNode(true) as HTMLElement;
 
 			cloned.hidden = false;
@@ -178,34 +182,32 @@ function findElements(attribute: string | null): HTMLElement[] {
 }
 
 function getContent(): HTMLElement {
-	const content = createElement(CONTENT_TAGNAME, {
+	const content = createElement('div', {
 		popover: 'hint',
 		role: 'tooltip',
 		tabIndex: -1,
 	});
 
-	content.setAttribute(ATTRIBUTE_CONTENT, '');
+	setAttribute(content, ATTRIBUTE_CONTENT, '');
 
 	return content;
 }
 
 function getElements(anchor: HTMLElement): HTMLElement[] | undefined {
-	let elements = findElements(anchor.getAttribute(ARIA_LABELLEDBY));
+	let elements = findElements(getAria(anchor, 'labelledby'));
 
-	if (elements.length > 0) {
-		return elements;
+	if (elements == null || elements.length === 0) {
+		elements = findElements(getAria(anchor, 'describedby'));
 	}
 
-	elements = findElements(anchor.getAttribute(ARIA_DESCRIBEDBY));
-
-	if (elements.length > 0) {
-		return elements;
+	if (elements != null && elements.length > 0) {
+		return elements as HTMLElement[];
 	}
 
-	let text = anchor.getAttribute(ARIA_LABEL);
+	let text = getAria(anchor, 'label');
 
 	if (isNullableOrWhitespace(text)) {
-		text = anchor.getAttribute(ARIA_DESCRIPTION);
+		text = getAria(anchor, 'description');
 	}
 
 	if (isNullableOrWhitespace(text)) {
@@ -276,11 +278,7 @@ function onPointermove(event: Event): void {
 }
 
 function onToggle(event: ToggleEvent): void {
-	if (event.newState === FLOATABLE_STATE_OPEN) {
-		content.setAttribute(ATTRIBUTE_CONTENT_OPEN, '');
-	} else {
-		content.removeAttribute(ATTRIBUTE_CONTENT_OPEN);
-	}
+	setAttribute(content, ATTRIBUTE_CONTENT_OPEN, event.newState === 'open' ? '' : undefined);
 }
 
 function removeTooltip(element: HTMLElement): void {
@@ -310,16 +308,6 @@ function setTooltipDelay(value: number): void {
 // #endregion
 
 // #region Variables
-
-const ARIA_DESCRIBEDBY = 'aria-describedby';
-
-const ARIA_DESCRIPTION = 'aria-description';
-
-const ARIA_LABEL = 'aria-label';
-
-const ARIA_LABELLEDBY = 'aria-labelledby';
-
-const CONTENT_TAGNAME = 'div';
 
 const EXPRESSION_WHITESPACE = /\s+/;
 

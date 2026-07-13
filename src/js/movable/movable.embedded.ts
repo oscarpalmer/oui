@@ -1,6 +1,8 @@
 import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
+import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
+import {getStyles, setStyle, setStyles} from '@oscarpalmer/toretto/style';
 import {attributable} from '../internal/attributable';
 import {
 	addDraggable,
@@ -23,10 +25,7 @@ export class OuiMovable extends OuiDraggable<OuiMovableState> {
 	#style: OuiMovableStyle;
 
 	constructor(element: HTMLElement, options?: CreateOuiDraggableOptions) {
-		const style = {
-			inset: element.style.inset,
-			position: element.style.position,
-		};
+		const style = getStyles(element, ['inset', 'position']);
 
 		super(
 			'movable',
@@ -80,8 +79,7 @@ export class OuiMovable extends OuiDraggable<OuiMovableState> {
 	override destroy(): void {
 		MOVED.delete(this);
 
-		this.#element.style.inset = this.#style.inset;
-		this.#element.style.position = this.#style.position;
+		setStyles(this.#element, this.#style);
 
 		this.#element = undefined as never;
 		this.#style = undefined as never;
@@ -98,8 +96,8 @@ type OuiMovableState = {
 };
 
 type OuiMovableStyle = {
-	inset: string;
-	position: string;
+	inset: string | undefined;
+	position: string | undefined;
 };
 
 // #endregion
@@ -168,10 +166,9 @@ function onCancel(globals: OuiDraggableGlobals, item: OuiDraggableItem): void {
 	const {x, y} = globals.original ?? {x: 0, y: 0};
 
 	if (moved) {
-		element.style.inset = `${y}px auto auto ${x}px`;
+		setStyle(element, 'inset', `${y}px auto auto ${x}px`);
 	} else {
-		element.style.position = style.position;
-		element.style.inset = style.inset;
+		setStyles(element, style);
 	}
 
 	element.removeAttribute(ATTRIBUTE_MOVING);
@@ -227,7 +224,7 @@ function onMove(
 	__: OuiDraggableItem,
 	position: OuiDragMovePosition,
 ): PlainObject | undefined {
-	globals.element?.node.setAttribute(ATTRIBUTE_MOVING, '');
+	setAttribute(globals.element?.node as never, ATTRIBUTE_MOVING, '');
 
 	return {
 		from: {...globals.original},
@@ -270,7 +267,7 @@ function reposition(movable: OuiMovable): void {
 	const x = container.left + (state.offset?.x ?? 0);
 	const y = container.top + (state.offset?.y ?? 0);
 
-	state.element.style.inset = `${y}px auto auto ${x}px`;
+	setStyle(state.element, 'inset', `${y}px auto auto ${x}px`);
 }
 
 function setOffset(state: OuiDraggableState & OuiMovableState, container: DOMRect): void {
