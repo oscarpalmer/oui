@@ -199,7 +199,7 @@ const ATTRIBUTE = 'oui-popover';
 const ATTRIBUTE_OPEN = `${ATTRIBUTE}-open`;
 
 const options: OuiFloatableOptions = {
-	attribute: `${ATTRIBUTE}position`,
+	attribute: `${ATTRIBUTE}-position`,
 	position: 'below-start',
 	reusable: false,
 };
