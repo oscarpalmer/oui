@@ -1,0 +1,26 @@
+/*! https://github.com/oscarpalmer/oui */
+
+@use './mixins.scss' as mixins;
+
+:where([oui-combobox-content]) {
+	@include mixins.shadow-overlay;
+
+	width: fit-content;
+	height: fit-content;
+	max-width: max(25vw, 32rem);
+	max-height: max(25vh, 32rem);
+	min-width: var(--oui-combobox-width, auto);
+	flex-flow: column nowrap;
+
+	&:popover-open {
+		display: flex !important;
+	}
+}
+
+:where([oui-combobox-list]) {
+	overflow: auto;
+}
+
+:where([oui-combobox-option]) {
+	cursor: pointer;
+}

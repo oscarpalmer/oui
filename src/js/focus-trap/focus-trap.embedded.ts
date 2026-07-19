@@ -289,19 +289,31 @@ function onTab(event: KeyboardEvent): void {
 		return;
 	}
 
-	if (!instance.disabled) {
-		event.preventDefault();
-	}
+	const dispatch = new CustomEvent('focus-trap:tab', {
+		cancelable: true,
+	});
 
-	const elements = getFocusable(element);
+	element.dispatchEvent(dispatch);
 
-	const index = elements.indexOf(event.target as HTMLElement);
+	setTimeout(() => {
+		if (dispatch.defaultPrevented) {
+			return;
+		}
 
-	if (index === -1 || elements.length === 0) {
-		tabToTrap(instance, elements, element);
-	} else {
-		tabToElement(instance, elements, index, event.shiftKey ? -1 : 1);
-	}
+		if (!instance.disabled) {
+			event.preventDefault();
+		}
+
+		const elements = getFocusable(element);
+
+		const index = elements.indexOf(event.target as HTMLElement);
+
+		if (index === -1 || elements.length === 0) {
+			tabToTrap(instance, elements, element);
+		} else {
+			tabToElement(instance, elements, index, event.shiftKey ? -1 : 1);
+		}
+	});
 }
 
 export function removeFocusTrap(element: HTMLElement): void {

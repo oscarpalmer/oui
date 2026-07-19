@@ -5,14 +5,10 @@ import {setAria} from '@oscarpalmer/toretto/aria';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
-import {setStyle, type StyleToggler, toggleStyles} from '@oscarpalmer/toretto/style';
+import {setStyle, toggleStyles} from '@oscarpalmer/toretto/style';
 import supportsTouch from '@oscarpalmer/toretto/touch';
 
-declare global {
-	interface HTMLElementTagNameMap {
-		[SELECTOR]: OuiSplitterElement;
-	}
-}
+// #region Special variables
 
 const ATTRIBUTE_MAX = 'max';
 
@@ -21,6 +17,16 @@ const ATTRIBUTE_MIN = 'min';
 const ATTRIBUTE_SIZE = 'size';
 
 const ATTRIBUTE_TYPE = 'type';
+
+// #endregion
+
+// #region Types
+
+declare global {
+	interface HTMLElementTagNameMap {
+		[TAGNAME]: OuiSplitterElement;
+	}
+}
 
 class OuiSplitter {
 	element: OuiSplitterElement;
@@ -227,7 +233,9 @@ type OuiSplitterValuesNow = {
 	previous: number;
 };
 
-//
+// #endregion
+
+// #region Functions
 
 function createHandle(): HTMLSpanElement {
 	const handle = document.createElement('span');
@@ -498,31 +506,33 @@ function setSize(splitter: OuiSplitter, size: number, previous?: boolean): void 
 	setAriaValue(splitter);
 }
 
-//
+// #endregion
 
-const SELECTOR = 'oui-splitter';
+// #region Variables
 
-const ATTRIBUTE_ACTIVE = `${SELECTOR}-active`;
+const TAGNAME = 'oui-splitter';
 
-const ATTRIBUTE_HANDLE = `${SELECTOR}-handle`;
+const ATTRIBUTE_ACTIVE = `${TAGNAME}-active`;
 
-const ATTRIBUTE_HORIZONTAL = `${SELECTOR}-horizontal`;
+const ATTRIBUTE_HANDLE = `${TAGNAME}-handle`;
 
-const ATTRIBUTE_SEPARATOR = `${SELECTOR}-separator`;
+const ATTRIBUTE_HORIZONTAL = `${TAGNAME}-horizontal`;
 
-const KEYS_ABSOLUTE: Set<string> = new Set(['End', 'Home']);
+const ATTRIBUTE_SEPARATOR = `${TAGNAME}-separator`;
 
-const KEYS_HORIZONTAL: Set<string> = new Set(['ArrowDown', 'ArrowUp']);
+const KEYS_ABSOLUTE = new Set(['End', 'Home']);
 
-const KEYS_NEGATIVE: Set<string> = new Set(['ArrowLeft', 'ArrowUp']);
+const KEYS_HORIZONTAL = new Set(['ArrowDown', 'ArrowUp']);
 
-const KEYS_VERTICAL: Set<string> = new Set(['ArrowLeft', 'ArrowRight']);
+const KEYS_NEGATIVE = new Set(['ArrowLeft', 'ArrowUp']);
 
-const KEYS_ALL: Set<string> = new Set([...KEYS_ABSOLUTE, ...KEYS_HORIZONTAL, ...KEYS_VERTICAL]);
+const KEYS_VERTICAL = new Set(['ArrowLeft', 'ArrowRight']);
 
-const MAPPED_ELEMENTS: WeakMap<HTMLElement, OuiSplitter> = new WeakMap();
+const KEYS_ALL = new Set([...KEYS_ABSOLUTE, ...KEYS_HORIZONTAL, ...KEYS_VERTICAL]);
 
-const MESSAGE = `<${SELECTOR}> must have exactly two panels.`;
+const MAPPED_ELEMENTS = new WeakMap<HTMLElement, OuiSplitter>();
+
+const MESSAGE = `<${TAGNAME}> must have exactly two panels.`;
 
 const METHODS_CONNECT = ['delete', 'set'] as const;
 
@@ -540,7 +550,7 @@ const RESIZE_OBSERVER: ResizeObserver = new ResizeObserver(onObservation);
 
 const SELECTOR_HANDLE = `[${ATTRIBUTE_HANDLE}]`;
 
-const STYLING_TOGGLER: StyleToggler = toggleStyles(document.body, {
+const STYLING_TOGGLER = toggleStyles(document.body, {
 	touchAction: 'none',
 	userSelect: 'none',
 	webkitUserSelect: 'none',
@@ -554,9 +564,9 @@ let frame: DOMHighResTimeStamp | undefined;
 
 let splitter: OuiSplitter | undefined;
 
-//
+// #endregion
 
-customElements.define(SELECTOR, OuiSplitterElement);
+// #region Initialization
 
 on(document, 'keydown', onKeydown);
 on(document, 'mousedown', onPointerdown);
@@ -564,3 +574,7 @@ on(document, 'pointermove', onPointermove);
 on(document, 'pointerup', onPointerup);
 on(document, 'touchcancel', onPointerup);
 on(document, 'touchstart', onPointerdown, {passive: false});
+
+customElements.define(TAGNAME, OuiSplitterElement);
+
+// #endregion

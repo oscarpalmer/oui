@@ -110,9 +110,9 @@ function afterEnd(
 	let insertion: 'afterend' | 'beforebegin';
 
 	if (position.y < top + height / 2) {
-		insertion = INSERT_BEFORE;
+		insertion = 'beforebegin';
 	} else {
-		insertion = INSERT_AFTER;
+		insertion = 'afterend';
 	}
 
 	elements.target?.insertAdjacentElement(insertion, elements.origin!);
@@ -277,8 +277,8 @@ function onEnd(
 		cancelable: true,
 	};
 
-	const fromEvent = new CustomEvent(EVENT_END, options);
-	const toEvent = new CustomEvent(EVENT_END, options);
+	const fromEvent = new CustomEvent('sortable:end', options);
+	const toEvent = new CustomEvent('sortable:end', options);
 
 	item.instance.element.dispatchEvent(fromEvent);
 
@@ -340,11 +340,11 @@ function onMove(
 		if (position.calculated.y < top + height / 2) {
 			place = 'before';
 
-			toElement.insertAdjacentElement(INSERT_BEFORE, placeholder);
+			toElement.insertAdjacentElement('beforebegin', placeholder);
 		} else {
 			place = 'after';
 
-			toElement.insertAdjacentElement(INSERT_AFTER, placeholder);
+			toElement.insertAdjacentElement('afterend', placeholder);
 		}
 
 		setAttribute(placeholder, ATTRIBUTE_PLACEHOLDER_POSITION, place);
@@ -383,7 +383,7 @@ function setPlaceholder(
 
 	updatePlaceholder(item, element);
 
-	const event = new CustomEvent(EVENT_PLACEHOLDER, {
+	const event = new CustomEvent('sortable:placeholder', {
 		cancelable: true,
 		detail: {
 			origin,
@@ -491,14 +491,6 @@ const ATTRIBUTE_PLACEHOLDER_POSITION = `${ATTRIBUTE}-placeholder-position`;
 const ATTRIBUTE_VERTICAL = `${ATTRIBUTE}-vertical`;
 
 const CONTAINERS = new Map<HTMLElement, Set<OuiSortable>>();
-
-const EVENT_END = 'sort:end';
-
-const EVENT_PLACEHOLDER = 'sort:placeholder';
-
-const INSERT_AFTER = 'afterend';
-
-const INSERT_BEFORE = 'beforebegin';
 
 const MESSAGE = 'The element must be an instance of HTMLElement or SVGElement';
 

@@ -2,7 +2,7 @@ import {isPlainObject} from '@oscarpalmer/atoms/is';
 import type {EventPosition} from '@oscarpalmer/atoms/models';
 import {getNumber} from '@oscarpalmer/atoms/number';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
-import {getPosition, on} from '@oscarpalmer/toretto/event';
+import {dispatch, getPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import {setStyles, toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
@@ -89,6 +89,21 @@ function addResizable(
 	}
 
 	return item?.instance;
+}
+
+function cancelResize(item?: OuiResizableItem): void {
+	if (item == null) {
+		return;
+	}
+
+	setStyles(item.state.element, {
+		height: `${item.state.height}px`,
+		width: `${item.state.width}px`,
+	});
+
+	resetResizable();
+
+	dispatch(item.state.element, 'resizable:cancel');
 }
 
 /**
@@ -245,16 +260,9 @@ function getXAndY(first: unknown, second?: unknown): [number, number] {
 }
 
 function onKeydown(event: KeyboardEvent): void {
-	if (current == null || event.key !== 'Escape') {
-		return;
+	if (current != null && event.key === 'Escape') {
+		cancelResize(current);
 	}
-
-	setStyles(current.state.element, {
-		height: `${current.state.height}px`,
-		width: `${current.state.width}px`,
-	});
-
-	resetResizable();
 }
 
 function onPointerdown(event: MouseEvent | TouchEvent): void {
@@ -283,11 +291,23 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		event.preventDefault();
 	}
 
-	current = stored;
-	start = position;
+	const dispatch = new CustomEvent('resizable:begin', {
+		cancelable: true,
+	});
 
-	current.state.styles.set();
-	styleToggler.set();
+	element!.dispatchEvent(dispatch);
+
+	setTimeout(() => {
+		if (dispatch.defaultPrevented) {
+			return;
+		}
+
+		current = stored;
+		start = position;
+
+		current.state.styles.set();
+		styleToggler.set();
+	});
 }
 
 function onPointermove(event: MouseEvent | TouchEvent): void {
@@ -305,6 +325,22 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 	const height = current.state.height + (y - (start?.y ?? 0));
 
 	getAndSetDimensions(current.state.element, current.state.options, {height, width});
+
+	const dispatch = new CustomEvent('resizable:resize', {
+		cancelable: true,
+		detail: {
+			height,
+			width,
+		},
+	});
+
+	current.state.element.dispatchEvent(dispatch);
+
+	setTimeout(() => {
+		if (dispatch.defaultPrevented) {
+			cancelResize(current);
+		}
+	});
 }
 
 function onPointerup(): void {
@@ -312,12 +348,26 @@ function onPointerup(): void {
 		return;
 	}
 
-	const {height, width} = current.state.element.getBoundingClientRect();
+	const dispatch = new CustomEvent('resizable:end', {
+		cancelable: true,
+	});
 
-	current.state.height = height;
-	current.state.width = width;
+	current.state.element.dispatchEvent(dispatch);
 
-	resetResizable();
+	setTimeout(() => {
+		if (current == null || dispatch.defaultPrevented) {
+			cancelResize(current);
+
+			return;
+		}
+
+		const {height, width} = current.state.element.getBoundingClientRect();
+
+		current.state.height = height;
+		current.state.width = width;
+
+		resetResizable();
+	});
 }
 
 function removeResizable(element: HTMLElement): void {

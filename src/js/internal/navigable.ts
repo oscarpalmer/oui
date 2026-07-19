@@ -1,6 +1,6 @@
 import {clamp} from '@oscarpalmer/atoms/number';
 import {getAria, setRole} from '@oscarpalmer/toretto/aria';
-import {on} from '@oscarpalmer/toretto/event';
+import {dispatch, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import type {AriaRole, RemovableEventListener} from '@oscarpalmer/toretto/models';
@@ -212,6 +212,10 @@ export function updateNavigableFocus(
 	if (focus) {
 		navigable.active.element?.focus();
 	}
+
+	dispatch(navigable.active.element, 'navigable:change', {
+		detail: {...navigable.active},
+	});
 }
 
 // #endregion

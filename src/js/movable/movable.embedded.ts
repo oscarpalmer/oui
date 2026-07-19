@@ -199,7 +199,7 @@ function onEnd(
 		setOffset(state, container);
 	}
 
-	const end = new CustomEvent(EVENT_END, {
+	const end = new CustomEvent('movable:end', {
 		detail: {
 			from: {...globals.original},
 			to: getPosition(event),
@@ -294,8 +294,6 @@ export const ATTRIBUTE_MOVABLE_HANDLE = `${ATTRIBUTE_MOVABLE}-handle`;
 const ATTRIBUTE_MOVING = `${ATTRIBUTE_MOVABLE}-moving`;
 
 const CONTAINERS = new Map<HTMLElement, Set<OuiMovable>>();
-
-const EVENT_END = 'move:end';
 
 const MESSAGE = 'The element must be an instance of HTMLElement or SVGElement';
 

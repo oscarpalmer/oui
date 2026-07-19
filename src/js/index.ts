@@ -1,6 +1,7 @@
 import './menu';
 import './toolbar';
 
+export * from './combobox';
 export * from './dialog';
 export * from './floatable/floatable.standalone';
 export * from './focus-trap/focus-trap.standalone';

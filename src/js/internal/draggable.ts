@@ -1,7 +1,7 @@
 import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
 import {clamp} from '@oscarpalmer/atoms/number';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
-import {getPosition, on} from '@oscarpalmer/toretto/event';
+import {dispatch, getPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import {setStyle, setStyles, toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
@@ -27,8 +27,6 @@ type OuiDraggableDirection = 'horizontal' | 'vertical' | 'x' | 'y';
 export abstract class OuiDraggable<ExtraState extends PlainObject = PlainObject> {
 	#destroyed = false;
 
-	#name: keyof OuiDraggableStates;
-
 	readonly #state: OuiDraggableState & ExtraState;
 
 	get element(): HTMLElement {
@@ -43,13 +41,12 @@ export abstract class OuiDraggable<ExtraState extends PlainObject = PlainObject>
 		options: OuiDraggableOptions<ExtraState>,
 		extras: ExtraState,
 	) {
-		this.#name = name;
-
 		this.#state = {
 			...extras,
 			attribute,
 			element,
 			event,
+			name,
 			options,
 			horizontal: true,
 			vertical: true,
@@ -70,7 +67,7 @@ export abstract class OuiDraggable<ExtraState extends PlainObject = PlainObject>
 
 		states ??= {};
 
-		states[this.#name] = this.#state;
+		states[this.#state.name] = this.#state;
 
 		globals.states.set(element, states);
 	}
@@ -216,9 +213,9 @@ export type OuiDraggableState = {
 	attribute: string;
 	container?: HTMLElement;
 	element: HTMLElement;
-	event: string;
 	hasHandles?: boolean;
 	horizontal: boolean;
+	name: keyof OuiDraggableStates;
 	options: OuiDraggableOptions;
 	styling: StyleToggler;
 	vertical: boolean;
@@ -252,6 +249,22 @@ export function addDraggable<
 	instances[this.property] ??= new this.constructor(element, options);
 
 	return instances[this.property] as Instance;
+}
+
+function cancelDrag(item?: OuiDraggableItem): void {
+	if (item == null) {
+		return;
+	}
+
+	item.state.options.drag.onCancel?.(globals, item);
+
+	dispatch(item.state.element, `${item.state.name}:cancel`, {
+		detail: {
+			element: item.state.options.getOrigin(),
+		},
+	});
+
+	reset();
 }
 
 function destroyInstance(instance: OuiDraggable, state: OuiDraggableState): void {
@@ -312,21 +325,9 @@ function getNextPosition(item: OuiDraggableItem, position: EventPosition): Event
 }
 
 function onKeydown(event: KeyboardEvent): void {
-	if (current == null || event.key !== KEY_ESCAPE) {
-		return;
+	if (current != null && event.key === KEY_ESCAPE) {
+		cancelDrag(current);
 	}
-
-	current.state.options.drag.onCancel?.(globals, current);
-
-	current.state.element.dispatchEvent(
-		new CustomEvent(`${current.state.event}:cancel`, {
-			detail: {
-				element: current.state.options.getOrigin(),
-			},
-		}),
-	);
-
-	reset();
 }
 
 function onPointerdown(event: MouseEvent | TouchEvent): void {
@@ -405,7 +406,7 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 	globals.offset = item.state.options.position.getOffset(globals, item, element, position);
 	globals.original = item.state.options.position.getOriginal(globals, item, position);
 
-	const begin = new CustomEvent(`${item.state.event}:begin`, {
+	const dispatch = new CustomEvent(`${item.state.name}:begin`, {
 		detail: {
 			element,
 			position: {...globals.original},
@@ -413,10 +414,10 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		cancelable: true,
 	});
 
-	item.state.element.dispatchEvent(begin);
+	item.state.element.dispatchEvent(dispatch);
 
 	setTimeout(() => {
-		if (begin.defaultPrevented) {
+		if (dispatch.defaultPrevented) {
 			item.state.options.drag.onCancel?.(globals, item);
 
 			reset();
@@ -461,11 +462,18 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 		original: position,
 	});
 
-	current.state.element.dispatchEvent(
-		new CustomEvent(`${current.state.event}:move`, {
-			detail,
-		}),
-	);
+	const dispatch = new CustomEvent(`${current.state.name}:move`, {
+		detail,
+		cancelable: true,
+	});
+
+	current.state.element.dispatchEvent(dispatch);
+
+	setTimeout(() => {
+		if (dispatch.defaultPrevented) {
+			cancelDrag(current);
+		}
+	});
 }
 
 function onPointerup(event: MouseEvent | TouchEvent): void {
