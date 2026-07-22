@@ -1,6 +1,6 @@
 import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
-import {getPosition, on} from '@oscarpalmer/toretto/event';
+import {dispatch, getPosition, on} from '@oscarpalmer/toretto/event';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import {getStyles, setStyle, setStyles} from '@oscarpalmer/toretto/style';
 import {attributable} from '../internal/attributable';
@@ -199,18 +199,15 @@ function onEnd(
 		setOffset(state, container);
 	}
 
-	const end = new CustomEvent('movable:end', {
+	const dispatched = dispatch(state.element, 'movable:end', {
 		detail: {
 			from: {...globals.original},
 			to: getPosition(event),
 		},
-		cancelable: true,
 	});
 
-	state.element.dispatchEvent(end);
-
 	setTimeout(() => {
-		if (end.defaultPrevented) {
+		if (dispatched.defaultPrevented) {
 			onCancel(globals, item);
 		}
 

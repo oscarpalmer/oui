@@ -2,70 +2,6 @@
 
 @use 'mixins.scss' as mixins;
 
-@mixin focus() {
-	--oui-border-value: var(--oui-blue-5);
-	--oui-foreground-value: inherit;
-	--oui-outline-percentage: 75%;
-	--oui-outline-value: var(--oui-blue-6);
-}
-
-@mixin hover() {
-	--oui-border-value: var(--oui-blue-4);
-	--oui-foreground-percentage: 0%;
-	--oui-foreground-value: inherit;
-	--oui-outline-percentage: 90%;
-	--oui-outline-value: var(--oui-blue-6);
-}
-
-@mixin input {
-	--oui-background-percentage: 0%;
-	--oui-foreground-percentage: 0%;
-
-	@include outlined;
-
-	background-color: color-mix(
-		in oklab,
-		var(--oui-background-value),
-		transparent var(--oui-background-percentage)
-	);
-	border: 1px solid var(--oui-border-value, var(--oui-gray-3));
-	box-shadow: inset 0 2px 4px -1px var(--oui-gray-3);
-	color: color-mix(
-		in oklab,
-		var(--oui-foreground-value, inherit),
-		transparent var(--oui-foreground-percentage)
-	);
-	-webkit-text-fill-color: color-mix(
-		in oklab,
-		var(--oui-foreground-value, inherit),
-		transparent var(--oui-foreground-percentage)
-	);
-}
-
-@mixin invalid() {
-	--oui-border-value: var(--oui-red-5);
-	--oui-foreground-value: var(--oui-red-9);
-	--oui-outline-percentage: 82.5%;
-	--oui-outline-value: var(--oui-red-6);
-}
-
-@mixin outlined {
-	--oui-outline-percentage: 100%;
-	--oui-outline-value: var(--oui-blue-6);
-
-	outline: 4px solid
-		color-mix(in oklab, var(--oui-outline-value), transparent var(--oui-outline-percentage));
-	outline-offset: 0;
-	transition: 0.125s ease-in-out;
-}
-
-@mixin valid() {
-	--oui-border-value: var(--oui-green-5);
-	--oui-foreground-value: var(--oui-green-9);
-	--oui-outline-percentage: 82.5%;
-	--oui-outline-value: var(--oui-green-6);
-}
-
 :where(.oui-fieldset) {
 	padding: 1em;
 	border: 1px solid var(--oui-gray-3);
@@ -78,7 +14,7 @@
 	}
 
 	:where(&:not([type='range' i])) {
-		@include input;
+		@include mixins.input;
 
 		padding: 0.5em 0.75em;
 		border-radius: 0.25em;
@@ -135,7 +71,7 @@
 		outline: none;
 
 		&::range-track {
-			@include input;
+			@include mixins.input;
 
 			appearance: none;
 			width: 100%;
@@ -148,7 +84,7 @@
 			--oui-background-percentage: 0%;
 			--oui-background-value: var(--oui-blue-6);
 
-			@include outlined;
+			@include mixins.input-outlined;
 
 			appearance: none;
 			width: 1.25em;
@@ -177,7 +113,7 @@
 			[aria-invalid='true' i]
 		)
 	) {
-		@include invalid;
+		@include mixins.input-invalid;
 
 		&::file-selector-button {
 			--oui-background-value: var(--oui-red-2);
@@ -190,7 +126,7 @@
 		}
 
 		&::range-track {
-			@include invalid;
+			@include mixins.input-invalid;
 		}
 
 		& > option:checked {
@@ -205,7 +141,7 @@
 			[aria-invalid='false' i]
 		)
 	) {
-		@include valid;
+		@include mixins.input-valid;
 
 		&::file-selector-button {
 			--oui-background-value: var(--oui-green-2);
@@ -214,7 +150,7 @@
 		}
 
 		&::range-track {
-			@include valid;
+			@include mixins.input-valid;
 		}
 
 		&::range-thumb {
@@ -249,7 +185,7 @@
 
 	:where(&:not([disabled], [readonly], [aria-disabled='true' i]):focus),
 	:where(&:not([disabled], [readonly], [aria-disabled='true' i]):focus-within) {
-		@include focus;
+		@include mixins.input-focus;
 
 		&::file-selector-button {
 			--oui-background-value: var(--oui-blue-2);
@@ -259,7 +195,7 @@
 
 		&::range-thumb,
 		&::range-track {
-			@include focus;
+			@include mixins.input-focus;
 		}
 
 		&::range-thumb {
@@ -271,7 +207,7 @@
 
 	@media (hover: hover) {
 		:where(&:not([disabled], [readonly], [aria-disabled='true' i]):hover) {
-			@include hover;
+			@include mixins.input-hover;
 
 			&::file-selector-button {
 				--oui-background-value: var(--oui-blue-2);
@@ -284,12 +220,12 @@
 			}
 
 			&::range-track {
-				@include hover;
+				@include mixins.input-hover;
 			}
 		}
 	}
 
-	:where(&[disabled], &[readonly], &[aria-disabled='true' i]) {
+	:where(&:is([disabled], [readonly], [aria-disabled='true' i])) {
 		--oui-foreground-percentage: 25%;
 
 		font-style: italic;
@@ -311,7 +247,7 @@
 		--oui-outline-percentage: 75%;
 	}
 
-	:where(&[disabled], &[aria-disabled='true' i]) {
+	:where(&:is([disabled], [aria-disabled='true' i])) {
 		--oui-background-percentage: 50%;
 
 		&::range-thumb {
@@ -383,9 +319,11 @@ select.oui-input:is([multiple]) {
 	font-weight: bold;
 }
 
-:where(.oui-label) {
-	cursor: pointer;
-	transition: 0.125s ease-in-out;
+.oui-label {
+	:where(&) {
+		cursor: pointer;
+		transition: 0.125s ease-in-out;
+	}
 
 	@media (hover: hover) {
 		:where(&[for]:hover) {

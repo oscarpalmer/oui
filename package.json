@@ -1,6 +1,6 @@
 {
 	"name": "@oscarpalmer/oui",
-	"version": "0.30.0",
+	"version": "0.31.0",
 	"description": "Styles, components, and utilities for building websites and applications.",
 	"keywords": [
 		"css",
@@ -95,10 +95,10 @@
 	},
 	"dependencies": {
 		"@oscarpalmer/atoms": "^0.188.1",
-		"@oscarpalmer/toretto": "^0.47.3"
+		"@oscarpalmer/toretto": "^0.48.0"
 	},
 	"devDependencies": {
-		"@oxlint/plugins": "^1.74",
+		"@oxlint/plugins": "^1.75",
 		"@vitest/coverage-istanbul": "^4.1",
 		"autoprefixer": "^10.5",
 		"concurrently": "^10",

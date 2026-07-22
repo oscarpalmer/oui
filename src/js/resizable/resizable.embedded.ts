@@ -32,8 +32,6 @@ export class OuiResizable {
 	set(): void {
 		const [width, height] = getAndSetDimensions(this.#state.element, this.#state.options);
 
-		console.log('set', width, height);
-
 		this.#state.width = width;
 		this.#state.height = height;
 	}
@@ -291,14 +289,10 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		event.preventDefault();
 	}
 
-	const dispatch = new CustomEvent('resizable:begin', {
-		cancelable: true,
-	});
-
-	element!.dispatchEvent(dispatch);
+	const dispatched = dispatch(element!, 'resizable:begin');
 
 	setTimeout(() => {
-		if (dispatch.defaultPrevented) {
+		if (dispatched.defaultPrevented) {
 			return;
 		}
 
@@ -326,18 +320,15 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 
 	getAndSetDimensions(current.state.element, current.state.options, {height, width});
 
-	const dispatch = new CustomEvent('resizable:resize', {
-		cancelable: true,
+	const dispatched = dispatch(current.state.element, 'resizable:resize', {
 		detail: {
 			height,
 			width,
 		},
 	});
 
-	current.state.element.dispatchEvent(dispatch);
-
 	setTimeout(() => {
-		if (dispatch.defaultPrevented) {
+		if (dispatched.defaultPrevented) {
 			cancelResize(current);
 		}
 	});
@@ -348,14 +339,10 @@ function onPointerup(): void {
 		return;
 	}
 
-	const dispatch = new CustomEvent('resizable:end', {
-		cancelable: true,
-	});
-
-	current.state.element.dispatchEvent(dispatch);
+	const dispatched = dispatch(current.state.element, 'resizable:end');
 
 	setTimeout(() => {
-		if (current == null || dispatch.defaultPrevented) {
+		if (current == null || dispatched.defaultPrevented) {
 			cancelResize(current);
 
 			return;

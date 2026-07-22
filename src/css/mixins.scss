@@ -1,3 +1,24 @@
+@mixin badge() {
+	--oui-shadow-mixed: color-mix(
+			in oklab,
+			var(--oui-shadow, var(--oui-gray-6)),
+			transparent 92.5%
+		);
+
+		@include shadow(var(--oui-shadow-mixed));
+
+		display: inline-flex;
+		flex-flow: row nowrap;
+		gap: 0.5em;
+		background-color: color-mix(
+			in oklab,
+			var(--oui-background, var(--oui-gray-0)),
+			transparent 25%
+		);
+		color: var(--oui-foreground, var(--oui-gray-8));
+		line-height: 1.25;
+}
+
 @mixin button() {
 	--oui-background-percentage: 25%;
 	--oui-foreground-percentage: 0%;
@@ -75,6 +96,71 @@
 	&[oui-position$='top'] {
 		--margin-top: 0;
 	}
+}
+
+@mixin input {
+	--oui-background-percentage: 0%;
+	--oui-foreground-percentage: 0%;
+
+	@include input-outlined;
+
+	align-content: center;
+	background-color: color-mix(
+		in oklab,
+		var(--oui-background-value),
+		transparent var(--oui-background-percentage)
+	);
+	border: 1px solid var(--oui-border-value, var(--oui-gray-3));
+	box-shadow: inset 0 2px 4px -1px var(--oui-gray-3);
+	color: color-mix(
+		in oklab,
+		var(--oui-foreground-value, inherit),
+		transparent var(--oui-foreground-percentage)
+	);
+	-webkit-text-fill-color: color-mix(
+		in oklab,
+		var(--oui-foreground-value, inherit),
+		transparent var(--oui-foreground-percentage)
+	);
+}
+
+@mixin input-focus() {
+	--oui-border-value: var(--oui-blue-5);
+	--oui-foreground-value: inherit;
+	--oui-outline-percentage: 75%;
+	--oui-outline-value: var(--oui-blue-6);
+}
+
+@mixin input-hover() {
+	--oui-border-value: var(--oui-blue-4);
+	--oui-foreground-percentage: 0%;
+	--oui-foreground-value: inherit;
+	--oui-outline-percentage: 90%;
+	--oui-outline-value: var(--oui-blue-6);
+}
+
+@mixin input-invalid() {
+	--oui-border-value: var(--oui-red-5);
+	--oui-foreground-value: var(--oui-red-9);
+	--oui-outline-percentage: 82.5%;
+	--oui-outline-value: var(--oui-red-6);
+}
+
+@mixin input-outlined {
+	--oui-outline-percentage: 100%;
+	--oui-outline-value: var(--oui-blue-6);
+
+	outline: 4px solid
+		color-mix(in oklab, var(--oui-outline-value), transparent var(--oui-outline-percentage));
+	outline-offset: 0;
+	transition: 0.125s ease-in-out;
+}
+
+@mixin input-valid() {
+	--oui-border-value: var(--oui-green-5);
+	--oui-foreground-value: var(--oui-green-9);
+	--oui-outline-percentage: 82.5%;
+	--oui-outline-value: var(--oui-green-6);
 }
 
 @mixin shadow($color: rgb(0 0 0 / 5%), $inset: transparent) {

@@ -1,5 +1,5 @@
 import {setAria, setRole} from '@oscarpalmer/toretto/aria';
-import {setAttribute} from '@oscarpalmer/toretto/attribute';
+import {setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {createEmbeddedFloatable, getOnBeforeToggleListener} from './floatable/floatable.embedded';
@@ -197,7 +197,10 @@ function initializeMenu(menu: OuiMenu): void {
 		haspopup: 'menu',
 	});
 
-	setAttribute(menu.content, 'tabindex', '-1');
+	setAttributes(menu.content, {
+		popover: '',
+		tabindex: '-1'
+	});
 
 	setRole(menu.content, 'menu');
 }

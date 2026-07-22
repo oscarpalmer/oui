@@ -1,7 +1,7 @@
 import {isPlainObject} from '@oscarpalmer/atoms/is';
 import {clamp} from '@oscarpalmer/atoms/number';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
-import {on} from '@oscarpalmer/toretto/event';
+import {dispatch, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {getFocusable} from '@oscarpalmer/toretto/focusable';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
@@ -289,14 +289,10 @@ function onTab(event: KeyboardEvent): void {
 		return;
 	}
 
-	const dispatch = new CustomEvent('focus-trap:tab', {
-		cancelable: true,
-	});
-
-	element.dispatchEvent(dispatch);
+	const dispatched = dispatch(element, 'focus-trap');
 
 	setTimeout(() => {
-		if (dispatch.defaultPrevented) {
+		if (dispatched.defaultPrevented) {
 			return;
 		}
 

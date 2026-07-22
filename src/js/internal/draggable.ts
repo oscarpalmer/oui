@@ -406,18 +406,15 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 	globals.offset = item.state.options.position.getOffset(globals, item, element, position);
 	globals.original = item.state.options.position.getOriginal(globals, item, position);
 
-	const dispatch = new CustomEvent(`${item.state.name}:begin`, {
+	const dispatched = dispatch(item.state.element, `${item.state.name}:begin`, {
 		detail: {
 			element,
 			position: {...globals.original},
 		},
-		cancelable: true,
 	});
 
-	item.state.element.dispatchEvent(dispatch);
-
 	setTimeout(() => {
-		if (dispatch.defaultPrevented) {
+		if (dispatched.defaultPrevented) {
 			item.state.options.drag.onCancel?.(globals, item);
 
 			reset();
@@ -462,15 +459,12 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 		original: position,
 	});
 
-	const dispatch = new CustomEvent(`${current.state.name}:move`, {
+	const dispatched = dispatch(current.state.element, `${current.state.name}:move`, {
 		detail,
-		cancelable: true,
 	});
 
-	current.state.element.dispatchEvent(dispatch);
-
 	setTimeout(() => {
-		if (dispatch.defaultPrevented) {
+		if (dispatched.defaultPrevented) {
 			cancelDrag(current);
 		}
 	});

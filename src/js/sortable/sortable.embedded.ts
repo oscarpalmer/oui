@@ -1,7 +1,7 @@
 import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
 import {getAttribute, setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createElement} from '@oscarpalmer/toretto/create';
-import {getPosition} from '@oscarpalmer/toretto/event';
+import {dispatch, getPosition} from '@oscarpalmer/toretto/event';
 import {findAncestor, getElementFromPosition} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import {setStyle} from '@oscarpalmer/toretto/style';
@@ -80,7 +80,7 @@ type OuiSortableState = {
 function afterEnd(
 	insert: 'append' | 'insert' | 'prepend' | undefined,
 	from: OuiDraggableItem<OuiSortableState>,
-	events: CustomEvent[],
+	events: [CustomEvent, CustomEvent | undefined],
 	elements: {origin?: HTMLElement; target: HTMLElement},
 	position: EventPosition | undefined,
 	valid: boolean,
@@ -91,7 +91,7 @@ function afterEnd(
 
 	resetPlaceholders();
 
-	if (!valid || events.some(event => event.defaultPrevented)) {
+	if (!valid || events.some(event => event?.defaultPrevented)) {
 		return;
 	}
 
@@ -277,17 +277,23 @@ function onEnd(
 		cancelable: true,
 	};
 
-	const fromEvent = new CustomEvent('sortable:end', options);
-	const toEvent = new CustomEvent('sortable:end', options);
+	const dispatchedFrom = dispatch(item.instance.element, 'sortable:end', options);
 
-	item.instance.element.dispatchEvent(fromEvent);
+	let dispatchedTo: CustomEvent | undefined;
 
-	if (item.instance !== toInstance) {
-		toInstance?.element.dispatchEvent(toEvent);
+	if (item.instance !== toInstance && toInstance != null) {
+		dispatchedTo = dispatch(toInstance.element, 'sortable:end', options);
 	}
 
 	setTimeout(() => {
-		afterEnd(insert, item, [fromEvent, toEvent], {origin, target: element}, position, valid);
+		afterEnd(
+			insert,
+			item,
+			[dispatchedFrom, dispatchedTo],
+			{origin, target: element},
+			position,
+			valid,
+		);
 
 		reset();
 	});
@@ -383,8 +389,7 @@ function setPlaceholder(
 
 	updatePlaceholder(item, element);
 
-	const event = new CustomEvent('sortable:placeholder', {
-		cancelable: true,
+	const dispatched = dispatch(item.instance.element, 'sortable:placeholder', {
 		detail: {
 			origin,
 			parent: item.state.element,
@@ -408,10 +413,8 @@ function setPlaceholder(
 		},
 	});
 
-	item.instance.element.dispatchEvent(event);
-
 	setTimeout(() => {
-		if (!event.defaultPrevented && placeholder.drag.custom == null) {
+		if (!dispatched.defaultPrevented && placeholder.drag.custom == null) {
 			placeholder.drag.default?.append(element.cloneNode(true));
 		}
 

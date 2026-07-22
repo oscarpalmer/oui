@@ -4,24 +4,7 @@
 
 .oui {
 	:where(&-pill, &-tag) {
-		--oui-shadow-mixed: color-mix(
-			in oklab,
-			var(--oui-shadow, var(--oui-gray-6)),
-			transparent 92.5%
-		);
-
-		@include mixins.shadow(var(--oui-shadow-mixed));
-
-		display: inline-flex;
-		flex-flow: row nowrap;
-		gap: 0.5em;
-		background-color: color-mix(
-			in oklab,
-			var(--oui-background, var(--oui-gray-0)),
-			transparent 25%
-		);
-		color: var(--oui-foreground, var(--oui-gray-8));
-		line-height: 1.25;
+		@include mixins.badge;
 	}
 
 	:where(&-pill) {

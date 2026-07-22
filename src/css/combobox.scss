@@ -2,7 +2,48 @@
 
 @use './mixins.scss' as mixins;
 
+[oui-combobox-anchor] {
+	:where(&) {
+		@include mixins.input;
+
+		--oui-background-value: var(--oui-absolute);
+
+		padding: 0.5em 2em .5em 0.75em;
+		border-radius: 0.25em;
+		background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='4'%3E%3Cpath d='M4 0h6L7 4'/%3E%3C/svg%3E");
+		background-position: right .5em center;
+		background-repeat: no-repeat;
+		background-size: 1em;
+	}
+
+	:where(&:not([disabled], [readonly], [aria-disabled='true' i]):focus),
+	:where([oui-combobox]:focus-within &:not([disabled], [readonly], [aria-disabled='true' i])) {
+		@include mixins.input-focus;
+	}
+
+	@media (hover: hover) {
+		:where(:not([disabled], [readonly], [aria-disabled='true' i]) &:hover) {
+			@include mixins.input-hover;
+		}
+	}
+
+	:where(:is([disabled], [readonly], [aria-disabled='true' i]) &) {
+		--oui-foreground-percentage: 25%;
+
+		font-style: italic;
+	}
+
+	:where(:is([disabled], [readonly], [aria-disabled='true' i]) &:focus) {
+		--oui-outline-percentage: 75%;
+	}
+
+	:where(:is([disabled], [aria-disabled='true' i]) &) {
+		--oui-background-percentage: 50%;
+	}
+}
+
 :where([oui-combobox-content]) {
+	@include mixins.floatable;
 	@include mixins.shadow-overlay;
 
 	width: fit-content;
@@ -11,16 +52,86 @@
 	max-height: max(25vh, 32rem);
 	min-width: var(--oui-combobox-width, auto);
 	flex-flow: column nowrap;
+	border-radius: 0.25em;
 
 	&:popover-open {
 		display: flex !important;
 	}
 }
 
+:where([oui-combobox-empty]) {
+	padding: 1em;
+	text-align: center;
+	font-style: italic;
+}
+
 :where([oui-combobox-list]) {
 	overflow: auto;
 }
 
-:where([oui-combobox-option]) {
-	cursor: pointer;
+[oui-combobox-option] {
+	:where(&) {
+		padding: 0.5em 0.75em;
+		outline: 4px solid transparent;
+		outline-offset: -4px;
+		line-height: 1.25;
+		cursor: pointer;
+		transition: .125s ease-in-out;
+	}
+
+	:where(&[aria-selected='true' i]) {
+		background-color: var(--oui-blue-3);
+		color: var(--oui-blue-9);
+	}
+
+	:where(oui-combobox[multiple] &[aria-selected='true' i])::before {
+		content: '✓';
+		margin: 0 0.75em 0 0;
+	}
+
+	:where(oui-combobox:not([disabled], [readonly], [aria-disabled='true' i]) &) {
+		@media (hover: hover) {
+			:where(&:hover) {
+				background-color: var(--oui-blue-1);
+				color: var(--oui-blue-8);
+			}
+		}
+	}
+}
+
+:where([oui-combobox-option-active]) {
+	background-color: var(--oui-blue-1);
+	outline-color: var(--oui-blue-4);
+	color: var(--oui-blue-8);
+}
+
+:where([oui-combobox-selection]) {
+	max-height: 8rem;
+	display: flex;
+	padding: .5em;
+	margin: -.5em -.5em -.5em -.75em;
+	flex-flow: row wrap;
+	gap: 0.5em;
+	overflow: auto;
+	list-style: none;
+}
+
+[oui-combobox-selection-item] {
+	:where(&) {
+		@include mixins.badge;
+
+		border-radius: 3em;
+		padding: 0.5em 1em;
+		gap: .75em;
+		font-size: .875em;
+		transition: .125s ease-in-out;
+	}
+
+	@media (hover: hover) {
+		:where(oui-combobox:not([disabled], [readonly], [aria-disabled='true' i]) &:hover) {
+			--oui-background: var(--oui-red-0);
+			--oui-foreground: var(--oui-red-8);
+			--oui-shadow: var(--oui-red-6);
+		}
+	}
 }
