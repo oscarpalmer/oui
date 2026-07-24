@@ -205,6 +205,11 @@ export class OuiComboboxElement extends HTMLElement {
 	}
 }
 
+type OuiComboboxFilter = {
+	element?: HTMLInputElement;
+	value: string;
+};
+
 type OuiComboboxAutoComplete = Record<OuiComboboxAutoCompleteType, boolean> & {
 	value: OuiComboboxAutoCompleteType;
 };
@@ -218,7 +223,7 @@ type OuiComboboxState = {
 	content: HTMLElement;
 	disabled: boolean;
 	empty: HTMLElement;
-	filter: string;
+	filter: OuiComboboxFilter;
 	floatable: OuiFloatable;
 	id: string;
 	internals: ElementInternals;
@@ -251,10 +256,10 @@ function filterOptions(
 	clear?: boolean,
 ): HTMLElement | undefined {
 	if (clear || state.autocomplete.none) {
-		state.filter = '';
+		state.filter.value = '';
 	}
 
-	const filter = state.filter.toLocaleLowerCase();
+	const filter = state.filter.value.toLocaleLowerCase();
 
 	const all = options ?? getOptions(state)[0];
 	const {length} = all;
@@ -374,12 +379,13 @@ function getBox(id: string, select: HTMLSelectElement, multiple: boolean): HTMLE
 }
 
 function getContent(
+	type: OuiComboboxType,
 	id: string,
 	label: HTMLLabelElement,
 	select: HTMLSelectElement,
 	autocomplete: OuiComboboxAutoComplete,
 	multiple: boolean,
-): [HTMLElement, HTMLElement[], HTMLElement] {
+): [HTMLElement, HTMLInputElement | undefined, HTMLElement[], HTMLElement] {
 	const content = createElement(
 		'div',
 		{
@@ -392,6 +398,8 @@ function getContent(
 			'aria-labelledby': label.id,
 		},
 	);
+
+	const [filter, input] = getFilter(type, id) ?? [];
 
 	const list = createElement(
 		'ul',
@@ -447,9 +455,52 @@ function getContent(
 		},
 	);
 
+	if (filter != null) {
+		content.append(filter);
+	}
+
 	content.append(list, empty);
 
-	return [content, selected, empty];
+	return [content, input, selected, empty];
+}
+
+function getFilter(type: OuiComboboxType, id: string): [HTMLElement, HTMLInputElement] | undefined {
+	if (type === 'autocomplete') {
+		return;
+	}
+
+	const container = createElement(
+		'div',
+		{},
+		{
+			[ATTRIBUTE_FILTER]: '',
+		},
+	);
+
+	const label = createElement(
+		'label',
+		{
+			htmlFor: `${id}_filter`,
+			textContent: 'Filter options',
+		},
+		{
+			[ATTRIBUTE_FILTER_LABEL]: '',
+		},
+	);
+
+	const filter = createElement(
+		'input',
+		{
+			id: `${id}_filter`,
+		},
+		{
+			[ATTRIBUTE_FILTER_INPUT]: '',
+		},
+	);
+
+	container.append(label, filter);
+
+	return [container, filter];
 }
 
 function getFormValue(state: OuiComboboxState, values: string[]): string {
@@ -641,7 +692,14 @@ function getState(element: OuiComboboxElement, internals: ElementInternals): Oui
 
 	const anchor = getAnchor(type, id, label, select, autocomplete, multiple);
 
-	const [content, selected, empty] = getContent(id, label, select, autocomplete, multiple);
+	const [content, filter, selected, empty] = getContent(
+		type,
+		id,
+		label,
+		select,
+		autocomplete,
+		multiple,
+	);
 
 	const values =
 		selected.length === 0 ? [''] : selected.map(option => getAttribute(option, 'value') ?? '');
@@ -675,14 +733,18 @@ function getState(element: OuiComboboxElement, internals: ElementInternals): Oui
 		selected,
 		type,
 		values,
-		filter: '',
+		active: selected[0],
+		filter: {
+			element: filter,
+			value: '',
+		},
 		listeners: [],
 		name: element.name,
 		touched: false,
 	};
 
 	state.listeners.push(
-		on(anchor, 'blur', () => {
+		on(element, 'focusout', () => {
 			state.touched = true;
 
 			updateValidity(state);
@@ -697,149 +759,24 @@ function getState(element: OuiComboboxElement, internals: ElementInternals): Oui
 			});
 
 			if (floatable.open) {
+				state.filter.element?.focus();
+
 				updateWidth(state);
 			}
 		}),
 	);
 
 	setDisabled(element, state, disabled);
+	setLimit('max', element, state, getAttribute(element, 'max'));
+	setLimit('min', element, state, getAttribute(element, 'min'));
+	setReadonly(element, state, readonly);
+	setRequired(element, state, required);
 
 	return state;
 }
 
 function hasTextSelection(element: HTMLElement): element is HTMLInputElement {
 	return element instanceof HTMLInputElement && element.selectionStart !== element.selectionEnd;
-}
-
-function onAnchor(
-	event: KeyboardEvent,
-	handler: (event: KeyboardEvent, combobox: OuiComboboxElement, state: OuiComboboxState) => void,
-): void {
-	if (event.ctrlKey || event.metaKey || event.shiftKey) {
-		return;
-	}
-
-	const combobox = findAncestor(event, TAGNAME);
-	const state = states.get(combobox!);
-
-	if (combobox == null || state == null) {
-		return;
-	}
-
-	const anchor = findAncestor(event, SELECTOR_ANCHOR);
-
-	if (anchor != null) {
-		handler(event, combobox, state);
-	}
-}
-
-function onAnchorKeydown(
-	event: KeyboardEvent,
-	combobox: OuiComboboxElement,
-	state: OuiComboboxState,
-): void {
-	const isSelect = state.type === 'select';
-
-	let preventDefault = true;
-
-	switch (true) {
-		case event.key === ' ' && state.type === 'select':
-		case event.key === 'Enter':
-			onEnter(combobox, state);
-			break;
-
-		case event.key === 'Escape':
-			onEscape(state);
-			break;
-
-		case isSelect && KEYS_ABSOLUTE.has(event.key):
-			onNavigation(event, combobox, state);
-			break;
-
-		case !isSelect && KEYS_SELECTION.has(event.key): {
-			preventDefault = false;
-
-			if (hasTextSelection(state.anchor)) {
-				onSelection(combobox, state);
-			}
-
-			break;
-		}
-
-		case KEYS_NAVIGATION.has(event.key):
-			onNavigation(event, combobox, state);
-			break;
-
-		default: {
-			preventDefault = false;
-
-			if (event.key === 'Tab') {
-				onTab(combobox, state);
-			}
-
-			break;
-		}
-	}
-
-	if (preventDefault) {
-		event.preventDefault();
-		event.stopPropagation();
-	}
-}
-
-function onAnchorKeyup(
-	event: KeyboardEvent,
-	combobox: OuiComboboxElement,
-	state: OuiComboboxState,
-): void {
-	const typed = event.key.length === 1 && EXPRESSION_TYPED.test(event.key);
-
-	if (state.type === 'select') {
-		if (typed) {
-			event.preventDefault();
-			event.stopPropagation();
-
-			onScrollTo(event, combobox, state);
-		}
-
-		return;
-	}
-
-	let preventDefault = true;
-
-	if (typed) {
-		state.filter += event.key;
-	}
-
-	if (
-		state.anchor instanceof HTMLInputElement &&
-		(KEYS_REMOVE.has(event.key) || state.anchor.value.length < state.filter.length)
-	) {
-		state.filter = state.anchor.value;
-
-		filterOptions(state);
-	}
-
-	switch (true) {
-		case typed:
-			onTyped(combobox, state);
-			break;
-
-		case KEYS_REMOVE.has(event.key):
-			onRemove(combobox, state);
-			break;
-
-		default: {
-			preventDefault = false;
-
-			break;
-		}
-	}
-
-	if (preventDefault) {
-		event.preventDefault();
-		event.stopPropagation();
-	}
 }
 
 function onClick(event: PointerEvent): void {
@@ -895,7 +832,7 @@ function onContent(event: PointerEvent, content: HTMLElement): void {
 		setNext('set', combobox, state, getOptions(state)[0], option);
 	}
 
-	state.anchor.focus();
+	(state.filter.element ?? state.anchor).focus();
 }
 
 function onEnter(combobox: OuiComboboxElement, state: OuiComboboxState): void {
@@ -918,12 +855,129 @@ function onEscape(state: OuiComboboxState): void {
 	state.floatable.hide();
 }
 
+function onInput(
+	event: KeyboardEvent,
+	handler: (event: KeyboardEvent, combobox: OuiComboboxElement, state: OuiComboboxState) => void,
+): void {
+	if (event.ctrlKey || event.metaKey) {
+		return;
+	}
+
+	const combobox = findAncestor(event, TAGNAME);
+	const state = states.get(combobox!);
+
+	if (combobox == null || state == null) {
+		return;
+	}
+
+	const input = findAncestor(event, SELECTOR_ANCHOR) ?? findAncestor(event, SELECTOR_FILTER);
+
+	if (input != null) {
+		handler(event, combobox, state);
+	}
+}
+
+function onInputKeydown(
+	event: KeyboardEvent,
+	combobox: OuiComboboxElement,
+	state: OuiComboboxState,
+): void {
+	const isSelect = state.type === 'select';
+
+	let preventDefault = true;
+
+	switch (true) {
+		case event.key === 'Enter':
+			onEnter(combobox, state);
+			break;
+
+		case event.key === 'Escape':
+			onEscape(state);
+			break;
+
+		case !isSelect && KEYS_SELECTION.has(event.key): {
+			preventDefault = false;
+
+			if (hasTextSelection(state.anchor)) {
+				onSelection(combobox, state);
+			}
+
+			break;
+		}
+
+		case KEYS_NAVIGATION.has(event.key):
+			onNavigation(event, combobox, state);
+			break;
+
+		default: {
+			preventDefault = false;
+
+			if (event.key === 'Tab') {
+				onTab(combobox, state);
+			}
+
+			break;
+		}
+	}
+
+	if (preventDefault) {
+		event.preventDefault();
+		event.stopPropagation();
+	}
+}
+
+function onInputKeyup(
+	event: KeyboardEvent,
+	combobox: OuiComboboxElement,
+	state: OuiComboboxState,
+): void {
+	const typed = event.key.length === 1 && EXPRESSION_TYPED.test(event.key);
+
+	if (typed) {
+		state.filter.value += event.key;
+	}
+
+	const filter = state.filter.element ?? state.anchor;
+
+	if (
+		filter instanceof HTMLInputElement &&
+		(KEYS_REMOVE.has(event.key) || filter.value.length < state.filter.value.length)
+	) {
+		state.filter.value = filter.value;
+
+		filterOptions(state);
+	}
+
+	let preventDefault = true;
+
+	switch (true) {
+		case typed:
+			onTyped(combobox, state);
+			break;
+
+		case KEYS_REMOVE.has(event.key):
+			onRemove(combobox, state);
+			break;
+
+		default: {
+			preventDefault = false;
+
+			break;
+		}
+	}
+
+	if (preventDefault) {
+		event.preventDefault();
+		event.stopPropagation();
+	}
+}
+
 function onKeydown(event: KeyboardEvent): void {
-	onAnchor(event, onAnchorKeydown);
+	onInput(event, onInputKeydown);
 }
 
 function onKeyup(event: KeyboardEvent): void {
-	onAnchor(event, onAnchorKeyup);
+	onInput(event, onInputKeyup);
 }
 
 function onNavigation(
@@ -993,26 +1047,8 @@ function onRemove(combobox: OuiComboboxElement, state: OuiComboboxState): void {
 	setNext('remove', combobox, state, all, next);
 }
 
-function onScrollTo(
-	event: KeyboardEvent,
-	combobox: OuiComboboxElement,
-	state: OuiComboboxState,
-): void {
-	const [all] = getOptions(state);
-
-	const key = event.key.toLocaleLowerCase();
-
-	const next =
-		all.find(option => option.textContent?.toLocaleLowerCase().startsWith(key) === true) ??
-		all.find(option => option.textContent?.toLocaleLowerCase().includes(key) === true);
-
-	if (next != null) {
-		setNext('navigation', combobox, state, all, next);
-	}
-}
-
 function onSelection(combobox: OuiComboboxElement, state: OuiComboboxState): void {
-	state.filter = state.anchor instanceof HTMLInputElement ? state.anchor.value : '';
+	state.filter.value = state.anchor instanceof HTMLInputElement ? state.anchor.value : '';
 
 	filterOptions(state);
 
@@ -1026,11 +1062,9 @@ function onTab(combobox: OuiComboboxElement, state: OuiComboboxState): void {
 }
 
 function onTyped(combobox: OuiComboboxElement, state: OuiComboboxState): void {
-	if (
-		!state.autocomplete.inline &&
-		state.anchor instanceof HTMLInputElement &&
-		state.anchor.value.length > 0
-	) {
+	const filter = state.filter.element ?? state.anchor;
+
+	if (!state.autocomplete.inline && filter instanceof HTMLInputElement && filter.value.length > 0) {
 		state.floatable.show();
 	}
 
@@ -1042,27 +1076,20 @@ function onTyped(combobox: OuiComboboxElement, state: OuiComboboxState): void {
 }
 
 function setDisabled(combobox: OuiComboboxElement, state: OuiComboboxState, value: boolean): void {
-	state.disabled = value;
-
-	setAria(state.anchor, 'disabled', value);
-	setProperty(combobox, 'disabled', value);
-
-	if (state.anchor instanceof HTMLInputElement) {
-		state.anchor.readOnly = value;
-	}
+	setProperties('disabled', 'disabled', combobox, state, value);
 }
 
 function setLimit(
 	type: 'max' | 'min',
 	combobox: OuiComboboxElement,
 	state: OuiComboboxState,
-	value?: number,
+	value?: unknown,
 ): void {
 	const updateLimit =
 		typeof value === 'number' && !Number.isNaN(value) ? value !== state[type] : value == null;
 
 	if (updateLimit) {
-		state[type] = value;
+		state[type] = value as number | undefined;
 
 		setAttribute(combobox, type, value);
 
@@ -1090,23 +1117,33 @@ function setNext(
 	setValue(update, combobox, state, next);
 }
 
-function setReadonly(combobox: OuiComboboxElement, state: OuiComboboxState, value: boolean): void {
-	state.readonly = value;
+function setProperties(
+	key: 'disabled' | 'readonly' | 'required',
+	property: 'disabled' | 'readOnly' | 'required',
+	combobox: OuiComboboxElement,
+	state: OuiComboboxState,
+	value: boolean,
+): void {
+	state[key] = value;
 
-	setAria(state.anchor, 'readonly', value);
-	setProperty(combobox, 'readonly', value);
+	setAria(state.anchor, key, value);
+	setProperty(combobox, key, value);
+
+	if (state.filter.element != null) {
+		state.filter.element[property] = value;
+	}
 
 	if (state.anchor instanceof HTMLInputElement) {
-		state.anchor.readOnly = value;
+		state.anchor[property] = value;
 	}
 }
 
+function setReadonly(combobox: OuiComboboxElement, state: OuiComboboxState, value: boolean): void {
+	setProperties('readonly', 'readOnly', combobox, state, value);
+}
+
 function setRequired(combobox: OuiComboboxElement, state: OuiComboboxState, value: boolean): void {
-	state.required = value;
-
-	setAria(state.anchor, 'required', value);
-	setProperty(combobox, 'required', value);
-
+	setProperties('required', 'required', combobox, state, value);
 	updateValidity(state);
 }
 
@@ -1243,7 +1280,7 @@ function updateAutoComplete(
 
 	if (
 		update === 'typed' &&
-		!content.toLocaleLowerCase().startsWith(state.filter.toLocaleLowerCase())
+		!content.toLocaleLowerCase().startsWith(state.filter.value.toLocaleLowerCase())
 	) {
 		return;
 	}
@@ -1253,7 +1290,7 @@ function updateAutoComplete(
 	if (state.anchor instanceof HTMLInputElement) {
 		state.anchor.value = content;
 
-		state.anchor.setSelectionRange(update === 'typed' ? state.filter.length : length, length);
+		state.anchor.setSelectionRange(update === 'typed' ? state.filter.value.length : length, length);
 	} else {
 		state.anchor.textContent = content;
 	}
@@ -1406,6 +1443,12 @@ const ATTRIBUTE_CONTENT = `${TAGNAME}-content`;
 
 const ATTRIBUTE_EMPTY = `${TAGNAME}-empty`;
 
+const ATTRIBUTE_FILTER = `${TAGNAME}-filter`;
+
+const ATTRIBUTE_FILTER_INPUT = `${ATTRIBUTE_FILTER}-input`;
+
+const ATTRIBUTE_FILTER_LABEL = `${ATTRIBUTE_FILTER}-label`;
+
 const ATTRIBUTE_LIST = `${TAGNAME}-list`;
 
 const ATTRIBUTE_OPTION = `${TAGNAME}-option`;
@@ -1428,8 +1471,6 @@ const INVALID_OVERFLOW = 'Please select fewer options (maximum is {max})';
 
 const INVALID_UNDERFLOW = 'Please select more options (minimum is {min})';
 
-const KEYS_ABSOLUTE = new Set(['End', 'Home']);
-
 const KEYS_NAVIGATION = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp']);
 
 const KEYS_REMOVE = new Set(['Backspace', 'Delete']);
@@ -1443,6 +1484,8 @@ const MESSAGE_SELECT = `<${TAGNAME}> must contain a valid <select> element`;
 const PROPERTY_STYLE = '--oui-combobox-width';
 
 const SELECTOR_ANCHOR = `[${ATTRIBUTE_ANCHOR}]`;
+
+const SELECTOR_FILTER = `[${ATTRIBUTE_FILTER_INPUT}]`;
 
 const SELECTOR_OPTION = `[${ATTRIBUTE_OPTION}]`;
 
