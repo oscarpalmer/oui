@@ -1,6 +1,6 @@
 {
 	"name": "@oscarpalmer/oui",
-	"version": "0.31.0",
+	"version": "0.32.0",
 	"description": "Styles, components, and utilities for building websites and applications.",
 	"keywords": [
 		"css",
@@ -106,7 +106,7 @@
 		"postcss-cli": "^11",
 		"postcss-input-range": "^6",
 		"postcss-scss": "^4",
-		"sass": "^1.101",
+		"sass": "^1.102",
 		"stylelint": "^17.14",
 		"stylelint-config-standard-scss": "^17",
 		"tsdown": "^0.22",

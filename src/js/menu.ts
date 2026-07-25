@@ -199,7 +199,7 @@ function initializeMenu(menu: OuiMenu): void {
 
 	setAttributes(menu.content, {
 		popover: '',
-		tabindex: '-1'
+		tabindex: '-1',
 	});
 
 	setRole(menu.content, 'menu');

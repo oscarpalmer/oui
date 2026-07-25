@@ -69,22 +69,24 @@
 	font-style: italic;
 }
 
+:where([oui-combobox-filter], [oui-combobox-header]) {
+	&::after {
+		content: '';
+		width: 100%;
+		height: 0.25em;
+		background-image: linear-gradient(to bottom, rgb(0 0 0 / 12.5%), transparent);
+		position: absolute;
+		bottom: -0.25em;
+		left: 0;
+	}
+}
+
 :where([oui-combobox-filter]) {
-	padding: .75em;
+	padding: 0.75em;
 	background-color: var(--oui-yellow-0);
 	border-radius: 0.25em 0.25em 0 0;
 	position: relative;
 	z-index: 1;
-
-	&::after {
-		content: '';
-		width: 100%;
-		height: .25em;
-		background-image: linear-gradient(to bottom, rgb(0 0 0 / 12.5%), transparent);
-		position: absolute;
-		bottom: -.25em;
-		left: 0;
-	}
 }
 
 :where([oui-combobox-filter-input]) {
@@ -97,12 +99,10 @@
 	padding: 0.5em 0.75em;
 	outline-width: 0;
 	border-radius: 0.25em;
-	font-size: .875rem;
+	font-size: 0.875rem;
 
 	:where(&:not([disabled], [readonly], [aria-disabled='true' i]):focus) {
 		@include mixins.input-focus;
-
-		--oui-border-value: var(--oui-yellow-5);
 	}
 
 	@media (hover: hover) {
@@ -133,8 +133,19 @@
 	position: absolute;
 }
 
+:where([oui-combobox-header]) {
+	padding: 0.5em calc(0.75em / 0.75);
+	background-color: var(--oui-gray-0);
+	font-size: 0.75em;
+	font-weight: bold;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
 :where([oui-combobox-list]) {
 	overflow: auto;
+	position: relative;
 }
 
 [oui-combobox-option] {
