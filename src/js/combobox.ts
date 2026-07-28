@@ -25,7 +25,7 @@ export class OuiComboboxElement extends HTMLElement {
 
 	readonly #internals: ElementInternals;
 
-	readonly #state: OuiComboboxState;
+	#state!: OuiComboboxState;
 
 	/**
 	 * Is the combobox disabled?
@@ -135,14 +135,14 @@ export class OuiComboboxElement extends HTMLElement {
 	 * Current value
 	 */
 	get value(): string {
-		return this.#state.values[0];
+		return this.#state.values.current[0];
 	}
 
 	/**
 	 * Set the value
 	 */
 	set value(value: unknown) {
-		const [option, all] = getOption(this.#state, value);
+		const [option, all] = findOption(this.#state, value);
 
 		if (option != null) {
 			setNext('set', this, this.#state, all, option);
@@ -153,7 +153,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 * Current values
 	 */
 	get values(): string[] {
-		return this.#state.values.slice();
+		return this.#state.values.current.slice();
 	}
 
 	/**
@@ -167,12 +167,6 @@ export class OuiComboboxElement extends HTMLElement {
 		super();
 
 		this.#internals = this.attachInternals();
-		this.#state = getState(this, this.#internals);
-
-		comboboxes.set(this.#state.content, this);
-
-		states.set(this, this.#state);
-		states.set(this.#state.content, this.#state);
 	}
 
 	attributeChangedCallback(name: string, _: string | null, value: string | null): void {
@@ -198,10 +192,39 @@ export class OuiComboboxElement extends HTMLElement {
 		setValues(this, this.#state, []);
 	}
 
+	connectedCallback(): void {
+		if (this.#state == null) {
+			this.#initialize();
+		} else {
+			attachCombobox(this, this.#state);
+		}
+	}
+
+	disconnectedCallback(): void {
+		detachCombobox(this, this.#state);
+	}
+
+	formDisabledCallback(disabled: boolean): void {
+		setDisabled(this, this.#state, disabled);
+	}
+
 	formResetCallback(): void {
 		this.#state.touched = false;
 
-		this.clear();
+		setValues(this, this.#state, this.#state.values.initial);
+	}
+
+	formStateRestoreCallback(
+		state: string | File | FormData,
+		reason: 'autocomplete' | 'restore',
+	): void {
+		// ?
+	}
+
+	#initialize(): void {
+		this.#state = createState(this, this.#internals);
+
+		setMaps(this, this.#state);
 	}
 }
 
@@ -241,16 +264,62 @@ type OuiComboboxState = {
 	selection?: HTMLElement;
 	touched: boolean;
 	type: OuiComboboxType;
-	values: string[];
+	values: OuiComboboxValues;
 };
 
 type OuiComboboxType = 'autocomplete' | 'select';
 
 type OuiComboboxUpdate = 'navigation' | 'none' | 'remove' | 'set' | 'typed';
 
+type OuiComboboxValues = {
+	current: string[];
+	initial: string[];
+};
+
 // #endregion
 
 // #region Functions
+
+function attachCombobox(element: OuiComboboxElement, state: OuiComboboxState): void {
+	const {anchor, content, filter, listeners, select} = state;
+
+	select.insertAdjacentElement('afterend', anchor);
+	anchor.insertAdjacentElement('afterend', content);
+
+	select.remove();
+
+	state.floatable = createEmbeddedFloatable(anchor, content, {
+		position: 'below-start',
+		reusable: false,
+	});
+
+	state.floatable.update();
+
+	setStyle(content, 'minWidth', 'anchor-size(width)');
+
+	listeners.push(
+		on(element, 'focusout', () => {
+			state.touched = true;
+
+			updateValidity(state);
+		}),
+		on(content, 'click', event => {
+			onContent(event, content);
+		}),
+		on(content, 'toggle', () => {
+			setAria(anchor, {
+				activedescendant: state.floatable.open ? state.active?.id : undefined,
+				expanded: state.floatable.open,
+			});
+
+			if (state.floatable.open) {
+				filter.element?.focus();
+			}
+		}),
+	);
+
+	setMaps(element, state);
+}
 
 function createAnchor(
 	type: OuiComboboxType,
@@ -535,10 +604,150 @@ function createSelection(select: HTMLSelectElement): HTMLElement {
 	);
 
 	for (const option of select.selectedOptions) {
-		selection.append(getSelectionItem(option));
+		selection.append(createSelectionItem(option));
 	}
 
 	return selection;
+}
+
+function createSelectionItem(option: HTMLElement): HTMLElement {
+	const icon = createElement(
+		'span',
+		{
+			innerHTML: '&times;',
+		},
+		{
+			'aria-hidden': true,
+		},
+	);
+
+	const label = createElement('span', {
+		textContent: option.textContent,
+	});
+
+	const item = createElement(
+		'li',
+		{},
+		{
+			[ATTRIBUTE_SELECTION_ITEM]: '',
+			option: option.id,
+		},
+	);
+
+	item.append(icon, label);
+
+	return item;
+}
+
+function createState(element: OuiComboboxElement, internals: ElementInternals): OuiComboboxState {
+	const select = element.querySelector('select');
+
+	if (select == null || select.id === '') {
+		throw new Error(MESSAGE_SELECT);
+	}
+
+	const label = element.querySelector(`label[for="${select.id}"]`) as HTMLLabelElement;
+
+	if (label == null) {
+		throw new Error(MESSAGE_LABEL);
+	}
+
+	select.hidden = true;
+
+	element.id = select.id;
+
+	setAttribute(element, 'name', select.name === '' ? select.id : select.name);
+
+	const disabled = element.disabled || select.disabled;
+	const multiple = element.multiple || select.multiple;
+	const readonly = element.readonly;
+	const required = element.required || select.required;
+
+	const id = getId();
+	const type = multiple ? 'select' : getAttributeValue(element, 'type', TYPES, 'select');
+
+	const autocomplete = getAutoComplete(element, type === 'select');
+
+	label.htmlFor = id;
+	label.id = `${id}_label`;
+
+	generateIds(select, id);
+
+	const [anchor, selection] = createAnchor(type, id, label, select, autocomplete, multiple);
+
+	const [content, filter, headers, selected, empty] = createContent(
+		type,
+		id,
+		label,
+		select,
+		autocomplete,
+		multiple,
+	);
+
+	const values =
+		selected.length === 0 ? [''] : selected.map(option => getAttribute(option, 'value') ?? '');
+
+	const state: OuiComboboxState = {
+		anchor,
+		autocomplete,
+		content,
+		disabled,
+		empty,
+		headers,
+		id,
+		internals,
+		label,
+		multiple,
+		readonly,
+		required,
+		select,
+		selected,
+		selection,
+		type,
+		active: selected[0],
+		filter: {
+			element: filter,
+			value: '',
+		},
+		floatable: undefined as never,
+		listeners: [],
+		name: element.name,
+		touched: false,
+		values: {
+			current: values.slice(),
+			initial: values.slice(),
+		},
+	};
+
+	attachCombobox(element, state);
+
+	setDisabled(element, state, disabled);
+	setLimit('max', element, state, getAttribute(element, 'max'));
+	setLimit('min', element, state, getAttribute(element, 'min'));
+	setReadonly(element, state, readonly);
+	setRequired(element, state, required);
+
+	return state;
+}
+
+function detachCombobox(element: OuiComboboxElement, state: OuiComboboxState): void {
+	const listeners = state.listeners.splice(0);
+
+	for (const listener of listeners) {
+		listener();
+	}
+
+	state.floatable.destroy();
+
+	state.anchor.insertAdjacentElement('beforebegin', state.select);
+
+	state.anchor.remove();
+	state.content.remove();
+
+	comboboxes.delete(state.content);
+
+	states.delete(element);
+	states.delete(state.content);
 }
 
 function filterOptions(
@@ -593,6 +802,28 @@ function filterOptions(
 	if (state.empty.hidden) {
 		return state.active != null && visible.includes(state.active) ? state.active : visible[0];
 	}
+}
+
+function findOption(
+	state: OuiComboboxState,
+	value: unknown,
+): [HTMLElement | undefined, HTMLElement[]] {
+	const [all] = getOptions(state);
+	const valueAsString = getString(value).toLocaleLowerCase();
+
+	filterOptions(state, all, true);
+
+	let match: HTMLElement | undefined;
+
+	for (const option of all) {
+		if (getAttribute(option, 'value')?.toLocaleLowerCase() === valueAsString) {
+			match = option;
+
+			break;
+		}
+	}
+
+	return [match, all];
 }
 
 function generateIds(select: HTMLSelectElement, prefix: string): void {
@@ -658,12 +889,12 @@ function getFormValues(state: OuiComboboxState, added?: boolean): [string[], boo
 		values =
 			typeof added === 'boolean'
 				? state.selected.map(option => getAttribute(option, 'value') ?? '')
-				: state.values;
+				: state.values.current;
 	} else {
 		values = [getAttribute(state.selected[0], 'value') ?? ''];
 	}
 
-	const previous = getFormValue(state, state.values);
+	const previous = getFormValue(state, state.values.current);
 	const next = getFormValue(state, values);
 
 	return [values, next !== previous];
@@ -673,28 +904,6 @@ function getId(): string {
 	index += 1;
 
 	return `oui_combobox_${index}`;
-}
-
-function getOption(
-	state: OuiComboboxState,
-	value: unknown,
-): [HTMLElement | undefined, HTMLElement[]] {
-	const [all] = getOptions(state);
-	const valueAsString = getString(value).toLocaleLowerCase();
-
-	filterOptions(state, all, true);
-
-	let match: HTMLElement | undefined;
-
-	for (const option of all) {
-		if (getAttribute(option, 'value')?.toLocaleLowerCase() === valueAsString) {
-			match = option;
-
-			break;
-		}
-	}
-
-	return [match, all];
 }
 
 function getOptions(state: OuiComboboxState): HTMLElement[][] {
@@ -744,156 +953,6 @@ function getSelected(
 	}
 
 	return selected;
-}
-
-function getSelectionItem(option: HTMLElement): HTMLElement {
-	const icon = createElement(
-		'span',
-		{
-			innerHTML: '&times;',
-		},
-		{
-			'aria-hidden': true,
-		},
-	);
-
-	const label = createElement('span', {
-		textContent: option.textContent,
-	});
-
-	const item = createElement(
-		'li',
-		{},
-		{
-			[ATTRIBUTE_SELECTION_ITEM]: '',
-			option: option.id,
-		},
-	);
-
-	item.append(icon, label);
-
-	return item;
-}
-
-function getState(element: OuiComboboxElement, internals: ElementInternals): OuiComboboxState {
-	const select = element.querySelector('select');
-
-	if (select == null || select.id === '') {
-		throw new Error(MESSAGE_SELECT);
-	}
-
-	const label = element.querySelector(`label[for="${select.id}"]`) as HTMLLabelElement;
-
-	if (label == null) {
-		throw new Error(MESSAGE_LABEL);
-	}
-
-	select.hidden = true;
-
-	element.id = select.id;
-
-	setAttribute(element, 'name', select.name === '' ? select.id : select.name);
-
-	const disabled = element.disabled || select.disabled;
-	const multiple = element.multiple || select.multiple;
-	const readonly = element.readonly;
-	const required = element.required || select.required;
-
-	const id = getId();
-	const type = multiple ? 'select' : getAttributeValue(element, 'type', TYPES, 'select');
-
-	const autocomplete = getAutoComplete(element, type === 'select');
-
-	label.htmlFor = id;
-	label.id = `${id}_label`;
-
-	generateIds(select, id);
-
-	const [anchor, selection] = createAnchor(type, id, label, select, autocomplete, multiple);
-
-	const [content, filter, headers, selected, empty] = createContent(
-		type,
-		id,
-		label,
-		select,
-		autocomplete,
-		multiple,
-	);
-
-	const values =
-		selected.length === 0 ? [''] : selected.map(option => getAttribute(option, 'value') ?? '');
-
-	const floatable = createEmbeddedFloatable(anchor, content, {
-		position: 'below-start',
-		reusable: false,
-	});
-
-	floatable.update();
-
-	select.insertAdjacentElement('afterend', anchor);
-	anchor.insertAdjacentElement('afterend', content);
-
-	select.remove();
-
-	const state: OuiComboboxState = {
-		anchor,
-		autocomplete,
-		content,
-		disabled,
-		empty,
-		floatable,
-		headers,
-		id,
-		internals,
-		label,
-		multiple,
-		readonly,
-		required,
-		select,
-		selected,
-		selection,
-		type,
-		values,
-		active: selected[0],
-		filter: {
-			element: filter,
-			value: '',
-		},
-		listeners: [],
-		name: element.name,
-		touched: false,
-	};
-
-	state.listeners.push(
-		on(element, 'focusout', () => {
-			state.touched = true;
-
-			updateValidity(state);
-		}),
-		on(content, 'click', event => {
-			onContent(event, content);
-		}),
-		on(content, 'toggle', () => {
-			setAria(anchor, {
-				activedescendant: floatable.open ? state.active?.id : undefined,
-				expanded: floatable.open,
-			});
-
-			if (floatable.open) {
-				state.filter.element?.focus();
-
-				updateWidth(state);
-			}
-		}),
-	);
-
-	setDisabled(element, state, disabled);
-	setLimit('max', element, state, getAttribute(element, 'max'));
-	setLimit('min', element, state, getAttribute(element, 'min'));
-	setReadonly(element, state, readonly);
-	setRequired(element, state, required);
-
-	return state;
 }
 
 function hasTextSelection(element: HTMLElement): element is HTMLInputElement {
@@ -1205,6 +1264,13 @@ function setLimit(
 	}
 }
 
+function setMaps(element: OuiComboboxElement, state: OuiComboboxState): void {
+	comboboxes.set(state.content, element);
+
+	states.set(element, state);
+	states.set(state.content, state);
+}
+
 function setNext(
 	update: OuiComboboxUpdate,
 	combobox: OuiComboboxElement,
@@ -1303,7 +1369,7 @@ function setValue(
 
 		state.selected = selected == null ? [] : [selected];
 
-		shouldUpdate = state.values[0] !== values[0];
+		shouldUpdate = state.values.current[0] !== values[0];
 	}
 
 	if (shouldUpdate) {
@@ -1323,10 +1389,6 @@ function setValue(
 	if (update === 'set' && !state.multiple) {
 		state.floatable.hide();
 	}
-
-	setTimeout(() => {
-		updateWidth(state);
-	});
 }
 
 function setValues(combobox: OuiComboboxElement, state: OuiComboboxState, value: unknown): void {
@@ -1367,7 +1429,7 @@ function setValues(combobox: OuiComboboxElement, state: OuiComboboxState, value:
 	for (const option of selected) {
 		setAria(option, 'selected', true);
 
-		state.selection?.append(getSelectionItem(option));
+		state.selection?.append(createSelectionItem(option));
 	}
 
 	state.selected = selected.slice();
@@ -1415,7 +1477,7 @@ function updateForm(combobox: OuiComboboxElement, state: OuiComboboxState, value
 		formData.append(state.name, value);
 	}
 
-	state.values = formValues;
+	state.values.current = formValues;
 
 	state.internals.setFormValue(formData);
 
@@ -1441,7 +1503,7 @@ function updateSelect(
 	}
 
 	if (added === true) {
-		state.selection?.append(getSelectionItem(next));
+		state.selection?.append(createSelectionItem(next));
 	} else if (added === false) {
 		state.selection?.querySelector(`[option="${next.id}"]`)?.remove();
 	}
@@ -1492,7 +1554,7 @@ function updateSelected(
 
 function updateValidity(state: OuiComboboxState): void {
 	if (state.autocomplete.none) {
-		const valueMissing = state.required && state.values[0].length === 0;
+		const valueMissing = state.required && state.values.current[0].length === 0;
 
 		state.internals.setValidity(
 			{
@@ -1535,10 +1597,6 @@ function updateValidity(state: OuiComboboxState): void {
 	);
 
 	state.internals.checkValidity();
-}
-
-function updateWidth(state: OuiComboboxState): void {
-	setStyle(state.content, PROPERTY_STYLE, `${state.anchor.getBoundingClientRect().width}px`);
 }
 
 // #endregion
@@ -1592,8 +1650,6 @@ const KEYS_SELECTION = new Set(['ArrowRight', 'End']);
 const MESSAGE_LABEL = `<${TAGNAME}> must contain a <label> element for the <select> element`;
 
 const MESSAGE_SELECT = `<${TAGNAME}> must contain a valid <select> element`;
-
-const PROPERTY_STYLE = '--oui-combobox-width';
 
 const SELECTOR_ANCHOR = `[${ATTRIBUTE_ANCHOR}]`;
 
