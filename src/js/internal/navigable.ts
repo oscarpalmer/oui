@@ -28,9 +28,16 @@ export class OuiNavigable {
 			on(element, 'focusin', event => {
 				onFocusin(this, event);
 			}),
-			on(element, 'keydown', event => {
-				onKeydown(this, event);
-			}),
+			on(
+				element,
+				'keydown',
+				event => {
+					onKeydown(this, event);
+				},
+				{
+					passive: false,
+				},
+			),
 		];
 
 		this.orientation = getOrientation(element, options);
