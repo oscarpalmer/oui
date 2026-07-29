@@ -125,13 +125,6 @@
 	}
 }
 
-:where([oui-combobox-filter-label]) {
-	@include mixins.visually-hidden;
-
-	display: inline-flex;
-	position: absolute;
-}
-
 :where([oui-combobox-header]) {
 	padding: 0.5em calc(0.75em / 0.75);
 	background-color: var(--oui-gray-0);
@@ -196,21 +189,53 @@
 
 [oui-combobox-selection-item] {
 	:where(&) {
-		@include mixins.badge;
+		@include mixins.button;
 
-		border-radius: 3em;
+		--oui-background-value: var(--oui-blue-1);
+		--oui-foreground-percentage: 12.5%;
+		--oui-foreground-value: var(--oui-blue-8);
+		--oui-shadow-percentage: 90%;
+
 		padding: 0.5em 1em;
-		gap: 0.75em;
-		font-size: 0.875em;
-		transition: 0.125s ease-in-out;
-		cursor: pointer;
+		flex-wrap: nowrap;
+		border-radius: 5em;
+		font-size: 0.75em;
+		white-space: nowrap;
+	}
+
+	:where(oui-combobox:not([disabled], [readonly], [aria-disabled='true' i]) &:focus-visible) {
+		--oui-background-value: var(--oui-red-1);
+		--oui-foreground-value: var(--oui-red-8);
+		--oui-outline-percentage: 75%;
+		--oui-outline-value: var(--oui-red-6);
 	}
 
 	@media (hover: hover) {
 		:where(oui-combobox:not([disabled], [readonly], [aria-disabled='true' i]) &:hover) {
-			--oui-background: var(--oui-red-0);
-			--oui-foreground: var(--oui-red-8);
-			--oui-shadow: var(--oui-red-6);
+			--oui-background-value: var(--oui-red-1);
+			--oui-foreground-value: var(--oui-red-8);
+			--oui-outline-value: var(--oui-red-6);
+
+			--oui-background-percentage: 50%;
+			--oui-foreground-percentage: 25%;
 		}
+	}
+
+	:where(oui-combobox:not([disabled], [readonly], [aria-disabled='true' i]) &:active) {
+		box-shadow:
+			0 0 0 1px var(--oui-shadow-value),
+			inset 0 1px 2px 0 var(--oui-shadow-value),
+			inset 0 2px 4px 0 var(--oui-shadow-value);
+	}
+
+	:where(oui-combobox:is([disabled], [readonly], [aria-disabled='true' i]) &) {
+		--oui-background-percentage: 80%;
+		--oui-background-value: var(--oui-red-1);
+		--oui-foreground-percentage: 20%;
+		--oui-foreground-value: var(--oui-red-8);
+		--oui-outline-value: var(--oui-red-6);
+		--oui-shadow-percentage: 95%;
+
+		font-style: italic;
 	}
 }
