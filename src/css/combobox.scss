@@ -26,18 +26,20 @@
 	}
 
 	@media (hover: hover) {
-		:where(&:not([disabled], [readonly], [aria-disabled='true' i]):hover) {
+		:where(
+			&:not([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]):hover
+		) {
 			@include mixins.input-hover;
 		}
 	}
 
-	:where(&:is([disabled], [readonly], [aria-disabled='true' i])) {
+	:where(&:is([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i])) {
 		--oui-foreground-percentage: 25%;
 
 		font-style: italic;
 	}
 
-	:where(&:is([disabled], [readonly], [aria-disabled='true' i]):focus) {
+	:where(&:is([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]):focus) {
 		--oui-outline-percentage: 75%;
 	}
 
@@ -54,6 +56,7 @@
 	height: fit-content;
 	max-width: max(25vw, 32rem);
 	max-height: max(25vh, 32rem);
+	min-width: anchor-size(width);
 	flex-flow: column nowrap;
 	border-radius: 0.25em;
 
@@ -100,23 +103,23 @@
 	border-radius: 0.25em;
 	font-size: 0.875rem;
 
-	:where(&:not([disabled], [readonly], [aria-disabled='true' i]):focus) {
+	:where(&:focus) {
 		@include mixins.input-focus;
 	}
 
 	@media (hover: hover) {
-		:where(&:not([disabled], [readonly], [aria-disabled='true' i]):hover) {
+		:where(&:hover) {
 			@include mixins.input-hover;
 		}
 	}
 
-	:where(&:is([disabled], [readonly], [aria-disabled='true' i])) {
+	:where(&:is([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i])) {
 		--oui-foreground-percentage: 25%;
 
 		font-style: italic;
 	}
 
-	:where(&:is([disabled], [readonly], [aria-disabled='true' i]):focus) {
+	:where(&:is([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]):focus) {
 		--oui-outline-percentage: 75%;
 	}
 
@@ -160,7 +163,9 @@
 		margin: 0 0.75em 0 0;
 	}
 
-	:where(oui-combobox:not([disabled], [readonly], [aria-disabled='true' i]) &) {
+	:where(
+		oui-combobox:not([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]) &
+	) {
 		@media (hover: hover) {
 			:where(&:hover) {
 				background-color: var(--oui-blue-1);
@@ -203,7 +208,18 @@
 		white-space: nowrap;
 	}
 
-	:where(oui-combobox:not([disabled], [readonly], [aria-disabled='true' i]) &:focus-visible) {
+	:where(
+		oui-combobox:is([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i])
+			&:focus-visible
+	) {
+		--oui-outline-percentage: 87.5%;
+		--oui-outline-value: var(--oui-blue-6);
+	}
+
+	:where(
+		oui-combobox:not([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i])
+			&:focus-visible
+	) {
 		--oui-background-value: var(--oui-red-1);
 		--oui-foreground-value: var(--oui-red-8);
 		--oui-outline-percentage: 75%;
@@ -211,7 +227,10 @@
 	}
 
 	@media (hover: hover) {
-		:where(oui-combobox:not([disabled], [readonly], [aria-disabled='true' i]) &:hover) {
+		:where(
+			oui-combobox:not([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i])
+				&:hover
+		) {
 			--oui-background-value: var(--oui-red-1);
 			--oui-foreground-value: var(--oui-red-8);
 			--oui-outline-value: var(--oui-red-6);
@@ -221,19 +240,21 @@
 		}
 	}
 
-	:where(oui-combobox:not([disabled], [readonly], [aria-disabled='true' i]) &:active) {
+	:where(
+		oui-combobox:not([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i])
+			&:active
+	) {
 		box-shadow:
 			0 0 0 1px var(--oui-shadow-value),
 			inset 0 1px 2px 0 var(--oui-shadow-value),
 			inset 0 2px 4px 0 var(--oui-shadow-value);
 	}
 
-	:where(oui-combobox:is([disabled], [readonly], [aria-disabled='true' i]) &) {
+	:where(
+		oui-combobox:is([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]) &
+	) {
 		--oui-background-percentage: 80%;
-		--oui-background-value: var(--oui-red-1);
 		--oui-foreground-percentage: 20%;
-		--oui-foreground-value: var(--oui-red-8);
-		--oui-outline-value: var(--oui-red-6);
 		--oui-shadow-percentage: 95%;
 
 		font-style: italic;
