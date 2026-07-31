@@ -14,9 +14,11 @@
 		background-position: right 0.5em center;
 		background-repeat: no-repeat;
 		background-size: 1em;
+		position: relative;
 	}
 
 	:where(&:not([disabled], [readonly], [aria-disabled='true' i]):focus),
+	:where(&:not([disabled], [readonly], [aria-disabled='true' i]):focus-within),
 	:where(
 		&:not([disabled], [readonly], [aria-disabled='true' i]):has(
 			+ [oui-combobox-content]:focus-within
@@ -45,6 +47,17 @@
 
 	:where(&:is([disabled], [aria-disabled='true' i])) {
 		--oui-background-percentage: 50%;
+	}
+
+	:where(& > button) {
+		border: none;
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+	}
+
+	:where(& > button:focus) {
+		outline: none;
 	}
 }
 
@@ -190,6 +203,8 @@
 	gap: 0.5em;
 	overflow: auto;
 	list-style: none;
+	position: relative;
+	z-index: 2;
 }
 
 [oui-combobox-selection-item] {

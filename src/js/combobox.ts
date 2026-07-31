@@ -18,6 +18,7 @@ declare global {
 }
 
 type CreateAnchor = {
+	container?: HTMLElement;
 	element: HTMLElement;
 	selection?: OuiComboboxSelection;
 };
@@ -291,6 +292,11 @@ export class OuiComboboxElement extends HTMLElement {
 	}
 }
 
+type OuiComboboxAnchor = {
+	container?: HTMLElement;
+	element: HTMLElement;
+};
+
 type OuiComboboxAutoComplete = Record<OuiComboboxAutoCompleteType, boolean> & {
 	value: OuiComboboxAutoCompleteType;
 };
@@ -315,12 +321,17 @@ type OuiComboboxOptions = {
 
 type OuiComboboxSelection = {
 	container: HTMLElement;
-	items: HTMLElement[];
+	items: OuiComboboxSelectionItem[];
+};
+
+type OuiComboboxSelectionItem = {
+	button: HTMLButtonElement;
+	element: HTMLElement;
 };
 
 type OuiComboboxState = {
 	active?: HTMLElement;
-	anchor: HTMLElement;
+	anchor: OuiComboboxAnchor;
 	autocomplete: OuiComboboxAutoComplete;
 	content: HTMLElement;
 	disabled: boolean;
@@ -366,12 +377,12 @@ function attachCombobox(state: OuiComboboxState): void {
 	label.htmlFor = filter.element.id;
 	select.hidden = true;
 
-	select.insertAdjacentElement('afterend', anchor);
-	anchor.insertAdjacentElement('afterend', content);
+	select.insertAdjacentElement('afterend', anchor.container ?? anchor.element);
+	(anchor.container ?? anchor.element).insertAdjacentElement('afterend', content);
 
 	select.remove();
 
-	state.floatable = createEmbeddedFloatable(anchor, content, {
+	state.floatable = createEmbeddedFloatable(anchor.container ?? anchor.element, content, {
 		position: 'below-start',
 		reusable: false,
 	});
@@ -386,7 +397,8 @@ function attachCombobox(state: OuiComboboxState): void {
 			onClickContent(event, content);
 		}),
 		on(content, 'toggle', () => {
-			setAria(anchor, 'expanded', state.floatable.open);
+			setAria(anchor.element, 'expanded', state.floatable.open);
+
 			setAria(
 				filter.element,
 				'activedescendant',
@@ -411,6 +423,7 @@ function createAnchor(
 	autocomplete: OuiComboboxAutoComplete,
 	multiple: boolean,
 ): CreateAnchor {
+	let container: HTMLElement | undefined;
 	let element: HTMLElement;
 	let selection: OuiComboboxSelection | undefined;
 
@@ -423,12 +436,12 @@ function createAnchor(
 			select.selectedOptions[0]?.textContent ?? '',
 		);
 	} else {
-		({element, selection} = createButton(id, label, select, multiple));
+		({container, element, selection} = createButton(id, label, select, multiple));
 	}
 
-	setAttribute(element, ATTRIBUTE_ANCHOR, '');
+	setAttribute(container ?? element, ATTRIBUTE_ANCHOR, '');
 
-	return {element, selection};
+	return {container, element, selection};
 }
 
 function createButton(
@@ -437,31 +450,29 @@ function createButton(
 	select: HTMLSelectElement,
 	multiple: boolean,
 ): CreateAnchor {
-	const element = createElement('div', {
+	const element = createElement('button', {
 		aria: {
 			controls: `${id}_content`,
 			expanded: false,
 			haspopup: 'listbox',
-			labelledby: label.id,
+			labelledby: `${label.id} ${id}`,
 		},
 		property: {
-			role: 'button',
-			tabIndex: 0,
+			id,
 			textContent: multiple ? '' : (select.selectedOptions[0]?.textContent ?? ''),
 		},
 	});
 
-	let selection: OuiComboboxSelection | undefined;
-
-	if (multiple) {
-		selection = createSelection(id, select);
-
-		setAria(element, 'describedby', selection.container.id);
-
-		element.append(selection.container);
+	if (!multiple) {
+		return {element};
 	}
 
-	return {element, selection};
+	const container = createElement('div');
+	const selection = createSelection(id, select);
+
+	container.append(selection.container, element);
+
+	return {container, element, selection};
 }
 
 function createContent(
@@ -753,9 +764,15 @@ function createSelection(id: string, select: HTMLSelectElement): OuiComboboxSele
 	const options = [...select.selectedOptions];
 	const active = options[0];
 
-	const items: HTMLElement[] = [];
+	const items: OuiComboboxSelectionItem[] = [];
 
 	createSelectionItems(options, active, container, items);
+
+	const {button} = items[0] ?? {};
+
+	if (button != null) {
+		button.tabIndex = 0;
+	}
 
 	return {
 		items,
@@ -763,8 +780,13 @@ function createSelection(id: string, select: HTMLSelectElement): OuiComboboxSele
 	};
 }
 
-function createSelectionItem(option: HTMLElement): HTMLElement {
-	const element = createElement('li', {
+function createSelectionItem(option: HTMLElement): OuiComboboxSelectionItem {
+	const element = createElement('li');
+
+	const button = createElement('button', {
+		aria: {
+			label: `Remove ${option.textContent}`,
+		},
 		attribute: {
 			[ATTRIBUTE_SELECTION_ITEM]: '',
 			tabindex: -1,
@@ -784,24 +806,25 @@ function createSelectionItem(option: HTMLElement): HTMLElement {
 	});
 
 	const label = createElement('span', {
-		aria: {
-			label: `Remove ${option.textContent}`,
-		},
 		property: {
 			textContent: option.textContent,
 		},
 	});
 
-	element.append(icon, label);
+	button.append(icon, label);
+	element.append(button);
 
-	return element;
+	return {
+		button,
+		element,
+	};
 }
 
 function createSelectionItems(
 	options: HTMLElement[],
 	active: HTMLElement,
 	container: HTMLElement,
-	items: HTMLElement[],
+	items: OuiComboboxSelectionItem[],
 ): void {
 	const {length} = options;
 
@@ -810,9 +833,7 @@ function createSelectionItems(
 
 		const item = createSelectionItem(option);
 
-		item.tabIndex = option === active ? 0 : -1;
-
-		container.append(item);
+		container.append(item.element);
 		items.push(item);
 	}
 }
@@ -868,7 +889,10 @@ function createState(element: OuiComboboxElement, internals: ElementInternals): 
 		required,
 		select,
 		type,
-		anchor: anchor.element,
+		anchor: {
+			container: anchor.container,
+			element: anchor.element,
+		},
 		active: content.list.selected[0],
 		content: content.element,
 		empty: content.empty,
@@ -911,7 +935,7 @@ function createState(element: OuiComboboxElement, internals: ElementInternals): 
 }
 
 function detachCombobox(state: OuiComboboxState): void {
-	const {anchor, content, floatable, host, label, select} = state;
+	const {content, floatable, host, label, select} = state;
 
 	const listeners = state.listeners.splice(0);
 	const {length} = listeners;
@@ -922,6 +946,8 @@ function detachCombobox(state: OuiComboboxState): void {
 
 	floatable.destroy();
 
+	const anchor = state.anchor.container ?? state.anchor.element;
+
 	anchor.insertAdjacentElement('beforebegin', select);
 
 	anchor.remove();
@@ -929,8 +955,6 @@ function detachCombobox(state: OuiComboboxState): void {
 
 	label.htmlFor = select.id;
 	select.hidden = false;
-
-	comboboxes.delete(content);
 
 	states.delete(host);
 	states.delete(content);
@@ -1131,10 +1155,9 @@ function hasTextSelection(element: HTMLElement): element is HTMLInputElement {
 }
 
 function onClickContent(event: PointerEvent, content: HTMLElement): void {
-	const combobox = comboboxes.get(content);
 	const state = states.get(content);
 
-	if (combobox == null || state == null) {
+	if (state == null) {
 		return;
 	}
 
@@ -1163,7 +1186,7 @@ function onClickDocument(event: PointerEvent): void {
 
 	if (label != null) {
 		if (label === state.label && combobox.type === 'select') {
-			state.anchor.focus();
+			state.anchor.element.focus();
 
 			if (!state.disabled) {
 				state.floatable.show();
@@ -1181,7 +1204,7 @@ function onClickDocument(event: PointerEvent): void {
 		);
 
 		if (state.disabled) {
-			state.anchor.focus();
+			state.anchor.element.focus();
 		} else if (state.readonly) {
 			updateTabindices(state, option);
 		} else {
@@ -1205,7 +1228,7 @@ function onEnter(state: OuiComboboxState): void {
 		return;
 	}
 
-	if (hasTextSelection(state.anchor)) {
+	if (hasTextSelection(state.anchor.element)) {
 		onSelection(state);
 	} else {
 		setNext('set', state, state.active);
@@ -1316,7 +1339,7 @@ function onKeydownFilter(event: KeyboardEvent, state: OuiComboboxState): void {
 		}
 
 		case !isSelect && KEYS_SELECTION.has(event.key): {
-			if (!ignore && hasTextSelection(state.anchor)) {
+			if (!ignore && hasTextSelection(state.anchor.element)) {
 				onSelection(state);
 			}
 
@@ -1354,6 +1377,8 @@ function onKeydownSelection(
 	item: HTMLElement,
 ): void {
 	if (KEYS_ACTIVATION.has(event.key)) {
+		event.preventDefault();
+
 		onRemoveSelection(state, item);
 
 		return;
@@ -1365,11 +1390,16 @@ function onKeydownSelection(
 
 	const {length} = state.selection.items;
 
-	const index = state.selection.items.indexOf(item);
+	const index = state.selection.items.findIndex(selection => selection.button === item);
 
 	let next: number | undefined;
 
 	switch (event.key) {
+		case 'ArrowDown':
+			state.anchor.element.focus();
+			state.anchor.element.click();
+			return;
+
 		case 'ArrowRight':
 		case 'ArrowLeft':
 			next = clamp(index + (event.key === 'ArrowRight' ? 1 : -1), 0, length - 1, true);
@@ -1394,13 +1424,13 @@ function onKeydownSelection(
 	event.preventDefault();
 
 	for (let index = 0; index < length; index += 1) {
-		const item = state.selection.items[index];
+		const {button} = state.selection.items[index];
 		const selected = index === next;
 
-		item.tabIndex = selected ? 0 : -1;
+		button.tabIndex = selected ? 0 : -1;
 
 		if (selected) {
-			item.focus();
+			button.focus();
 		}
 	}
 }
@@ -1568,11 +1598,17 @@ function setProperties(
 ): void {
 	state[key] = value;
 
-	const elements = [state.host, state.anchor, state.filter.element];
+	const elements = [state.host, state.anchor.element, state.filter.element];
 	const {length} = elements;
 
 	for (let index = 0; index < length; index += 1) {
-		setAria(elements[index], key, value);
+		const element = elements[index];
+
+		setAria(
+			element,
+			key,
+			key !== 'readonly' || !(element instanceof HTMLButtonElement) ? value : undefined,
+		);
 	}
 }
 
@@ -1680,6 +1716,12 @@ function setValues(state: OuiComboboxState, value: unknown, emit?: boolean): voi
 	setNext('set', state, selected[0] ?? state.options.all[0], selected, emit);
 }
 
+function updateAnchor(state: OuiComboboxState): void {
+	if (state.multiple) {
+		setAria(state.anchor.element, 'label', `${state.options.selected.length} selected`);
+	}
+}
+
 function updateAutoComplete(
 	update: OuiComboboxUpdate,
 	state: OuiComboboxState,
@@ -1698,18 +1740,18 @@ function updateAutoComplete(
 		return;
 	}
 
-	if (state.anchor instanceof HTMLInputElement) {
+	if (state.anchor.element instanceof HTMLInputElement) {
 		const contentLength = content.length;
 		const filterLength = state.filter.element.value.length;
 
-		state.anchor.value = content;
+		state.anchor.element.value = content;
 
-		state.anchor.setSelectionRange(
+		state.anchor.element.setSelectionRange(
 			update === 'typed' ? filterLength : contentLength,
 			contentLength,
 		);
 	} else {
-		state.anchor.textContent = content;
+		state.anchor.element.textContent = content;
 	}
 }
 
@@ -1736,6 +1778,7 @@ function updateForm(state: OuiComboboxState, values: string[], emit?: boolean): 
 
 	state.internals.setFormValue(formValue, JSON.stringify(formValues));
 
+	updateAnchor(state);
 	updateValidity(state);
 
 	if (emit !== false) {
@@ -1755,7 +1798,7 @@ function updateSelect(
 	}
 
 	if (!state.multiple) {
-		state.anchor.textContent = active.textContent ?? '';
+		state.anchor.element.textContent = active.textContent ?? '';
 
 		return;
 	}
@@ -1839,7 +1882,7 @@ function updateSelection(
 		const {length} = state.selection.items;
 
 		for (let index = 0; index < length; index += 1) {
-			state.selection.items[index].remove();
+			state.selection.items[index].element.remove();
 		}
 
 		state.selection.items.splice(0);
@@ -1851,37 +1894,41 @@ function updateSelection(
 		return;
 	}
 
-	let index = state.selection.items.findIndex(item => getData(item, 'option') === active.id);
+	let current = state.selection.items.findIndex(
+		item => getData(item.button, 'option') === active.id,
+	);
 
-	if (index === -1) {
+	if (current === -1) {
 		return;
 	}
 
-	let item = state.selection.items[index];
+	const item = state.selection.items[current];
 
-	item.remove();
+	item.element.remove();
 
-	state.selection.items.splice(index, 1);
+	state.selection.items.splice(current, 1);
 
 	if (state.selection.items.length === 0) {
-		state.anchor.focus();
+		state.anchor.element.focus();
 
 		return;
 	}
 
-	index -= 1;
+	const {length} = state.selection.items;
 
-	if (index < 0) {
-		index = 0;
-	} else if (index >= state.selection.items.length) {
-		index = state.selection.items.length - 1;
+	if (current < 0) {
+		current = 0;
+	} else if (current >= length) {
+		current = length - 1;
 	}
 
-	item = state.selection.items[index];
+	for (let index = 0; index < length; index += 1) {
+		const {button} = state.selection.items[index];
 
-	item.tabIndex = 0;
+		button.tabIndex = index === current ? 0 : -1;
+	}
 
-	item.focus();
+	state.selection.items[current].button.focus();
 }
 
 function updateTabindices(state: OuiComboboxState, active?: HTMLElement): void {
@@ -1889,7 +1936,7 @@ function updateTabindices(state: OuiComboboxState, active?: HTMLElement): void {
 		return;
 	}
 
-	const next = state.selection.items.find(item => getData(item, 'option') === active.id);
+	const next = state.selection.items.find(item => getData(item.button, 'option') === active.id);
 
 	if (next == null) {
 		return;
@@ -1900,10 +1947,10 @@ function updateTabindices(state: OuiComboboxState, active?: HTMLElement): void {
 	for (let index = 0; index < length; index += 1) {
 		const item = state.selection.items[index];
 
-		item.tabIndex = item === next ? 0 : -1;
+		item.button.tabIndex = item === next ? 0 : -1;
 	}
 
-	next.focus();
+	next.button.focus();
 }
 
 function updateValidity(state: OuiComboboxState): void {
@@ -2016,8 +2063,6 @@ const SELECTOR_SELECTION_ITEM = `[${ATTRIBUTE_SELECTION_ITEM}]`;
 const SELECTOR_OPTION = `[${ATTRIBUTE_OPTION}]`;
 
 const TYPES = new Set<OuiComboboxType>(['autocomplete', 'select']);
-
-const comboboxes = new WeakMap<HTMLElement, OuiComboboxElement>();
 
 const scrollOptions: ScrollIntoViewOptions = {
 	behavior: 'auto',
