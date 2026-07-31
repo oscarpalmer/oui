@@ -78,12 +78,6 @@
 	}
 }
 
-:where([oui-combobox-empty]) {
-	padding: 1em;
-	text-align: center;
-	font-style: italic;
-}
-
 :where([oui-combobox-filter], [oui-combobox-header]) {
 	&::after {
 		content: '';
@@ -151,9 +145,21 @@
 	z-index: 1;
 }
 
+:where([oui-combobox-hidden]) {
+	@include mixins.visually-hidden;
+
+	position: absolute;
+}
+
 :where([oui-combobox-list]) {
 	overflow: auto;
 	position: relative;
+}
+
+:where([oui-combobox-message]) {
+	padding: 1em;
+	text-align: center;
+	font-style: italic;
 }
 
 [oui-combobox-option] {

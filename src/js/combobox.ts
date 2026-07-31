@@ -8,6 +8,7 @@ import {dispatch, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import {createEmbeddedFloatable, type OuiFloatable} from './floatable/floatable.embedded';
+import type {NestedPartial} from '@oscarpalmer/atoms';
 
 // #region Types
 
@@ -25,9 +26,9 @@ type CreateAnchor = {
 
 type CreateContent = {
 	element: HTMLElement;
-	empty: HTMLElement;
 	filter?: CreateFilter;
 	list: CreateList;
+	message: HTMLElement;
 };
 
 type CreateFilter = {
@@ -40,6 +41,23 @@ type CreateList = {
 	groups?: OuiComboboxGroup[];
 	options: HTMLElement[];
 	selected: HTMLElement[];
+};
+
+type OuiComboboxAnchor = {
+	container?: HTMLElement;
+	element: HTMLElement;
+};
+
+type OuiComboboxAutoComplete = Record<OuiComboboxAutoCompleteType, boolean> & {
+	value: OuiComboboxAutoCompleteType;
+};
+
+type OuiComboboxAutoCompleteType = 'both' | 'inline' | 'list' | 'none';
+
+type OuiComboboxGroup = {
+	element: HTMLElement;
+	header: HTMLElement;
+	options: HTMLElement[];
 };
 
 export class OuiComboboxElement extends HTMLElement {
@@ -233,6 +251,9 @@ export class OuiComboboxElement extends HTMLElement {
 		}
 	}
 
+	/**
+	 * Clear all selected options
+	 */
 	clear(): void {
 		setValues(this.#state, []);
 	}
@@ -279,6 +300,35 @@ export class OuiComboboxElement extends HTMLElement {
 		}
 	}
 
+	/**
+	 * Set combobox localizations for a specific language
+	 *
+	 * @param language Language code
+	 * @param localizations Localizations for language
+	 */
+	setLocalizations(language: string, localizations: Partial<OuiComboboxLocalizations>): void;
+
+	/**
+	 * Set combobox localizations for one or more languages
+	 *
+	 * @param localizations Localizations for one or more languages
+	 */
+	setLocalizations(localizations: Record<string, Partial<OuiComboboxLocalizations>>): void;
+
+	setLocalizations(
+		first: string | Record<string, Partial<OuiComboboxLocalizations>>,
+		second?: Partial<OuiComboboxLocalizations>,
+	): void {
+		updateLocalizations(
+			typeof first === 'string'
+				? {
+						[first]: second!,
+					}
+				: first,
+			this.#state.localizations,
+		);
+	}
+
 	#initialize(): void {
 		this.tabIndex = -1;
 
@@ -292,26 +342,20 @@ export class OuiComboboxElement extends HTMLElement {
 	}
 }
 
-type OuiComboboxAnchor = {
-	container?: HTMLElement;
-	element: HTMLElement;
-};
-
-type OuiComboboxAutoComplete = Record<OuiComboboxAutoCompleteType, boolean> & {
-	value: OuiComboboxAutoCompleteType;
-};
-
-type OuiComboboxAutoCompleteType = 'both' | 'inline' | 'list' | 'none';
-
-type OuiComboboxGroup = {
-	element: HTMLElement;
-	header: HTMLElement;
-	options: HTMLElement[];
-};
-
 type OuiComboboxFilter = {
 	element: HTMLInputElement;
 	value: string;
+};
+
+type OuiComboboxLocalizations = {
+	empty: string;
+	input: string;
+	invalid: string;
+	max: string;
+	min: string;
+	remove: string;
+	results: string;
+	selected: string;
 };
 
 type OuiComboboxOptions = {
@@ -335,7 +379,6 @@ type OuiComboboxState = {
 	autocomplete: OuiComboboxAutoComplete;
 	content: HTMLElement;
 	disabled: boolean;
-	empty: HTMLElement;
 	filter: OuiComboboxFilter;
 	floatable: OuiFloatable;
 	groups?: OuiComboboxGroup[];
@@ -344,8 +387,10 @@ type OuiComboboxState = {
 	internals: ElementInternals;
 	label: HTMLLabelElement;
 	listeners: RemovableEventListener[];
+	localizations?: Record<string, Partial<OuiComboboxLocalizations>>;
 	max?: number;
 	min?: number;
+	message: HTMLElement;
 	name: string;
 	multiple: boolean;
 	options: OuiComboboxOptions;
@@ -499,31 +544,15 @@ function createContent(
 
 	const filter = createFilter(type, id, label, autocomplete.value);
 	const list = createList(id, label, select, autocomplete, multiple);
-	const empty = createEmpty();
+	const message = createMessage();
 
 	if (filter != null) {
 		element.append(filter.container);
 	}
 
-	element.append(list.element, empty);
+	element.append(list.element, message);
 
-	return {element, empty, filter, list};
-}
-
-function createEmpty(): HTMLElement {
-	return createElement('div', {
-		aria: {
-			live: 'polite',
-		},
-		attribute: {
-			[ATTRIBUTE_EMPTY]: '',
-		},
-		property: {
-			hidden: true,
-			role: 'status',
-			textContent: 'No results found',
-		},
-	});
+	return {element, filter, list, message};
 }
 
 function createFilter(
@@ -694,6 +723,21 @@ function createList(
 	return {element, groups, options, selected};
 }
 
+function createMessage(): HTMLElement {
+	return createElement('div', {
+		aria: {
+			live: 'polite',
+		},
+		attribute: {
+			[ATTRIBUTE_MESSAGE]: '',
+		},
+		property: {
+			hidden: true,
+			role: 'status',
+		},
+	});
+}
+
 function createOption(
 	index: number,
 	option: HTMLOptionElement,
@@ -762,11 +806,10 @@ function createSelection(id: string, select: HTMLSelectElement): OuiComboboxSele
 	});
 
 	const options = [...select.selectedOptions];
-	const active = options[0];
 
 	const items: OuiComboboxSelectionItem[] = [];
 
-	createSelectionItems(options, active, container, items);
+	createSelectionItems(options, container, items);
 
 	const {button} = items[0] ?? {};
 
@@ -780,12 +823,18 @@ function createSelection(id: string, select: HTMLSelectElement): OuiComboboxSele
 	};
 }
 
-function createSelectionItem(option: HTMLElement): OuiComboboxSelectionItem {
+function createSelectionItem(
+	option: HTMLElement,
+	state?: OuiComboboxState,
+): OuiComboboxSelectionItem {
 	const element = createElement('li');
 
 	const button = createElement('button', {
 		aria: {
-			label: `Remove ${option.textContent}`,
+			label:
+				state == null
+					? undefined
+					: getLocalization('remove', state).replace('{label}', option.textContent),
 		},
 		attribute: {
 			[ATTRIBUTE_SELECTION_ITEM]: '',
@@ -822,16 +871,16 @@ function createSelectionItem(option: HTMLElement): OuiComboboxSelectionItem {
 
 function createSelectionItems(
 	options: HTMLElement[],
-	active: HTMLElement,
 	container: HTMLElement,
 	items: OuiComboboxSelectionItem[],
+	state?: OuiComboboxState,
 ): void {
 	const {length} = options;
 
 	for (let index = 0; index < length; index += 1) {
 		const option = options[index];
 
-		const item = createSelectionItem(option);
+		const item = createSelectionItem(option, state);
 
 		container.append(item.element);
 		items.push(item);
@@ -895,7 +944,6 @@ function createState(element: OuiComboboxElement, internals: ElementInternals): 
 		},
 		active: content.list.selected[0],
 		content: content.element,
-		empty: content.empty,
 		filter: {
 			element: content.filter?.element ?? (anchor.element as HTMLInputElement),
 			value: '',
@@ -904,6 +952,7 @@ function createState(element: OuiComboboxElement, internals: ElementInternals): 
 		groups: content.list.groups,
 		host: element,
 		listeners: [],
+		message: content.message,
 		name: element.name,
 		options: {
 			all: content.list.options,
@@ -930,6 +979,7 @@ function createState(element: OuiComboboxElement, internals: ElementInternals): 
 	}
 
 	updateForm(state, state.values.current, false);
+	updateMessage(state, getVisible(state).length);
 
 	return state;
 }
@@ -1002,9 +1052,9 @@ function filterOptions(state: OuiComboboxState, clear?: boolean): HTMLElement | 
 		}
 	}
 
-	state.empty.hidden = visible.length > 0;
+	updateMessage(state, visible.length);
 
-	if (state.empty.hidden) {
+	if (visible.length === 0) {
 		return state.active != null && visible.includes(state.active) ? state.active : visible[0];
 	}
 }
@@ -1105,6 +1155,46 @@ function getId(): string {
 	index += 1;
 
 	return `oui_combobox_${index}`;
+}
+
+function getLanguage(state: OuiComboboxState): string {
+	return (
+		state.host.closest('[lang]')?.getAttribute('lang') ?? document.documentElement.lang
+	).toLowerCase();
+}
+
+function getLocalization(key: keyof OuiComboboxLocalizations, state: OuiComboboxState): string {
+	const language = getLanguage(state);
+
+	const allLocalizations = [state.localizations, LOCALIZATIONS.globals];
+	const {length} = allLocalizations;
+
+	let localization: string | undefined;
+	let shortLanguage: string | undefined;
+
+	for (let index = 0; index < length; index += 1) {
+		const localizations = allLocalizations[index];
+
+		localization = localizations?.[language]?.[key];
+
+		if (localization != null) {
+			break;
+		}
+
+		shortLanguage ??= language.split('-')[0];
+
+		if (shortLanguage === language) {
+			continue;
+		}
+
+		localization = localizations?.[shortLanguage]?.[key];
+
+		if (localization != null) {
+			break;
+		}
+	}
+
+	return localization ?? LOCALIZATIONS.defaults[key];
 }
 
 function getVisible(state: OuiComboboxState): HTMLElement[] {
@@ -1565,6 +1655,39 @@ function setLimit(type: 'max' | 'min', state: OuiComboboxState, value?: unknown)
 	}
 }
 
+/**
+ * Set combobox localizations for a specific language
+ *
+ * @param language Language code
+ * @param localizations Localizations for language
+ */
+export function setLocalizations(
+	language: string,
+	localizations: Partial<OuiComboboxLocalizations>,
+): void;
+
+/**
+ * Set combobox localizations for one or more languages
+ *
+ * @param localizations Localizations for one or more languages
+ */
+export function setLocalizations(
+	localizations: Record<string, Partial<OuiComboboxLocalizations>>,
+): void;
+
+export function setLocalizations(
+	first: string | Record<string, Partial<OuiComboboxLocalizations>>,
+	second?: Partial<OuiComboboxLocalizations>,
+): void {
+	updateLocalizations(
+		typeof first === 'string'
+			? {
+					[first]: second!,
+				}
+			: first,
+	);
+}
+
 function setNext(
 	update: OuiComboboxUpdate,
 	state: OuiComboboxState,
@@ -1718,7 +1841,14 @@ function setValues(state: OuiComboboxState, value: unknown, emit?: boolean): voi
 
 function updateAnchor(state: OuiComboboxState): void {
 	if (state.multiple) {
-		setAria(state.anchor.element, 'label', `${state.options.selected.length} selected`);
+		setAria(
+			state.anchor.element,
+			'label',
+			getLocalization('selected', state).replace(
+				'{amount}',
+				state.options.selected.length.toString(),
+			),
+		);
 	}
 }
 
@@ -1784,6 +1914,57 @@ function updateForm(state: OuiComboboxState, values: string[], emit?: boolean): 
 	if (emit !== false) {
 		dispatch(state.host, 'change');
 	}
+}
+
+function updateLocalizations(
+	values: Record<string, Partial<OuiComboboxLocalizations>>,
+	destination?: Record<string, Partial<OuiComboboxLocalizations>>,
+): void {
+	if (typeof values !== 'object' || values == null) {
+		return;
+	}
+
+	const localizations = destination ?? LOCALIZATIONS.globals;
+
+	const languages = Object.keys(values);
+	const languagesLength = languages.length;
+
+	for (let languagesIndex = 0; languagesIndex < languagesLength; languagesIndex += 1) {
+		const language = languages[languagesIndex].toLowerCase();
+		const value = values[language];
+
+		if (typeof value !== 'object' || value == null) {
+			continue;
+		}
+
+		localizations[language] ??= {};
+
+		const keys = Object.keys(value);
+		const keysLength = keys.length;
+
+		for (let keysIndex = 0; keysIndex < keysLength; keysIndex += 1) {
+			const key = keys[keysIndex].toLowerCase() as keyof OuiComboboxLocalizations;
+
+			if (LOCALIZATIONS.keys.has(key) && typeof value[key] === 'string') {
+				localizations[language][key] = value[key];
+			}
+		}
+	}
+}
+
+function updateMessage(state: OuiComboboxState, visible: number): void {
+	setAttribute(state.message, ATTRIBUTE_HIDDEN, visible > 0 ? '' : undefined);
+
+	if (visible === 0) {
+		state.message.textContent = getLocalization('empty', state);
+	} else {
+		state.message.textContent = getLocalization('results', state).replace(
+			'{amount}',
+			visible.toString(),
+		);
+	}
+
+	state.message.hidden = false;
 }
 
 function updateSelect(
@@ -1889,7 +2070,7 @@ function updateSelection(
 	}
 
 	if (added) {
-		createSelectionItems(options, active, state.selection.container, state.selection.items);
+		createSelectionItems(options, state.selection.container, state.selection.items, state);
 
 		return;
 	}
@@ -1961,7 +2142,7 @@ function updateValidity(state: OuiComboboxState): void {
 			{
 				valueMissing,
 			},
-			INVALID_INPUT,
+			getLocalization('input', state),
 		);
 
 		state.internals.checkValidity();
@@ -1975,21 +2156,21 @@ function updateValidity(state: OuiComboboxState): void {
 	switch (true) {
 		case state.required && state.options.selected.length === 0:
 			error = 'badInput';
-			message = INVALID_BAD;
+			message = getLocalization('invalid', state);
 			break;
 
 		case state.multiple &&
 			typeof state.max === 'number' &&
 			state.options.selected.length > state.max:
 			error = 'rangeOverflow';
-			message = INVALID_OVERFLOW.replace('{max}', state.max!.toString());
+			message = getLocalization('max', state).replace('{max}', state.max!.toString());
 			break;
 
 		case state.multiple &&
 			typeof state.min === 'number' &&
 			state.options.selected.length < state.min:
 			error = 'rangeUnderflow';
-			message = INVALID_UNDERFLOW.replace('{min}', state.min!.toString());
+			message = getLocalization('min', state).replace('{min}', state.min!.toString());
 			break;
 
 		default:
@@ -2018,15 +2199,17 @@ const ATTRIBUTE_ANCHOR = `${TAGNAME}-anchor`;
 
 const ATTRIBUTE_CONTENT = `${TAGNAME}-content`;
 
-const ATTRIBUTE_EMPTY = `${TAGNAME}-empty`;
-
 const ATTRIBUTE_FILTER = `${TAGNAME}-filter`;
 
 const ATTRIBUTE_FILTER_INPUT = `${ATTRIBUTE_FILTER}-input`;
 
 const ATTRIBUTE_HEADER = `${TAGNAME}-header`;
 
+const ATTRIBUTE_HIDDEN = `${TAGNAME}-hidden`;
+
 const ATTRIBUTE_LIST = `${TAGNAME}-list`;
+
+const ATTRIBUTE_MESSAGE = `${TAGNAME}-message`;
 
 const ATTRIBUTE_OPTION = `${TAGNAME}-option`;
 
@@ -2038,19 +2221,39 @@ const ATTRIBUTE_SELECTION_ITEM = `${TAGNAME}-selection-item`;
 
 const AUTOCOMPLETES = new Set<OuiComboboxAutoCompleteType>(['both', 'inline', 'list', 'none']);
 
-const INVALID_BAD = 'Please select an option from the list';
-
-const INVALID_INPUT = 'Please enter a value';
-
-const INVALID_OVERFLOW = 'Please select fewer options (maximum is {max})';
-
-const INVALID_UNDERFLOW = 'Please select more options (minimum is {min})';
-
 const KEYS_ACTIVATION = new Set([' ', 'Backspace', 'Delete', 'Enter']);
 
 const KEYS_NAVIGATION = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp']);
 
 const KEYS_SELECTION = new Set(['ArrowRight', 'End']);
+
+const LOCALIZATIONS: {
+	defaults: OuiComboboxLocalizations;
+	globals: Record<string, NestedPartial<OuiComboboxLocalizations>>;
+	keys: Set<keyof OuiComboboxLocalizations>;
+} = {
+	defaults: {
+		empty: 'No results found',
+		input: 'Please enter a value',
+		invalid: 'Please select an option from the list',
+		max: 'Please select fewer options (maximum is {max})',
+		min: 'Please select more options (minimum is {min})',
+		remove: 'Remove {label}',
+		results: '{amount} results available',
+		selected: '{amount} selected',
+	},
+	globals: {},
+	keys: new Set<keyof OuiComboboxLocalizations>([
+		'empty',
+		'input',
+		'invalid',
+		'max',
+		'min',
+		'remove',
+		'results',
+		'selected',
+	]),
+};
 
 const MESSAGE_LABEL = `<${TAGNAME}> must contain a <label> element for the <select> element`;
 
