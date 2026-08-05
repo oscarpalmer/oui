@@ -2,14 +2,22 @@ import {getAria} from '@oscarpalmer/toretto/aria';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import type {AnyAriaBooleanAttribute} from '@oscarpalmer/toretto/models';
 import type {OuiComboboxElement} from '.';
+import {updateLocalizations} from '../l10n';
 import {COMBOBOX_AUTOCOMPLETES} from './constants.combobox';
+import {
+	updateComboboxAnchor,
+	updateComboboxMessage,
+	updateComboboxSelectionItems,
+} from './dom.combobox';
 import {onComboboxFilter} from './event.combobox';
 import {updateComboboxValidity} from './form.combobox';
 import type {
 	OuiComboboxAutoComplete,
 	OuiComboboxAutoCompleteType,
+	OuiComboboxLocalizations,
 	OuiComboboxState,
 } from './models.combobox';
+import {comboboxLocalizations, comboboxStates} from './state.combobox';
 
 // #region Functions
 
@@ -127,6 +135,48 @@ export function setComboboxLimit(
 
 		updateComboboxValidity(state);
 	}
+}
+
+/**
+ * Set combobox localizations for a specific language
+ *
+ * @param language Language code
+ * @param localizations Localizations for language
+ */
+export function setComboboxLocalizations(
+	language: string,
+	localizations: Partial<OuiComboboxLocalizations>,
+): void;
+
+/**
+ * Set combobox localizations for one or more languages
+ *
+ * @param localizations Localizations for one or more languages
+ */
+export function setComboboxLocalizations(
+	localizations: Record<string, Partial<OuiComboboxLocalizations>>,
+): void;
+
+export function setComboboxLocalizations(
+	first: string | Record<string, Partial<OuiComboboxLocalizations>>,
+	second?: Partial<OuiComboboxLocalizations>,
+): void {
+	updateLocalizations(
+		comboboxLocalizations,
+		typeof first === 'string'
+			? {
+					[first]: second!,
+				}
+			: first,
+		comboboxLocalizations.values,
+		() => {
+			for (const state of comboboxStates.set) {
+				updateComboboxAnchor(state);
+				updateComboboxMessage(state, getComboboxVisibleOptions(state).length);
+				updateComboboxSelectionItems(state);
+			}
+		},
+	);
 }
 
 // #endregion

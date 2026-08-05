@@ -18,7 +18,6 @@ import {
 	comboboxScrollOptions,
 } from './constants.combobox';
 import {updateComboboxValidity} from './form.combobox';
-import {getComboboxLocalization} from './i18n.combobox';
 import type {
 	OuiComboboxAutoComplete,
 	OuiComboboxAutoCompleteType,
@@ -29,6 +28,8 @@ import type {
 	OuiComboboxState,
 	OuiComboboxType,
 } from './models.combobox';
+import {getLocalization, localize} from '../l10n';
+import {comboboxLocalizations} from './state.combobox';
 
 // #region Types
 
@@ -471,17 +472,26 @@ export function createComboboxSelectionItem(
 	option: HTMLElement,
 	state?: OuiComboboxState,
 ): OuiComboboxSelectionItem {
+	const optionLabel = option.textContent;
+	const optionValue = getData(option, 'value', false) ?? '';
+
 	const element = createElement('li');
 
 	const localization =
-		state == null ? option.textContent : getComboboxLocalization('remove', state);
+		state == null
+			? option.textContent
+			: getLocalization(comboboxLocalizations, state.host, 'remove', state.localizations);
 
 	const button = createElement('button', {
 		aria: {
-			label:
-				typeof localization === 'function'
-					? localization(option.textContent ?? '', getData(option, 'value', false) ?? '')
-					: localization,
+			label: localize(
+				localization,
+				{
+					label: optionLabel,
+					value: optionValue,
+				},
+				[optionLabel, optionValue],
+			),
 		},
 		attribute: {
 			[COMBOBOX_ATTRIBUTE_SELECTION_ITEM]: '',
@@ -598,15 +608,16 @@ export function updateComboboxAnchor(state: OuiComboboxState): void {
 		return;
 	}
 
-	const localization = getComboboxLocalization('selected', state);
-
-	setAria(
-		state.anchor.element,
-		'label',
-		typeof localization === 'function'
-			? localization(state.options.selected.length)
-			: localization.replace('{amount}', state.options.selected.length.toString()),
+	const localization = getLocalization(
+		comboboxLocalizations,
+		state.host,
+		'selected',
+		state.localizations,
 	);
+
+	const {length} = state.options.selected;
+
+	setAria(state.anchor.element, 'label', localize(localization, {amount: length}, [length]));
 }
 
 export function updateComboboxAutocomplete(
@@ -648,16 +659,23 @@ export function updateComboboxMessage(state: OuiComboboxState, visible: number):
 	setAttribute(state.message, COMBOBOX_ATTRIBUTE_HIDDEN, visible > 0 ? '' : undefined);
 
 	if (visible === 0) {
-		const localization = getComboboxLocalization('empty', state);
+		const localization = getLocalization(
+			comboboxLocalizations,
+			state.host,
+			'empty',
+			state.localizations,
+		);
 
-		state.message.textContent = typeof localization === 'function' ? localization() : localization;
+		state.message.textContent = localize(localization, {}, []);
 	} else {
-		const localization = getComboboxLocalization('results', state);
+		const localization = getLocalization(
+			comboboxLocalizations,
+			state.host,
+			'results',
+			state.localizations,
+		);
 
-		state.message.textContent =
-			typeof localization === 'function'
-				? localization(visible)
-				: localization.replace('{amount}', visible.toString());
+		state.message.textContent = localize(localization, {amount: visible}, [visible]);
 	}
 
 	state.message.hidden = false;
@@ -701,7 +719,7 @@ export function updateComboboxSelection(
 
 	let options = active == null ? [] : [active];
 
-	if (selected != null) {
+	if (added && selected != null) {
 		options = selected;
 
 		const {length} = state.selection.items;
@@ -766,7 +784,12 @@ export function updateComboboxSelectionItems(state: OuiComboboxState): void {
 		return;
 	}
 
-	const localization = getComboboxLocalization('remove', state);
+	const localization = getLocalization(
+		comboboxLocalizations,
+		state.host,
+		'remove',
+		state.localizations,
+	);
 
 	const {length} = state.selection.items;
 
@@ -781,12 +804,20 @@ export function updateComboboxSelectionItems(state: OuiComboboxState): void {
 			continue;
 		}
 
+		const optionLabel = option.textContent;
+		const optionValue = getData(option, 'value', false) ?? '';
+
 		setAria(
 			item.button,
 			'label',
-			typeof localization === 'function'
-				? localization(option?.textContent ?? '', getData(option, 'value', false) ?? '')
-				: localization.replace('{label}', option?.textContent ?? ''),
+			localize(
+				localization,
+				{
+					label: optionLabel,
+					value: optionValue,
+				},
+				[optionLabel, optionValue],
+			),
 		);
 	}
 }

@@ -1,12 +1,17 @@
 import {parse} from '@oscarpalmer/atoms/string';
 import {getAttribute} from '@oscarpalmer/toretto/attribute';
+import {updateLocalizations} from '../l10n';
 import {COMBOBOX_TAGNAME} from './constants.combobox';
 import {setComboboxValue, setComboboxValues} from './data.combobox';
 import {setComboboxDisabled, setComboboxReadonly, setComboboxRequired} from './dom.combobox';
-import {updateComboboxLocalizations} from './i18n.combobox';
 import {setComboboxFilter, setComboboxLimit} from './misc.combobox';
 import type {OuiComboboxLocalizations, OuiComboboxState, OuiComboboxType} from './models.combobox';
-import {attachCombobox, createComboboxState, detachCombobox} from './state.combobox';
+import {
+	attachCombobox,
+	comboboxLocalizations,
+	createComboboxState,
+	detachCombobox,
+} from './state.combobox';
 
 // #region Types
 
@@ -269,7 +274,8 @@ export class OuiComboboxElement extends HTMLElement {
 		first: string | Record<string, Partial<OuiComboboxLocalizations>>,
 		second?: Partial<OuiComboboxLocalizations>,
 	): void {
-		updateComboboxLocalizations(
+		updateLocalizations(
+			comboboxLocalizations,
 			typeof first === 'string'
 				? {
 						[first]: second!,
@@ -302,6 +308,6 @@ customElements.define(COMBOBOX_TAGNAME, OuiComboboxElement);
 
 // #region Exports
 
-export {setComboboxLocalizations} from './i18n.combobox';
+export {setComboboxLocalizations} from './misc.combobox';
 
 // #endregion

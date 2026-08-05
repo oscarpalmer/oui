@@ -1,7 +1,8 @@
 import {dispatch} from '@oscarpalmer/toretto/event';
+import {getLocalization, localize} from '../l10n';
 import {updateComboboxAnchor} from './dom.combobox';
-import {getComboboxLocalization} from './i18n.combobox';
 import type {OuiComboboxState} from './models.combobox';
+import {comboboxLocalizations} from './state.combobox';
 
 // #region Functions
 
@@ -40,28 +41,29 @@ export function updateComboboxValidity(state: OuiComboboxState): void {
 	if (state.autocomplete.none) {
 		const valueMissing = state.required && state.filter.element.value.length === 0;
 
-		const localization = getComboboxLocalization('invalid', state);
-
-		state.internals.setValidity(
-			{valueMissing},
-			typeof localization === 'function' ? localization() : localization,
+		const localization = getLocalization(
+			comboboxLocalizations,
+			state.host,
+			'invalid',
+			state.localizations,
 		);
+
+		state.internals.setValidity({valueMissing}, localize(localization, {}, []));
 
 		state.internals.checkValidity();
 
 		return;
 	}
 
+	let data: Record<string, unknown> = {};
 	let error: 'badInput' | 'rangeOverflow' | 'rangeUnderflow' | undefined;
-	let message: string | undefined;
+	let key: 'input' | 'max' | 'min' | undefined;
+	let parameters: unknown[] = [];
 
 	switch (true) {
 		case state.required && state.options.selected.length === 0: {
 			error = 'badInput';
-
-			const localization = getComboboxLocalization('input', state);
-
-			message = typeof localization === 'function' ? localization() : localization;
+			key = 'input';
 
 			break;
 		}
@@ -69,14 +71,10 @@ export function updateComboboxValidity(state: OuiComboboxState): void {
 		case state.multiple &&
 			typeof state.max === 'number' &&
 			state.options.selected.length > state.max: {
+			data = {amount: state.max};
 			error = 'rangeOverflow';
-
-			const localization = getComboboxLocalization('max', state);
-
-			message =
-				typeof localization === 'function'
-					? localization(state.max)
-					: localization.replace('{max}', state.max.toString());
+			key = 'max';
+			parameters = [state.max];
 
 			break;
 		}
@@ -84,14 +82,10 @@ export function updateComboboxValidity(state: OuiComboboxState): void {
 		case state.multiple &&
 			typeof state.min === 'number' &&
 			state.options.selected.length < state.min: {
+			data = {amount: state.min};
 			error = 'rangeUnderflow';
-
-			const localization = getComboboxLocalization('min', state);
-
-			message =
-				typeof localization === 'function'
-					? localization(state.min)
-					: localization.replace('{min}', state.min.toString());
+			key = 'min';
+			parameters = [state.min];
 
 			break;
 		}
@@ -99,6 +93,13 @@ export function updateComboboxValidity(state: OuiComboboxState): void {
 		default:
 			break;
 	}
+
+	const localization =
+		key == null
+			? undefined
+			: getLocalization(comboboxLocalizations, state.host, key, state.localizations);
+
+	const message = localization == null ? undefined : localize(localization, data, parameters);
 
 	state.internals.setValidity(
 		error == null

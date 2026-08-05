@@ -3,6 +3,7 @@ import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {getData} from '@oscarpalmer/toretto/data';
 import {on} from '@oscarpalmer/toretto/event';
 import {createEmbeddedFloatable} from '../floatable/floatable.embedded';
+import {getLocalizations} from '../l10n';
 import {
 	COMBOBOX_MESSAGE_LABEL,
 	COMBOBOX_MESSAGE_SELECT,
@@ -31,7 +32,7 @@ import {
 	getComboboxVisibleOptions,
 	setComboboxLimit,
 } from './misc.combobox';
-import type {OuiComboboxState} from './models.combobox';
+import type {OuiComboboxLocalizations, OuiComboboxState} from './models.combobox';
 
 // #region Functions
 
@@ -226,6 +227,17 @@ export function detachCombobox(state: OuiComboboxState): void {
 // #endregion
 
 // #region Variables
+
+export const comboboxLocalizations = getLocalizations<OuiComboboxLocalizations>({
+	empty: 'No results found',
+	input: 'Please enter a value',
+	invalid: 'Please select an option from the list',
+	max: max => `Please select fewer options (maximum is ${max})`,
+	min: min => `Please select more options (minimum is ${min})`,
+	remove: label => `Remove ${label}`,
+	results: amount => `${amount} results available`,
+	selected: amount => `${amount} selected`,
+});
 
 export const comboboxStates = {
 	map: new WeakMap<HTMLElement, OuiComboboxState>(),
