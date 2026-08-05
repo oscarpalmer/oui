@@ -1,7 +1,7 @@
 import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
 import {clamp} from '@oscarpalmer/atoms/number';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
-import {dispatch, getPosition, on} from '@oscarpalmer/toretto/event';
+import {dispatch, getEventPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import {setStyle, setStyles, toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
@@ -392,7 +392,7 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 	const dragged = item.state.options.getDragged();
 	const rectangle = dragged.getBoundingClientRect();
 
-	const position = getPosition(event) ?? {x: 0, y: 0};
+	const position = getEventPosition(event) ?? {x: 0, y: 0};
 
 	current = item;
 
@@ -442,7 +442,7 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 		return;
 	}
 
-	const position = getPosition(event);
+	const position = getEventPosition(event);
 
 	if (position == null) {
 		return;

@@ -3,7 +3,7 @@ import {round} from '@oscarpalmer/atoms/math';
 import {clamp} from '@oscarpalmer/atoms/number';
 import {setAria} from '@oscarpalmer/toretto/aria';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
-import {getPosition, on} from '@oscarpalmer/toretto/event';
+import {getEventPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {setStyle, toggleStyles} from '@oscarpalmer/toretto/style';
 import supportsTouch from '@oscarpalmer/toretto/touch';
@@ -464,7 +464,7 @@ function onPointermove(event: MouseEvent): void {
 		return;
 	}
 
-	const position = getPosition(event);
+	const position = getEventPosition(event);
 
 	if (position != null) {
 		splitter.values.now.current = getSize(

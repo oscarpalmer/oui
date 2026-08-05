@@ -1,6 +1,6 @@
 import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
-import {dispatch, getPosition, on} from '@oscarpalmer/toretto/event';
+import {dispatch, getEventPosition, on} from '@oscarpalmer/toretto/event';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import {getStyles, setStyle, setStyles} from '@oscarpalmer/toretto/style';
 import {attributable} from '../internal/attributable';
@@ -202,7 +202,7 @@ function onEnd(
 	const dispatched = dispatch(state.element, 'movable:end', {
 		detail: {
 			from: {...globals.original},
-			to: getPosition(event),
+			to: getEventPosition(event),
 		},
 	});
 

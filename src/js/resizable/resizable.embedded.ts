@@ -2,7 +2,7 @@ import {isPlainObject} from '@oscarpalmer/atoms/is';
 import type {EventPosition} from '@oscarpalmer/atoms/models';
 import {getNumber} from '@oscarpalmer/atoms/number';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
-import {dispatch, getPosition, on} from '@oscarpalmer/toretto/event';
+import {dispatch, getEventPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import {setStyles, toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
@@ -279,7 +279,7 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 	const handle = findAncestor(event, SELECTOR_HANDLE);
 	const element = handle && findAncestor(handle, SELECTOR);
 	const stored = element && items.get(element as HTMLElement);
-	const position = getPosition(event);
+	const position = getEventPosition(event);
 
 	if (stored == null || position == null) {
 		return;
@@ -309,7 +309,7 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 		return;
 	}
 
-	const {x, y} = getPosition(event) ?? {};
+	const {x, y} = getEventPosition(event) ?? {};
 
 	if (x == null || y == null) {
 		return;

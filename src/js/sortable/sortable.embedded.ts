@@ -1,7 +1,7 @@
 import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
 import {getAttribute, setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createElement} from '@oscarpalmer/toretto/create';
-import {dispatch, getPosition} from '@oscarpalmer/toretto/event';
+import {dispatch, getEventPosition} from '@oscarpalmer/toretto/event';
 import {findAncestor, getElementFromPosition} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import {setStyle} from '@oscarpalmer/toretto/style';
@@ -214,7 +214,7 @@ function onEnd(
 ): void {
 	const {origin} = item.state;
 
-	const position = getPosition(event) ?? {x: 0, y: 0};
+	const position = getEventPosition(event) ?? {x: 0, y: 0};
 
 	const target = getElementFromPosition(position)[0];
 
