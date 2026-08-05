@@ -24,6 +24,7 @@ type ApplySelectionParameters = {
 	option?: HTMLElement;
 	selected?: HTMLElement[];
 	state: OuiComboboxState;
+	values?: string[];
 };
 
 type CreateAnchor = {
@@ -503,11 +504,11 @@ function applySelection(parameters: ApplySelectionParameters): void {
 		setAria(option, 'selected', (selected ?? state.options.selected).includes(option));
 	}
 
-	console.log(parameters);
-
-	const values = state.autocomplete.none
-		? [state.filter.element.value]
-		: (selected ?? state.options.selected).map(option => getData(option, 'value', false) ?? '');
+	const values =
+		parameters.values ??
+		(state.autocomplete.none
+			? [state.filter.element.value]
+			: (selected ?? state.options.selected).map(option => getData(option, 'value', false) ?? ''));
 
 	if (values.length === 0) {
 		values.push('');
@@ -1161,6 +1162,8 @@ function filterOption(
 	value: unknown,
 	textContent?: boolean,
 ): HTMLElement | undefined {
+	const filterTextContent = textContent ?? false;
+
 	const filter = getString(value).toLocaleLowerCase();
 
 	filterOptions(state);
@@ -1172,7 +1175,7 @@ function filterOption(
 		const option = state.options.all[index];
 
 		const value = (
-			textContent ? option.textContent : (getData(option, 'value', false) ?? '')
+			filterTextContent ? option.textContent : (getData(option, 'value', false) ?? '')
 		).toLocaleLowerCase();
 
 		if (value === filter) {
@@ -1447,7 +1450,7 @@ function onFocusout(state: OuiComboboxState): void {
 		option,
 		state,
 		added: false,
-		selected: option == null ? undefined : [option],
+		selected: option == null ? [] : [option],
 	});
 }
 
@@ -1872,6 +1875,7 @@ function setValues(state: OuiComboboxState, value: unknown, emit?: boolean): voi
 		state,
 		added: true,
 		option: selected[0] ?? state.options.all[0],
+		values: state.autocomplete.none ? values : undefined,
 	});
 }
 
@@ -1905,6 +1909,7 @@ function toggleOption(state: OuiComboboxState, option?: HTMLElement): void {
 		option,
 		selected,
 		state,
+		values: state.autocomplete.none && option != null ? [option.textContent] : undefined,
 	});
 
 	if (!state.multiple) {
