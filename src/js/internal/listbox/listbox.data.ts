@@ -1,23 +1,21 @@
 import {getString} from '@oscarpalmer/atoms/string';
 import {setAria} from '@oscarpalmer/toretto/aria';
+import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {getData} from '@oscarpalmer/toretto/data';
-import {
-	updateComboboxMessage,
-	updateComboboxPreview,
-	updateComboboxSelection,
-} from './dom.combobox';
-import {onComboboxFilter} from './event.combobox';
-import {updateComboboxForm} from './form.combobox';
-import type {OuiComboboxState} from './models.combobox';
+import {updateListboxMessage, updateListboxPreview, updateListboxValueLabel} from './listbox.dom';
+import {updateListboxForm} from './listbox.form';
+import {setListboxFilter} from './listbox.misc';
+import type {OuiListboxState} from './listbox.model';
 
 // #region Types
 
-type ApplySelectionParameters = {
+type ApplySelectionParameters<State extends OuiListboxState = OuiListboxState> = {
 	added: boolean;
 	emit?: boolean;
 	option?: HTMLElement;
+	scroll?: boolean;
 	selected?: HTMLElement[];
-	state: OuiComboboxState;
+	state: State;
 	values?: string[];
 };
 
@@ -25,9 +23,10 @@ type ApplySelectionParameters = {
 
 // #region Functions
 
-export function applyComboboxSelection(parameters: ApplySelectionParameters): void {
-	const {added, emit, option, selected, state} = parameters;
-
+export function applyListboxSelection<State extends OuiListboxState>(
+	parameters: ApplySelectionParameters<State>,
+): void {
+	const {added, emit, option, scroll, selected, state} = parameters;
 	const {length} = state.options.all;
 
 	for (let index = 0; index < length; index += 1) {
@@ -38,7 +37,7 @@ export function applyComboboxSelection(parameters: ApplySelectionParameters): vo
 
 	const values =
 		parameters.values ??
-		(state.autocomplete.none
+		(state.autocomplete.none && !state.listbox
 			? [state.filter.element.value]
 			: (selected ?? state.options.selected).map(option => getData(option, 'value', false) ?? ''));
 
@@ -59,13 +58,16 @@ export function applyComboboxSelection(parameters: ApplySelectionParameters): vo
 		return;
 	}
 
-	updateComboboxForm(state, values, emit);
-	updateComboboxPreview('set', state, option);
-	updateComboboxSelection(state, option, added, selected);
+	updateListboxForm(state, values, emit);
+	updateListboxMessage(state);
+	updateListboxPreview('set', state, option, scroll);
+	updateListboxValueLabel(state);
+
+	state.callbacks.data.onApply(state, option, values, added, selected, emit);
 }
 
-export function filterComboboxOption(
-	state: OuiComboboxState,
+export function filterListboxOption(
+	state: OuiListboxState,
 	value: unknown,
 	textContent?: boolean,
 ): HTMLElement | undefined {
@@ -73,9 +75,10 @@ export function filterComboboxOption(
 
 	const filter = getString(value).toLocaleLowerCase();
 
-	filterComboboxOptions(state);
+	filterListboxOptions(state);
 
 	const {length} = state.options.all;
+
 	let match: HTMLElement | undefined;
 
 	for (let index = 0; index < length; index += 1) {
@@ -95,7 +98,7 @@ export function filterComboboxOption(
 	return match;
 }
 
-export function filterComboboxOptions(state: OuiComboboxState): HTMLElement | undefined {
+export function filterListboxOptions(state: OuiListboxState): HTMLElement | undefined {
 	function filter(options: HTMLElement[]): boolean {
 		const {length} = options;
 
@@ -105,7 +108,8 @@ export function filterComboboxOptions(state: OuiComboboxState): HTMLElement | un
 			const option = options[index];
 
 			option.hidden =
-				!state.autocomplete.none && !option.textContent.toLocaleLowerCase().includes(value);
+				(state.type === 'select' || !state.autocomplete.none) &&
+				!option.textContent.toLocaleLowerCase().includes(value);
 
 			if (!option.hidden) {
 				count += 1;
@@ -133,28 +137,36 @@ export function filterComboboxOptions(state: OuiComboboxState): HTMLElement | un
 		}
 	}
 
-	updateComboboxMessage(state, visible.length);
+	setAttribute(state.list, state.attributes.empty, visible.length === 0 ? '' : undefined);
+
+	updateListboxMessage(state);
 
 	return state.active != null && visible.includes(state.active) ? state.active : visible[0];
 }
 
-export function setComboboxValue(state: OuiComboboxState, value: unknown, emit?: boolean): void {
-	if (state.autocomplete.none) {
-		state.filter.element.value = getString(value);
-
-		onComboboxFilter('insertText', state, true, emit);
+export function setListboxValue<State extends OuiListboxState>(
+	state: State,
+	value: unknown,
+	emit?: boolean,
+): void {
+	if (state.autocomplete.none && !state.listbox) {
+		setListboxFilter(state, getString(value));
 
 		return;
 	}
 
-	const option = filterComboboxOption(state, value);
+	const option = filterListboxOption(state, value);
 
 	if (option != null) {
-		setComboboxValues(state, [value], emit);
+		setListboxValues(state, [value], emit);
 	}
 }
 
-export function setComboboxValues(state: OuiComboboxState, value: unknown, emit?: boolean): void {
+export function setListboxValues<State extends OuiListboxState>(
+	state: State,
+	value: unknown[],
+	emit?: boolean,
+): void {
 	if (!Array.isArray(value)) {
 		return;
 	}
@@ -167,8 +179,8 @@ export function setComboboxValues(state: OuiComboboxState, value: unknown, emit?
 		values.push('');
 	}
 
-	if (state.autocomplete.none) {
-		setComboboxValue(state, values[0], emit);
+	if (state.autocomplete.none && !state.listbox) {
+		setListboxValue(state, values[0], emit);
 
 		return;
 	}
@@ -185,19 +197,22 @@ export function setComboboxValues(state: OuiComboboxState, value: unknown, emit?
 		}
 	}
 
-	applyComboboxSelection({
+	applyListboxSelection({
 		emit,
 		selected,
 		state,
 		added: true,
 		option: selected[0] ?? state.options.all[0],
-		values: state.autocomplete.none ? values : undefined,
+		values: state.autocomplete.none && !state.listbox ? values : undefined,
 	});
 }
 
-export function toggleComboboxOption(state: OuiComboboxState, option?: HTMLElement): void {
+export function toggleListboxOption<State extends OuiListboxState>(
+	state: State,
+	option?: HTMLElement,
+): void {
 	if (option == null || (!state.multiple && state.options.selected.includes(option))) {
-		state.floatable.hide();
+		state.callbacks.data.onToggle(state);
 
 		return;
 	}
@@ -220,17 +235,19 @@ export function toggleComboboxOption(state: OuiComboboxState, option?: HTMLEleme
 		selected.splice(0, selected.length, option);
 	}
 
-	applyComboboxSelection({
+	applyListboxSelection({
 		added,
 		option,
 		selected,
 		state,
-		values: state.autocomplete.none && option != null ? [option.textContent] : undefined,
+		scroll: false,
+		values:
+			state.autocomplete.none && !state.listbox && option != null
+				? [option.textContent]
+				: undefined,
 	});
 
-	if (!state.multiple) {
-		state.floatable.hide();
-	}
+	state.callbacks.data.onToggle(state);
 }
 
 // #endregion

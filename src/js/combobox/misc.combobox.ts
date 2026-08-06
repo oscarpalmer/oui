@@ -1,70 +1,28 @@
-import {getAria} from '@oscarpalmer/toretto/aria';
-import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
-import type {AnyAriaBooleanAttribute} from '@oscarpalmer/toretto/models';
-import type {OuiComboboxElement} from '.';
-import {updateLocalizations} from '../l10n';
-import {COMBOBOX_AUTOCOMPLETES} from './constants.combobox';
-import {
-	updateComboboxAnchor,
-	updateComboboxMessage,
-	updateComboboxSelectionItems,
-} from './dom.combobox';
-import {onComboboxFilter} from './event.combobox';
-import {updateComboboxValidity} from './form.combobox';
+import {updateListboxMessage, updateListboxValueLabel} from '../internal/listbox/listbox.dom';
 import type {
-	OuiComboboxAutoComplete,
-	OuiComboboxAutoCompleteType,
-	OuiComboboxLocalizations,
-	OuiComboboxState,
-} from './models.combobox';
+	OuiListboxAutoComplete,
+	OuiListboxAutoCompleteType,
+	OuiListboxLocalizations,
+} from '../internal/listbox/listbox.model';
+import {getAttributeValue} from '../internal/misc';
+import {OuiLocalizations, updateLocalizations} from '../l10n';
+import {COMBOBOX_AUTOCOMPLETES} from './constants.combobox';
+import {updateComboboxSelectionItems} from './dom.combobox';
+import type {OuiComboboxElement} from './index';
 import {comboboxLocalizations, comboboxStates} from './state.combobox';
 
 // #region Functions
 
-export function generateComboboxIds(prefix: string, select: HTMLSelectElement): void {
-	const elements = [...select.children].flatMap(child =>
-		child instanceof HTMLOptGroupElement
-			? [
-					child,
-					...[...child.children].filter(groupChild => groupChild instanceof HTMLOptionElement),
-				]
-			: child instanceof HTMLOptionElement
-				? [child]
-				: [],
-	);
-
-	const {length} = elements;
-
-	for (let index = 0; index < length; index += 1) {
-		const element = elements[index];
-
-		if (element.id === '') {
-			element.id = `${prefix}${element instanceof HTMLOptGroupElement ? '_group_' : '_option_'}${index}`;
-		}
-	}
-}
-
-export function getComboboxAttributeValue<Value>(
-	element: HTMLElement,
-	attribute: string,
-	possible: Set<Value>,
-	defaultValue: Value,
-): Value {
-	const value = getAttribute(element, attribute);
-
-	return possible.has(value as Value) ? (value as Value) : defaultValue;
-}
-
 export function getComboboxAutoComplete(
 	element: OuiComboboxElement,
 	select: boolean,
-): OuiComboboxAutoComplete {
-	let value: OuiComboboxAutoCompleteType;
+): OuiListboxAutoComplete {
+	let value: OuiListboxAutoCompleteType;
 
 	if (select) {
 		value = 'list';
 	} else {
-		value = getComboboxAttributeValue(element, 'autocomplete', COMBOBOX_AUTOCOMPLETES, 'none');
+		value = getAttributeValue(element, 'autocomplete', COMBOBOX_AUTOCOMPLETES, 'none');
 	}
 
 	return {
@@ -76,65 +34,14 @@ export function getComboboxAutoComplete(
 	};
 }
 
-export function getComboboxBooleanAria(
-	element: HTMLElement,
-	attribute: AnyAriaBooleanAttribute,
-): boolean {
-	const value = getAria(element, attribute);
-
-	return value === true || value === 'true';
-}
-
 export function getComboboxId(): string {
 	index += 1;
 
 	return `oui_combobox_${index}`;
 }
 
-export function getComboboxVisibleOptions(state: OuiComboboxState): HTMLElement[] {
-	return state.options.all.filter(option => !option.hidden);
-}
-
 export function hasTextSelection(element: HTMLElement): element is HTMLInputElement {
 	return element instanceof HTMLInputElement && element.selectionStart !== element.selectionEnd;
-}
-
-export function setComboboxFilter(state: OuiComboboxState, value: unknown): void {
-	if (typeof value !== 'string') {
-		return;
-	}
-
-	const type: InputEvent['inputType'] =
-		value.length < state.filter.element.value.length ? 'deleteContentBackward' : 'insertText';
-
-	state.filter.element.value = value;
-
-	onComboboxFilter(type, state);
-}
-
-export function setComboboxLimit(
-	type: 'max' | 'min',
-	state: OuiComboboxState,
-	value?: unknown,
-): void {
-	let actual = value;
-
-	if (typeof actual === 'string') {
-		actual = Number.parseInt(actual, 10);
-	}
-
-	const updateLimit =
-		typeof actual === 'number' && !Number.isNaN(actual) && actual >= 0
-			? actual !== state[type]
-			: actual == null;
-
-	if (updateLimit) {
-		state[type] = actual as number | undefined;
-
-		setAttribute(state.host, type, actual);
-
-		updateComboboxValidity(state);
-	}
 }
 
 /**
@@ -145,7 +52,7 @@ export function setComboboxLimit(
  */
 export function setComboboxLocalizations(
 	language: string,
-	localizations: Partial<OuiComboboxLocalizations>,
+	localizations: Partial<OuiListboxLocalizations>,
 ): void;
 
 /**
@@ -154,25 +61,34 @@ export function setComboboxLocalizations(
  * @param localizations Localizations for one or more languages
  */
 export function setComboboxLocalizations(
-	localizations: Record<string, Partial<OuiComboboxLocalizations>>,
+	localizations: Record<string, Partial<OuiListboxLocalizations>>,
 ): void;
 
 export function setComboboxLocalizations(
-	first: string | Record<string, Partial<OuiComboboxLocalizations>>,
-	second?: Partial<OuiComboboxLocalizations>,
+	first: string | Record<string, Partial<OuiListboxLocalizations>>,
+	second?: Partial<OuiListboxLocalizations>,
+): void {
+	updateComboboxLocalizations(comboboxLocalizations, comboboxLocalizations.values, first, second);
+}
+
+export function updateComboboxLocalizations(
+	instance: OuiLocalizations<OuiListboxLocalizations>,
+	destination: Record<string, Partial<OuiListboxLocalizations>>,
+	first: string | Record<string, Partial<OuiListboxLocalizations>>,
+	second?: Partial<OuiListboxLocalizations>,
 ): void {
 	updateLocalizations(
-		comboboxLocalizations,
+		instance,
 		typeof first === 'string'
 			? {
 					[first]: second!,
 				}
 			: first,
-		comboboxLocalizations.values,
+		destination,
 		() => {
 			for (const state of comboboxStates.set) {
-				updateComboboxAnchor(state);
-				updateComboboxMessage(state, getComboboxVisibleOptions(state).length);
+				updateListboxMessage(state);
+				updateListboxValueLabel(state);
 				updateComboboxSelectionItems(state);
 			}
 		},

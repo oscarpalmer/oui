@@ -1,6 +1,6 @@
 {
 	"name": "@oscarpalmer/oui",
-	"version": "0.35.0",
+	"version": "0.36.0",
 	"description": "Styles, components, and utilities for building websites and applications.",
 	"keywords": [
 		"css",
@@ -48,6 +48,10 @@
 		"./focus-trap": {
 			"types": "./dist/js/focus-trap/focus-trap.standalone.d.mts",
 			"default": "./dist/js/focus-trap/focus-trap.standalone.mjs"
+		},
+		"./listbox": {
+			"types": "./dist/js/listbox/index.d.mts",
+			"default": "./dist/js/listbox/index.mjs"
 		},
 		"./movable": {
 			"types": "./dist/js/movable/movable.standalone.d.mts",

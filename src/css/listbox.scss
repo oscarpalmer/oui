@@ -1,0 +1,149 @@
+/*! https://github.com/oscarpalmer/oui */
+
+@use './mixins.scss' as mixins;
+
+:where(oui-listbox, [oui-listbox-content]) {
+	display: flex;
+	flex-flow: column nowrap;
+}
+
+:where([oui-listbox-content]) {
+	flex: 1;
+	background-color: var(--oui-absolute);
+	border: 1px solid var(--oui-gray-3);
+	border-radius: 0.5em;
+}
+
+:where([oui-listbox-filter], [oui-listbox-header]) {
+	&::after {
+		content: '';
+		width: 100%;
+		height: 0.25em;
+		background-image: linear-gradient(to bottom, rgb(0 0 0 / 12.5%), transparent);
+		position: absolute;
+		bottom: -0.25em;
+		left: 0;
+	}
+}
+
+:where([oui-listbox-filter]) {
+	padding: 1em;
+	background-color: var(--oui-yellow-0);
+	border-radius: 0.5em 0.5em 0 0;
+	position: relative;
+	z-index: 2;
+}
+
+[oui-listbox-filter-input] {
+	:where(&) {
+		@include mixins.input;
+
+		--oui-background-value: var(--oui-absolute);
+
+		width: 100%;
+		padding: 0.5em 0.75em;
+		border-radius: 0.25em;
+		position: relative;
+	}
+
+	:where(&:not([disabled], [readonly], [aria-disabled='true' i]):focus) {
+		@include mixins.input-focus;
+	}
+
+	@media (hover: hover) {
+		:where(
+			&:not([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]):hover
+		) {
+			@include mixins.input-hover;
+		}
+	}
+
+	:where(&:is([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i])) {
+		--oui-foreground-percentage: 25%;
+
+		font-style: italic;
+	}
+
+	:where(&:is([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]):focus) {
+		--oui-outline-percentage: 75%;
+	}
+
+	:where(&:is([disabled], [aria-disabled='true' i])) {
+		--oui-background-percentage: 50%;
+	}
+}
+
+:where([oui-listbox-header]) {
+	padding: 0.5em calc(0.75em / 0.75);
+	background-color: var(--oui-gray-0);
+	font-size: 0.75em;
+	font-weight: bold;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+:where([oui-listbox-hidden]) {
+	@include mixins.visually-hidden;
+
+	position: absolute;
+}
+
+:where([oui-listbox-list]) {
+	height: fit-content;
+	max-height: max(25vh, 32rem);
+	flex: 1;
+	overflow: auto;
+	border-radius: 0 0 0.5em 0.5em;
+	position: relative;
+}
+
+:where([oui-listbox-list-empty]) {
+	display: none;
+}
+
+:where([oui-listbox-message]) {
+	padding: 1em;
+	flex: 1;
+	align-content: center;
+	text-align: center;
+	font-style: italic;
+}
+
+[oui-listbox-option] {
+	:where(&) {
+		padding: 0.5em 0.75em;
+		outline: 4px solid transparent;
+		outline-offset: -4px;
+		line-height: 1.25;
+		cursor: pointer;
+		transition: 0.125s ease-in-out;
+	}
+
+	:where(&[aria-selected='true' i]) {
+		background-color: var(--oui-blue-3);
+		color: var(--oui-blue-9);
+	}
+
+	:where(oui-listbox[multiple] &[aria-selected='true' i])::before {
+		content: '✓';
+		margin: 0 0.75em 0 0;
+	}
+
+	:where(
+		oui-listbox:not([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]) &
+	) {
+		@media (hover: hover) {
+			:where(&:hover) {
+				background-color: var(--oui-blue-1);
+				color: var(--oui-blue-8);
+			}
+		}
+	}
+}
+
+:where(oui-listbox:focus-within [oui-listbox-option-active]) {
+	background-color: var(--oui-blue-1);
+	outline-color: var(--oui-blue-4);
+	color: var(--oui-blue-8);
+}

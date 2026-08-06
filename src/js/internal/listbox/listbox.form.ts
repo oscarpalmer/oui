@@ -1,13 +1,11 @@
 import {dispatch} from '@oscarpalmer/toretto/event';
-import {getLocalization, localize} from '../l10n';
-import {updateComboboxAnchor} from './dom.combobox';
-import type {OuiComboboxState} from './models.combobox';
-import {comboboxLocalizations} from './state.combobox';
+import {getLocalization, localize} from '../../l10n';
+import type {OuiListboxState} from './listbox.model';
 
 // #region Functions
 
-export function updateComboboxForm(
-	state: OuiComboboxState,
+export function updateListboxForm<State extends OuiListboxState>(
+	state: State,
 	values: string[],
 	emit?: boolean,
 ): void {
@@ -29,23 +27,24 @@ export function updateComboboxForm(
 
 	state.internals.setFormValue(value, JSON.stringify(values));
 
-	updateComboboxAnchor(state);
-	updateComboboxValidity(state);
+	state.callbacks.data.onForm(state);
+
+	updateListboxValidity(state);
 
 	if (emit ?? true) {
 		dispatch(state.host, 'change');
 	}
 }
 
-export function updateComboboxValidity(state: OuiComboboxState): void {
-	if (state.autocomplete.none) {
+export function updateListboxValidity(state: OuiListboxState): void {
+	if (state.autocomplete.none && !state.listbox) {
 		const valueMissing = state.required && state.filter.element.value.length === 0;
 
 		const localization = getLocalization(
-			comboboxLocalizations,
+			state.localizations.global,
 			state.host,
 			'invalid',
-			state.localizations,
+			state.localizations.component,
 		);
 
 		state.internals.setValidity({valueMissing}, localize(localization, {}, []));
@@ -97,7 +96,7 @@ export function updateComboboxValidity(state: OuiComboboxState): void {
 	const localization =
 		key == null
 			? undefined
-			: getLocalization(comboboxLocalizations, state.host, key, state.localizations);
+			: getLocalization(state.localizations.global, state.host, key, state.localizations.component);
 
 	const message = localization == null ? undefined : localize(localization, data, parameters);
 

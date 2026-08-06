@@ -1,46 +1,160 @@
-import {setAria} from '@oscarpalmer/toretto/aria';
-import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
+import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {getData} from '@oscarpalmer/toretto/data';
-import {on} from '@oscarpalmer/toretto/event';
 import {createEmbeddedFloatable} from '../floatable/floatable.embedded';
+import {LISTBOX_TYPES} from '../internal/listbox/listbox.constants';
+import {generateListboxIds} from '../internal/listbox/listbox.misc';
+import type {
+	OuiListboxCallbacks,
+	OuiListboxLocalizations,
+	OuiListboxStates,
+} from '../internal/listbox/listbox.model';
+import {initializeListboxState} from '../internal/listbox/listbox.state';
+import {getAttributeValue, getBooleanAriaValue} from '../internal/misc';
 import {getLocalizations} from '../l10n';
+import {COMBOBOX_ATTRIBUTES, COMBOBOX_MESSAGES} from './constants.combobox';
+import {createComboboxAnchor, createComboboxContent} from './dom.combobox';
 import {
-	COMBOBOX_MESSAGE_LABEL,
-	COMBOBOX_MESSAGE_SELECT,
-	COMBOBOX_TYPES,
-} from './constants.combobox';
-import {filterComboboxOptions} from './data.combobox';
-import {
-	createComboboxAnchor,
-	createComboboxContent,
-	setComboboxDisabled,
-	setComboboxReadonly,
-	setComboboxRequired,
-	updateComboboxMessage,
-	updateComboboxPreview,
-	updateComboboxSelectionItems,
-} from './dom.combobox';
-import {onComboboxClickContent, onComboboxFocusout} from './event.combobox';
-import {updateComboboxForm} from './form.combobox';
+	onComboboxActivation,
+	onComboboxApply,
+	onComboboxEnter,
+	onComboboxEscape,
+	onComboboxFilter,
+	onComboboxForm,
+	onComboboxNavigation,
+	onComboboxPreview,
+	onComboboxSelection,
+	onComboboxTab,
+	onComboboxToggle,
+	skipComboboxNavigation,
+} from './event.combobox';
 import type {OuiComboboxElement} from './index';
-import {
-	generateComboboxIds,
-	getComboboxAttributeValue,
-	getComboboxAutoComplete,
-	getComboboxBooleanAria,
-	getComboboxId,
-	getComboboxVisibleOptions,
-	setComboboxLimit,
-} from './misc.combobox';
-import type {OuiComboboxLocalizations, OuiComboboxState} from './models.combobox';
+import {getComboboxAutoComplete, getComboboxId} from './misc.combobox';
+import type {OuiComboboxState} from './models.combobox';
 
 // #region Functions
 
-export function attachCombobox(state: OuiComboboxState): void {
-	const {anchor, content, filter, label, listeners, select} = state;
+export function createComboboxState(
+	element: OuiComboboxElement,
+	internals: ElementInternals,
+): OuiComboboxState {
+	const select = element.querySelector('select');
 
-	label.element.htmlFor = filter.element.id;
-	label.element.id = `${state.id}_label`;
+	if (select == null || select.id === '') {
+		throw new Error(COMBOBOX_MESSAGES.select);
+	}
+
+	const label = element.querySelector(`label[for="${select.id}"]`) as HTMLLabelElement;
+
+	if (label == null) {
+		throw new Error(COMBOBOX_MESSAGES.label);
+	}
+
+	element.id = select.id;
+
+	const disabled = getBooleanAriaValue(element, 'disabled') || select.disabled;
+	const multiple = element.multiple || select.multiple;
+	const readonly = getBooleanAriaValue(element, 'readonly');
+	const required = getBooleanAriaValue(element, 'required') || select.required;
+
+	const id = getComboboxId();
+	const type = multiple ? 'select' : getAttributeValue(element, 'type', LISTBOX_TYPES, 'select');
+
+	const autocomplete = getComboboxAutoComplete(element, type === 'select');
+
+	setAttributes(element, {
+		autocomplete: autocomplete.value,
+		name: select.name === '' ? select.id : select.name,
+	});
+
+	const labelId = label.id;
+
+	label.htmlFor = id;
+	label.id = `${id}_label`;
+
+	generateListboxIds(id, select);
+
+	const anchor = createComboboxAnchor({
+		attributes: COMBOBOX_ATTRIBUTES,
+		autocomplete,
+		element,
+		id,
+		label,
+		multiple,
+		select,
+		type,
+	});
+
+	const content = createComboboxContent({
+		attributes: COMBOBOX_ATTRIBUTES,
+		autocomplete,
+		element,
+		id,
+		label,
+		multiple,
+		select,
+		type,
+	});
+
+	const {selected} = content.list.options;
+
+	const values =
+		selected.length === 0 ? [''] : selected.map(option => getData(option, 'value', false) ?? '');
+
+	const state: OuiComboboxState = {
+		autocomplete,
+		disabled,
+		id,
+		internals,
+		multiple,
+		readonly,
+		required,
+		select,
+		type,
+		active: selected[0],
+		anchor: {
+			container: anchor.container,
+			element: anchor.element,
+		},
+		attributes: COMBOBOX_ATTRIBUTES,
+		callbacks: comboboxCallbacks as OuiComboboxState['callbacks'],
+		content: content.element,
+		elements: [element, anchor.element, content.filter?.element],
+		filter: {
+			element: content.filter?.element ?? (anchor.element as HTMLInputElement),
+			value: '',
+		},
+		floatable: undefined as never,
+		groups: content.list.groups,
+		host: element,
+		label: {
+			element: label,
+			id: labelId,
+		},
+		list: content.list.element,
+		listbox: false,
+		localizations: {
+			component: {},
+			global: comboboxLocalizations,
+		},
+		message: content.message,
+		name: element.name,
+		options: {
+			selected,
+			all: content.list.options.all,
+		},
+		selection: anchor.selection,
+		values: {
+			current: values.slice(),
+			initial: values.slice(),
+			label: content.value,
+		},
+	};
+
+	return initializeListboxState(state, comboboxStates, onAttachCombobox);
+}
+
+export function onAttachCombobox(state: OuiComboboxState): void {
+	const {anchor, content, select} = state;
 
 	select.hidden = true;
 
@@ -55,155 +169,10 @@ export function attachCombobox(state: OuiComboboxState): void {
 	});
 
 	state.floatable.update();
-
-	listeners.push(
-		on(state.host, 'focusout', () => {
-			setTimeout(() => {
-				onComboboxFocusout(state);
-			});
-		}),
-		on(content, 'click', event => {
-			onComboboxClickContent(event, content);
-		}),
-		on(content, 'toggle', () => {
-			setAria(anchor.element, 'expanded', state.floatable.open);
-
-			setAria(
-				filter.element,
-				'activedescendant',
-				state.floatable.open ? state.active?.id : undefined,
-			);
-
-			if (state.floatable.open) {
-				filter.element.focus();
-			}
-		}),
-	);
-
-	comboboxStates.map.set(state.host, state);
-	comboboxStates.map.set(state.content, state);
-	comboboxStates.set.add(state);
 }
 
-export function createComboboxState(
-	element: OuiComboboxElement,
-	internals: ElementInternals,
-): OuiComboboxState {
-	const select = element.querySelector('select');
-
-	if (select == null || select.id === '') {
-		throw new Error(COMBOBOX_MESSAGE_SELECT);
-	}
-
-	const label = element.querySelector(`label[for="${select.id}"]`) as HTMLLabelElement;
-
-	if (label == null) {
-		throw new Error(COMBOBOX_MESSAGE_LABEL);
-	}
-
-	element.id = select.id;
-
-	setAttribute(element, 'name', select.name === '' ? select.id : select.name);
-
-	const disabled = getComboboxBooleanAria(element, 'disabled') || select.disabled;
-	const multiple = element.multiple || select.multiple;
-	const readonly = getComboboxBooleanAria(element, 'readonly');
-	const required = getComboboxBooleanAria(element, 'required') || select.required;
-
-	const id = getComboboxId();
-	const type = multiple
-		? 'select'
-		: getComboboxAttributeValue(element, 'type', COMBOBOX_TYPES, 'select');
-
-	const autocomplete = getComboboxAutoComplete(element, type === 'select');
-
-	const labelId = label.id;
-
-	label.htmlFor = id;
-	label.id = `${id}_label`;
-
-	generateComboboxIds(id, select);
-
-	const anchor = createComboboxAnchor({autocomplete, id, label, multiple, select, type});
-	const content = createComboboxContent({autocomplete, id, label, multiple, select, type});
-
-	const values =
-		content.list.selected.length === 0
-			? ['']
-			: content.list.selected.map(option => getData(option, 'value', false) ?? '');
-
-	const state: OuiComboboxState = {
-		autocomplete,
-		disabled,
-		id,
-		internals,
-		multiple,
-		readonly,
-		required,
-		select,
-		type,
-		anchor: {
-			container: anchor.container,
-			element: anchor.element,
-		},
-		active: content.list.selected[0],
-		content: content.element,
-		filter: {
-			element: content.filter?.element ?? (anchor.element as HTMLInputElement),
-			value: '',
-		},
-		floatable: undefined as never,
-		groups: content.list.groups,
-		host: element,
-		label: {
-			element: label,
-			id: labelId,
-		},
-		listeners: [],
-		localizations: {},
-		message: content.message,
-		name: element.name,
-		options: {
-			all: content.list.options,
-			selected: content.list.selected,
-		},
-		selection: anchor.selection,
-		values: {
-			current: values.slice(),
-			initial: values.slice(),
-		},
-	};
-
-	attachCombobox(state);
-
-	setComboboxDisabled(state, disabled);
-	setComboboxLimit('max', state, getAttribute(element, 'max'));
-	setComboboxLimit('min', state, getAttribute(element, 'min'));
-	setComboboxReadonly(state, readonly);
-	setComboboxRequired(state, required);
-
-	filterComboboxOptions(state);
-
-	if (content.list.selected.length > 0) {
-		updateComboboxPreview('set', state, content.list.selected[0]);
-	}
-
-	updateComboboxForm(state, state.values.current, false);
-	updateComboboxMessage(state, getComboboxVisibleOptions(state).length);
-	updateComboboxSelectionItems(state);
-
-	return state;
-}
-
-export function detachCombobox(state: OuiComboboxState): void {
-	const {content, floatable, host, label, select} = state;
-
-	const listeners = state.listeners.splice(0);
-	const {length} = listeners;
-
-	for (let index = 0; index < length; index += 1) {
-		listeners[index]();
-	}
+export function onDetachCombobox(state: OuiComboboxState): void {
+	const {content, floatable, label, select} = state;
 
 	floatable.destroy();
 
@@ -218,17 +187,33 @@ export function detachCombobox(state: OuiComboboxState): void {
 	label.element.id = state.label.id;
 
 	select.hidden = false;
-
-	comboboxStates.map.delete(host);
-	comboboxStates.map.delete(content);
-	comboboxStates.set.delete(state);
 }
 
 // #endregion
 
 // #region Variables
 
-export const comboboxLocalizations = getLocalizations<OuiComboboxLocalizations>({
+const comboboxCallbacks: OuiListboxCallbacks<OuiComboboxState> = {
+	data: {
+		onApply: onComboboxApply,
+		onFilter: onComboboxFilter,
+		onForm: onComboboxForm,
+		onPreview: onComboboxPreview,
+		onToggle: onComboboxToggle,
+	},
+	keydown: {
+		onActivation: onComboboxActivation,
+		onEnter: onComboboxEnter,
+		onEscape: onComboboxEscape,
+		onNavigation: onComboboxNavigation,
+		onSelection: onComboboxSelection,
+		onTab: onComboboxTab,
+		onToggle: onComboboxToggle,
+		skipNavigation: skipComboboxNavigation,
+	},
+};
+
+export const comboboxLocalizations = getLocalizations<OuiListboxLocalizations>({
 	empty: 'No results found',
 	input: 'Please enter a value',
 	invalid: 'Please select an option from the list',
@@ -239,9 +224,9 @@ export const comboboxLocalizations = getLocalizations<OuiComboboxLocalizations>(
 	selected: amount => `${amount} selected`,
 });
 
-export const comboboxStates = {
-	map: new WeakMap<HTMLElement, OuiComboboxState>(),
-	set: new Set<OuiComboboxState>(),
+export const comboboxStates: OuiListboxStates<OuiComboboxState> = {
+	map: new WeakMap(),
+	set: new Set(),
 };
 
 // #endregion

@@ -1,16 +1,23 @@
 import {parse} from '@oscarpalmer/atoms/string';
 import {getAttribute} from '@oscarpalmer/toretto/attribute';
+import {setListboxValue, setListboxValues} from '../internal/listbox/listbox.data';
+import {
+	setListboxDisabled,
+	setListboxFilter,
+	setListboxLimit,
+	setListboxReadonly,
+	setListboxRequired,
+} from '../internal/listbox/listbox.misc';
+import type {OuiListboxLocalizations, OuiListboxType} from '../internal/listbox/listbox.model';
+import {attachListbox, detachListbox} from '../internal/listbox/listbox.state';
 import {updateLocalizations} from '../l10n';
 import {COMBOBOX_TAGNAME} from './constants.combobox';
-import {setComboboxValue, setComboboxValues} from './data.combobox';
-import {setComboboxDisabled, setComboboxReadonly, setComboboxRequired} from './dom.combobox';
-import {setComboboxFilter, setComboboxLimit} from './misc.combobox';
-import type {OuiComboboxLocalizations, OuiComboboxState, OuiComboboxType} from './models.combobox';
+import type {OuiComboboxState} from './models.combobox';
 import {
-	attachCombobox,
-	comboboxLocalizations,
+	comboboxStates,
 	createComboboxState,
-	detachCombobox,
+	onAttachCombobox,
+	onDetachCombobox,
 } from './state.combobox';
 
 // #region Types
@@ -44,7 +51,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 */
 	set disabled(value: boolean) {
 		if (typeof value === 'boolean' && value !== this.disabled) {
-			setComboboxDisabled(this.#state, value);
+			setListboxDisabled(this.#state, value);
 		}
 	}
 
@@ -59,7 +66,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 * Set the filter value
 	 */
 	set filter(value: string) {
-		setComboboxFilter(this.#state, value);
+		setListboxFilter(this.#state, value);
 	}
 
 	/**
@@ -73,7 +80,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 * Set the maximum number of selected options
 	 */
 	set max(value: number) {
-		setComboboxLimit('max', this.#state, value);
+		setListboxLimit('max', this.#state, value);
 	}
 
 	/**
@@ -87,7 +94,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 * Set the minimum number of selected options
 	 */
 	set min(value: number) {
-		setComboboxLimit('min', this.#state, value);
+		setListboxLimit('min', this.#state, value);
 	}
 
 	/**
@@ -116,7 +123,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 */
 	set readonly(value: boolean) {
 		if (typeof value === 'boolean' && value !== this.readonly) {
-			setComboboxReadonly(this.#state, value);
+			setListboxReadonly(this.#state, value);
 		}
 	}
 
@@ -132,7 +139,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 */
 	set required(value: boolean) {
 		if (typeof value === 'boolean' && value !== this.required) {
-			setComboboxRequired(this.#state, value);
+			setListboxRequired(this.#state, value);
 		}
 	}
 
@@ -146,7 +153,7 @@ export class OuiComboboxElement extends HTMLElement {
 	/**
 	 * Type of combobox
 	 */
-	get type(): OuiComboboxType {
+	get type(): OuiListboxType {
 		return this.#state.type;
 	}
 
@@ -161,7 +168,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 * Set the value
 	 */
 	set value(value: unknown) {
-		setComboboxValue(this.#state, value);
+		setListboxValue(this.#state, value);
 	}
 
 	/**
@@ -174,8 +181,8 @@ export class OuiComboboxElement extends HTMLElement {
 	/**
 	 * Set the values
 	 */
-	set values(value: unknown[]) {
-		setComboboxValues(this.#state, value);
+	set values(values: unknown[]) {
+		setListboxValues(this.#state, values);
 	}
 
 	constructor() {
@@ -196,7 +203,7 @@ export class OuiComboboxElement extends HTMLElement {
 
 			case 'max':
 			case 'min':
-				setComboboxLimit(name, this.#state, value);
+				setListboxLimit(name, this.#state, value);
 				break;
 
 			case 'value':
@@ -212,20 +219,20 @@ export class OuiComboboxElement extends HTMLElement {
 	 * Clear all selected options
 	 */
 	clear(): void {
-		setComboboxValues(this.#state, []);
+		setListboxValues(this.#state, []);
 	}
 
 	connectedCallback(): void {
 		if (this.#state == null) {
 			this.#initialize();
 		} else {
-			attachCombobox(this.#state);
+			attachListbox(this.#state, comboboxStates, onAttachCombobox);
 		}
 	}
 
 	disconnectedCallback(): void {
 		if (this.#state != null) {
-			detachCombobox(this.#state);
+			detachListbox(this.#state, comboboxStates, onDetachCombobox);
 		}
 	}
 
@@ -234,7 +241,7 @@ export class OuiComboboxElement extends HTMLElement {
 	}
 
 	formResetCallback(): void {
-		setComboboxValues(this.#state, this.#state.values.initial, false);
+		setListboxValues(this.#state, this.#state.values.initial);
 	}
 
 	formStateRestoreCallback(state: string | File | FormData, reason: unknown): void {
@@ -251,7 +258,7 @@ export class OuiComboboxElement extends HTMLElement {
 		if (this.#state == null) {
 			this.#restored = parsed;
 		} else {
-			setComboboxValues(this.#state, parsed);
+			setListboxValues(this.#state, parsed);
 		}
 	}
 
@@ -261,27 +268,27 @@ export class OuiComboboxElement extends HTMLElement {
 	 * @param language Language code
 	 * @param localizations Localizations for language
 	 */
-	setLocalizations(language: string, localizations: Partial<OuiComboboxLocalizations>): void;
+	setLocalizations(language: string, localizations: Partial<OuiListboxLocalizations>): void;
 
 	/**
 	 * Set combobox localizations for one or more languages
 	 *
 	 * @param localizations Localizations for one or more languages
 	 */
-	setLocalizations(localizations: Record<string, Partial<OuiComboboxLocalizations>>): void;
+	setLocalizations(localizations: Record<string, Partial<OuiListboxLocalizations>>): void;
 
 	setLocalizations(
-		first: string | Record<string, Partial<OuiComboboxLocalizations>>,
-		second?: Partial<OuiComboboxLocalizations>,
+		first: string | Record<string, Partial<OuiListboxLocalizations>>,
+		second?: Partial<OuiListboxLocalizations>,
 	): void {
 		updateLocalizations(
-			comboboxLocalizations,
+			this.#state.localizations.global,
 			typeof first === 'string'
 				? {
 						[first]: second!,
 					}
 				: first,
-			this.#state.localizations,
+			this.#state.localizations.component,
 		);
 	}
 
@@ -291,7 +298,7 @@ export class OuiComboboxElement extends HTMLElement {
 		this.#state = createComboboxState(this, this.#internals);
 
 		if (this.#restored != null) {
-			setComboboxValues(this.#state, this.#restored, false);
+			setListboxValues(this.#state, this.#restored);
 
 			this.#restored = undefined;
 		}

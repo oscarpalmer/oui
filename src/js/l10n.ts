@@ -7,9 +7,7 @@ type LocalizationParameters<Localization> = Localization extends GenericCallback
 	? Parameters<Localization>
 	: never;
 
-type OuiLocalizationValues = Record<string, string | GenericCallback>;
-
-export class OuiLocalizations<Localizations extends OuiLocalizationValues> {
+export class OuiLocalizations<Localizations extends OuiLocalizationsValues> {
 	readonly defaults: Localizations;
 
 	readonly keys: Set<keyof Localizations>;
@@ -49,6 +47,8 @@ export class OuiLocalizations<Localizations extends OuiLocalizationValues> {
 	}
 }
 
+export type OuiLocalizationsValues = Record<string, string | GenericCallback>;
+
 // #endregion
 
 // #region Functions
@@ -60,7 +60,7 @@ export function getLanguage(element: Element): string {
 }
 
 export function getLocalization<
-	Localizations extends OuiLocalizationValues,
+	Localizations extends OuiLocalizationsValues,
 	Key extends keyof Localizations,
 >(
 	localizations: OuiLocalizations<Localizations>,
@@ -101,14 +101,14 @@ export function getLocalization<
 	return localization ?? localizations.defaults[key];
 }
 
-export function getLocalizations<Localizations extends OuiLocalizationValues>(
+export function getLocalizations<Localizations extends OuiLocalizationsValues>(
 	defaults: Localizations,
 ): OuiLocalizations<Localizations> {
 	return new OuiLocalizations(defaults);
 }
 
 export function localize<
-	Localizations extends OuiLocalizationValues,
+	Localizations extends OuiLocalizationsValues,
 	Key extends keyof Localizations,
 	Localization extends Localizations[Key],
 >(
@@ -135,10 +135,10 @@ export function localize<
 	return localized;
 }
 
-export function updateLocalizations<Localizations extends OuiLocalizationValues>(
+export function updateLocalizations<Localizations extends OuiLocalizationsValues>(
 	instance: OuiLocalizations<Localizations>,
 	values: Record<string, Partial<Localizations>>,
-	destination?: Record<string, Partial<Localizations>>,
+	destination: Record<string, Partial<Localizations>>,
 	onAfter?: () => void,
 ): void {
 	if (typeof values !== 'object' || values == null) {
