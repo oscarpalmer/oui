@@ -2,10 +2,11 @@ import {getString} from '@oscarpalmer/atoms/string';
 import {setAria} from '@oscarpalmer/toretto/aria';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {getData} from '@oscarpalmer/toretto/data';
+import {dispatch} from '@oscarpalmer/toretto/event';
 import {updateListboxMessage, updateListboxPreview, updateListboxValueLabel} from './listbox.dom';
 import {updateListboxForm} from './listbox.form';
 import {setListboxFilter} from './listbox.misc';
-import type {OuiListboxState} from './listbox.model';
+import type {OuiListboxPreview, OuiListboxState} from './listbox.model';
 
 // #region Types
 
@@ -32,7 +33,12 @@ export function applyListboxSelection<State extends OuiListboxState>(
 	for (let index = 0; index < length; index += 1) {
 		const option = state.options.all[index];
 
-		setAria(option, 'selected', (selected ?? state.options.selected).includes(option));
+		setAria(
+			option,
+			'selected',
+			(state.type === 'select' || !state.autocomplete.none) &&
+				(selected ?? state.options.selected).includes(option),
+		);
 	}
 
 	const values =
@@ -64,6 +70,34 @@ export function applyListboxSelection<State extends OuiListboxState>(
 	updateListboxValueLabel(state);
 
 	state.callbacks.data.onApply(state, option, values, added, selected, emit);
+}
+
+export function filterListbox(type: InputEvent['inputType'], state: OuiListboxState): void {
+	if (state.disabled || state.readonly) {
+		return;
+	}
+
+	const update = state.filter.element.value !== state.filter.value;
+
+	const option = filterListboxOptions(state);
+
+	let preview: OuiListboxPreview | undefined;
+
+	if (type.includes('delete')) {
+		preview = 'none';
+	} else if (type.includes('insert')) {
+		preview = 'typed';
+	}
+
+	if (preview != null) {
+		state.callbacks.data.onFilter(preview, state, update, option);
+	}
+
+	if (update) {
+		state.filter.value = state.filter.element.value;
+
+		dispatch(state.host, 'input');
+	}
 }
 
 export function filterListboxOption(

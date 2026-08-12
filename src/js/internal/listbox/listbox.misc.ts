@@ -1,6 +1,6 @@
 import {setAria} from '@oscarpalmer/toretto/aria';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
-import {onListboxFilter} from './listbox.event';
+import {filterListbox} from './listbox.data';
 import {updateListboxValidity} from './listbox.form';
 import type {OuiListboxState} from './listbox.model';
 
@@ -55,7 +55,7 @@ export function setListboxFilter<State extends OuiListboxState>(
 
 	state.filter.element.value = value;
 
-	onListboxFilter(type, state);
+	filterListbox(type, state);
 }
 
 export function setListboxLimit<State extends OuiListboxState>(

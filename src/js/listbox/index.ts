@@ -223,6 +223,14 @@ export class OuiListboxElement extends HTMLElement {
 		}
 	}
 
+	formDisabledCallback(disabled: boolean): void {
+		this.disabled = disabled;
+	}
+
+	formResetCallback(): void {
+		setListboxValues(this.#state, this.#state.values.initial);
+	}
+
 	formStateRestoreCallback(state: string | File | FormData, reason: unknown): void {
 		if (reason !== 'restore') {
 			return;

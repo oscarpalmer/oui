@@ -69,7 +69,7 @@ export function createComboboxButton(parameters: CreateListboxContentParameters)
 			controls: `${id}_content`,
 			expanded: false,
 			haspopup: 'listbox',
-			labelledby: `${label.id} ${id}_value`,
+			labelledby: `${label.id} ${id}_value`, // Non-input anchor, so no implicit value label, so we need to explicitly reference the value label
 		},
 		property: {
 			textContent: multiple ? '' : (select.selectedOptions[0]?.textContent ?? ''),

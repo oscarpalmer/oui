@@ -99,10 +99,10 @@
 	},
 	"dependencies": {
 		"@oscarpalmer/atoms": "^0.188.1",
-		"@oscarpalmer/toretto": "^0.50.1"
+		"@oscarpalmer/toretto": "^0.51"
 	},
 	"devDependencies": {
-		"@oxlint/plugins": "^1.77",
+		"@oxlint/plugins": "^1.78",
 		"@vitest/coverage-istanbul": "^4.1",
 		"autoprefixer": "^10.5",
 		"concurrently": "^10",

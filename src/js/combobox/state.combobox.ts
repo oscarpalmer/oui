@@ -1,5 +1,8 @@
+import {noop} from '@oscarpalmer/atoms/function';
+import {setAria} from '@oscarpalmer/toretto/aria';
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {getData} from '@oscarpalmer/toretto/data';
+import {on} from '@oscarpalmer/toretto/event';
 import {createEmbeddedFloatable} from '../floatable/floatable.embedded';
 import {LISTBOX_TYPES} from '../internal/listbox/listbox.constants';
 import {generateListboxIds} from '../internal/listbox/listbox.misc';
@@ -19,12 +22,12 @@ import {
 	onComboboxEnter,
 	onComboboxEscape,
 	onComboboxFilter,
-	onComboboxForm,
 	onComboboxNavigation,
 	onComboboxPreview,
 	onComboboxSelection,
 	onComboboxTab,
 	onComboboxToggle,
+	preventComboboxActivation,
 	skipComboboxNavigation,
 } from './event.combobox';
 import type {OuiComboboxElement} from './index';
@@ -73,8 +76,7 @@ export function createComboboxState(
 
 	generateListboxIds(id, select);
 
-	const anchor = createComboboxAnchor({
-		attributes: COMBOBOX_ATTRIBUTES,
+	const parameters = {
 		autocomplete,
 		element,
 		id,
@@ -82,18 +84,12 @@ export function createComboboxState(
 		multiple,
 		select,
 		type,
-	});
+		attributes: COMBOBOX_ATTRIBUTES,
+		listbox: false,
+	};
 
-	const content = createComboboxContent({
-		attributes: COMBOBOX_ATTRIBUTES,
-		autocomplete,
-		element,
-		id,
-		label,
-		multiple,
-		select,
-		type,
-	});
+	const anchor = createComboboxAnchor(parameters);
+	const content = createComboboxContent(parameters);
 
 	const {selected} = content.list.options;
 
@@ -132,6 +128,7 @@ export function createComboboxState(
 		},
 		list: content.list.element,
 		listbox: false,
+		listeners: [],
 		localizations: {
 			component: {},
 			global: comboboxLocalizations,
@@ -154,7 +151,7 @@ export function createComboboxState(
 }
 
 export function onAttachCombobox(state: OuiComboboxState): void {
-	const {anchor, content, select} = state;
+	const {anchor, content, filter, select} = state;
 
 	select.hidden = true;
 
@@ -169,6 +166,22 @@ export function onAttachCombobox(state: OuiComboboxState): void {
 	});
 
 	state.floatable.update();
+
+	state.listeners.push(
+		on(content, 'toggle', () => {
+			setAria(anchor.element, 'expanded', state.floatable.open);
+
+			setAria(
+				filter.element,
+				'activedescendant',
+				state.floatable.open ? state.active?.id : undefined,
+			);
+
+			if (state.floatable.open) {
+				filter.element.focus();
+			}
+		}),
+	);
 }
 
 export function onDetachCombobox(state: OuiComboboxState): void {
@@ -197,7 +210,7 @@ const comboboxCallbacks: OuiListboxCallbacks<OuiComboboxState> = {
 	data: {
 		onApply: onComboboxApply,
 		onFilter: onComboboxFilter,
-		onForm: onComboboxForm,
+		onForm: noop,
 		onPreview: onComboboxPreview,
 		onToggle: onComboboxToggle,
 	},
@@ -209,6 +222,7 @@ const comboboxCallbacks: OuiListboxCallbacks<OuiComboboxState> = {
 		onSelection: onComboboxSelection,
 		onTab: onComboboxTab,
 		onToggle: onComboboxToggle,
+		preventActivation: preventComboboxActivation,
 		skipNavigation: skipComboboxNavigation,
 	},
 };

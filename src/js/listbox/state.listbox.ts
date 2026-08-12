@@ -1,3 +1,4 @@
+import {noop} from '@oscarpalmer/atoms/function';
 import {setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
 import {getData} from '@oscarpalmer/toretto/data';
 import {createListboxContent} from '../internal/listbox/listbox.dom';
@@ -14,12 +15,9 @@ import {getBooleanAriaValue} from '../internal/misc';
 import {getLocalizations} from '../l10n';
 import {LISTBOX_ATTRIBUTES, LISTBOX_MESSAGES} from './constants.listbox';
 import {
-	onListboxApply,
 	onListboxEnter,
-	onListboxFilter2,
-	onListboxForm,
+	onListboxFilter,
 	onListboxNavigation,
-	onListboxPreview,
 	onListboxToggle,
 } from './event.listbox';
 import type {OuiListboxElement} from './index';
@@ -77,6 +75,7 @@ export function createListboxState(
 		type,
 		attributes: LISTBOX_ATTRIBUTES,
 		autocomplete: listboxAutoComplete,
+		listbox: true,
 	});
 
 	const {selected} = content.list.options;
@@ -110,6 +109,7 @@ export function createListboxState(
 			element: label,
 		},
 		list: content.list.element,
+		listeners: [],
 		listbox: true,
 		localizations: {
 			component: {},
@@ -164,10 +164,10 @@ const listboxAutoComplete: Record<OuiListboxAutoCompleteType, boolean> = {
 
 const listboxCallbacks: OuiListboxCallbacks = {
 	data: {
-		onApply: onListboxApply,
-		onFilter: onListboxFilter2,
-		onForm: onListboxForm,
-		onPreview: onListboxPreview,
+		onApply: noop,
+		onFilter: onListboxFilter,
+		onForm: noop,
+		onPreview: noop,
 		onToggle: onListboxToggle,
 	},
 	keydown: {

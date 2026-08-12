@@ -36,6 +36,13 @@ export function detachListbox<State extends OuiListboxState>(
 ): void {
 	const {host, label, select} = state;
 
+	const listeners = state.listeners.splice(0);
+	const {length} = listeners;
+
+	for (let index = 0; index < length; index += 1) {
+		listeners[index]();
+	}
+
 	label.element.htmlFor = select.id;
 	label.element.id = label.id;
 

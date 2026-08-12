@@ -29,6 +29,7 @@ export type CreateListboxContentParameters = {
 	element: HTMLElement;
 	id: string;
 	label: HTMLLabelElement;
+	listbox: boolean;
 	multiple: boolean;
 	select: HTMLSelectElement;
 	type: OuiListboxType;
@@ -183,15 +184,16 @@ export function createListboxInput(
 	parameters: CreateListboxContentParameters,
 	value: string,
 ): HTMLInputElement {
-	const {autocomplete, id, label, type} = parameters;
+	const {autocomplete, id, label, listbox, type} = parameters;
 
-	return createElement('input', {
+	const isAutocomplete = type === 'autocomplete';
+
+	const input = createElement('input', {
 		aria: {
 			autocomplete: autocomplete.value,
 			controls: `${id}_list`,
-			expanded: type === 'select',
-			haspopup: 'listbox',
-			labelledby: `${label.id} ${id}_value`,
+			haspopup: isAutocomplete ? 'listbox' : undefined,
+			labelledby: label.id,
 		},
 		attribute: {
 			autocorrect: 'off',
@@ -203,9 +205,15 @@ export function createListboxInput(
 		property: {
 			id,
 			value,
-			role: 'combobox',
+			role: isAutocomplete || listbox ? 'combobox' : 'searchbox',
 		},
 	});
+
+	if (isAutocomplete || listbox) {
+		setAria(input, 'expanded', listbox);
+	}
+
+	return input;
 }
 
 export function createListboxList(parameters: CreateListboxContentParameters): CreateListboxList {
@@ -213,7 +221,7 @@ export function createListboxList(parameters: CreateListboxContentParameters): C
 
 	const element = createElement('ul', {
 		aria: {
-			labelledby: `${label.id} ${id}_value`,
+			labelledby: label.id,
 			multiselectable: multiple,
 		},
 		attribute: {
@@ -269,7 +277,7 @@ export function createListboxList(parameters: CreateListboxContentParameters): C
 
 		groups ??= [];
 
-		element.append(group.element, ...group.options);
+		element.append(group.element);
 		groups.push(group);
 		options.push(...group.options);
 	}

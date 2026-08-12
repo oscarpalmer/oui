@@ -95,7 +95,7 @@
 	background-color: var(--oui-yellow-0);
 	border-radius: 0.25em 0.25em 0 0;
 	position: relative;
-	z-index: 1;
+	z-index: 2;
 }
 
 :where([oui-combobox-filter-input]) {

@@ -1,3 +1,4 @@
+import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import type {OuiLocalizations, OuiLocalizationsValues} from '../../l10n';
 
 // #region Types
@@ -66,6 +67,7 @@ type OuiListboxCallbacksKeydown<State extends OuiListboxState = OuiListboxState>
 	onSelection?: (state: State) => void;
 	onTab?: (state: State) => void;
 	onToggle?: (state: State) => void;
+	preventActivation?: (state: State) => boolean;
 	skipNavigation?: (state: State) => boolean;
 };
 
@@ -136,6 +138,7 @@ export type OuiListboxState = {
 	label: OuiListboxLabel;
 	list: HTMLUListElement;
 	listbox: boolean;
+	listeners: RemovableEventListener[];
 	localizations: OuiListboxLocalization<OuiListboxLocalizations>;
 	max?: number;
 	min?: number;

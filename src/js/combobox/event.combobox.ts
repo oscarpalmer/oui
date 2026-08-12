@@ -4,12 +4,13 @@ import {on} from '@oscarpalmer/toretto/event';
 import {LISTBOX_KEYS} from '../internal/listbox/listbox.constants';
 import {
 	applyListboxSelection,
+	filterListbox,
 	filterListboxOption,
 	filterListboxOptions,
 	toggleListboxOption,
 } from '../internal/listbox/listbox.data';
 import {updateListboxPreview} from '../internal/listbox/listbox.dom';
-import {onListboxFilter, onListboxKeydown} from '../internal/listbox/listbox.event';
+import {processListboxKeydown} from '../internal/listbox/listbox.event';
 import type {OuiListboxPreview} from '../internal/listbox/listbox.model';
 import {
 	COMBOBOX_ATTRIBUTE_SELECTION_ITEM,
@@ -152,39 +153,39 @@ export function onComboboxFilter(
 }
 
 export function onComboboxFocusout(event: FocusEvent): void {
-	const combobox = findAncestor(event, COMBOBOX_TAGNAME);
-	const state = comboboxStates.map.get(combobox!);
+	setTimeout(() => {
+		const combobox = findAncestor(event, COMBOBOX_TAGNAME);
+		const state = comboboxStates.map.get(combobox!);
 
-	if (
-		combobox == null ||
-		state == null ||
-		state.disabled ||
-		state.readonly ||
-		state.type === 'select' ||
-		state.host === document.activeElement ||
-		state.host.contains(document.activeElement)
-	) {
-		return;
-	}
+		if (
+			combobox == null ||
+			state == null ||
+			state.disabled ||
+			state.readonly ||
+			state.type === 'select' ||
+			state.host === document.activeElement ||
+			state.host.contains(document.activeElement)
+		) {
+			return;
+		}
 
-	const option = filterListboxOption(state, state.filter.element.value, true);
+		const option = filterListboxOption(state, state.filter.element.value, true);
 
-	applyListboxSelection({
-		option,
-		state,
-		added: false,
-		selected: option == null ? [] : [option],
+		applyListboxSelection({
+			option,
+			state,
+			added: false,
+			selected: option == null ? [] : [option],
+		});
 	});
 }
-
-export function onComboboxForm(): void {}
 
 export function onComboboxInput(event: InputEvent): void {
 	const combobox = findAncestor(event, COMBOBOX_TAGNAME) as OuiComboboxElement | null;
 	const state = comboboxStates.map.get(combobox!);
 
 	if (combobox != null && state != null && event.target === state.filter.element) {
-		onListboxFilter(event.inputType, state);
+		filterListbox(event.inputType, state);
 	}
 }
 
@@ -201,7 +202,7 @@ export function onComboboxKeydown(event: KeyboardEvent): void {
 	if (item instanceof HTMLElement) {
 		onComboboxKeydownSelection(event, state, item);
 	} else {
-		onListboxKeydown(event, state);
+		processListboxKeydown(event, state);
 	}
 }
 
@@ -329,6 +330,10 @@ export function onComboboxToggle(state: OuiComboboxState): void {
 	if (!state.multiple) {
 		state.floatable.hide();
 	}
+}
+
+export function preventComboboxActivation(state: OuiComboboxState): boolean {
+	return state.floatable.open;
 }
 
 export function skipComboboxNavigation(state: OuiComboboxState): boolean {

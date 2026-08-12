@@ -1,41 +1,11 @@
 import {clamp} from '@oscarpalmer/atoms/number';
-import {dispatch} from '@oscarpalmer/toretto/event';
 import {LISTBOX_KEYS} from './listbox.constants';
-import {filterListboxOptions} from './listbox.data';
 import {getListboxVisibleOptions} from './listbox.misc';
 import type {OuiListboxPreview, OuiListboxState} from './listbox.model';
 
 // #region Functions
 
-export function onListboxFilter(type: InputEvent['inputType'], state: OuiListboxState): void {
-	if (state.disabled || state.readonly) {
-		return;
-	}
-
-	const update = state.filter.element.value !== state.filter.value;
-
-	const option = filterListboxOptions(state);
-
-	let preview: OuiListboxPreview | undefined;
-
-	if (type.includes('delete')) {
-		preview = 'none';
-	} else if (type.includes('insert')) {
-		preview = 'typed';
-	}
-
-	if (preview != null) {
-		state.callbacks.data.onFilter(preview, state, update, option);
-	}
-
-	if (update) {
-		state.filter.value = state.filter.element.value;
-
-		dispatch(state.host, 'input');
-	}
-}
-
-export function onListboxKeydown<State extends OuiListboxState>(
+export function processListboxKeydown<State extends OuiListboxState>(
 	event: KeyboardEvent,
 	state: State,
 ): void {
@@ -54,7 +24,7 @@ export function onListboxKeydown<State extends OuiListboxState>(
 		}
 
 		case event.key === 'Enter': {
-			preventDefault = true; // state.floatable.open;
+			preventDefault = state.callbacks.keydown.preventActivation?.(state) ?? true;
 
 			if (preventDefault) {
 				state.callbacks.keydown.onEnter?.(state);
