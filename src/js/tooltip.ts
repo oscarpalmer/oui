@@ -182,15 +182,16 @@ function findElements(attribute?: string): HTMLElement[] | undefined {
 }
 
 function getContent(): HTMLElement {
-	const content = createElement('div', {
-		popover: 'hint',
-		role: 'tooltip',
-		tabIndex: -1,
+	return createElement('div', {
+		attribute: {
+			[ATTRIBUTE_CONTENT]: '',
+			popover: 'hint',
+		},
+		property: {
+			role: 'tooltip',
+			tabIndex: -1,
+		},
 	});
-
-	setAttribute(content, ATTRIBUTE_CONTENT, '');
-
-	return content;
 }
 
 function getElements(anchor: HTMLElement): HTMLElement[] | undefined {
@@ -204,21 +205,23 @@ function getElements(anchor: HTMLElement): HTMLElement[] | undefined {
 		return elements as HTMLElement[];
 	}
 
-	let text = getAria(anchor, 'label');
+	let textContent = getAria(anchor, 'label');
 
-	if (isNullableOrWhitespace(text)) {
-		text = getAria(anchor, 'description');
+	if (isNullableOrWhitespace(textContent)) {
+		textContent = getAria(anchor, 'description');
 	}
 
-	if (isNullableOrWhitespace(text)) {
+	if (isNullableOrWhitespace(textContent)) {
 		return;
 	}
 
-	const paragraph = document.createElement('p');
-
-	paragraph.textContent = text;
-
-	return [paragraph];
+	return [
+		createElement('p', {
+			property: {
+				textContent,
+			},
+		}),
+	];
 }
 
 function getState(anchor: HTMLElement, elements: HTMLElement[]): OuiTooltipState {

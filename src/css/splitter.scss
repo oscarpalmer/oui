@@ -24,7 +24,7 @@ oui-splitter {
 	transition: background 0.125s ease-in-out;
 }
 
-:where([oui-splitter-separator]:has([oui-splitter-handle]:focus)),
+:where([oui-splitter-separator]:has([oui-splitter-handle]:focus-visible)),
 :where([oui-splitter-separator]:has([oui-splitter-handle]:hover)),
 :where([oui-splitter-separator][oui-splitter-active]) {
 	background-color: color-mix(in oklab, var(--oui-blue-6), transparent 82.5%);
@@ -58,7 +58,7 @@ oui-splitter {
 	}
 }
 
-:where([oui-splitter-handle]:focus),
+:where([oui-splitter-handle]:focus-visible),
 :where([oui-splitter-handle]:hover),
 :where([oui-splitter-handle][oui-splitter-active]) {
 	&::after {

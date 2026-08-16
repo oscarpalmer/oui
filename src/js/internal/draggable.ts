@@ -258,7 +258,7 @@ function cancelDrag(item?: OuiDraggableItem): void {
 
 	item.state.options.drag.onCancel?.(globals, item);
 
-	dispatch(item.state.element, `${item.state.name}:cancel`, {
+	dispatch(item.state.element, `oui:${item.state.name}:cancel`, {
 		detail: {
 			element: item.state.options.getOrigin(),
 		},
@@ -406,35 +406,33 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 	globals.offset = item.state.options.position.getOffset(globals, item, element, position);
 	globals.original = item.state.options.position.getOriginal(globals, item, position);
 
-	const dispatched = dispatch(item.state.element, `${item.state.name}:begin`, {
-		detail: {
-			element,
-			position: {...globals.original},
-		},
+	if (
+		dispatch(item.state.element, `oui:${item.state.name}:begin`, {
+			detail: {
+				element,
+				position: {...globals.original},
+			},
+		}).defaultPrevented
+	) {
+		item.state.options.drag.onCancel?.(globals, item);
+
+		reset();
+
+		return;
+	}
+
+	const next = getNextPosition(item, position);
+
+	setStyles(dragged, {
+		position: 'fixed',
+		inset: `${next.y}px auto auto ${next.x}px`,
+		transform: 'translate3d(0, 0, 0)',
 	});
 
-	setTimeout(() => {
-		if (dispatched.defaultPrevented) {
-			item.state.options.drag.onCancel?.(globals, item);
+	item.state.options.drag.onBegin?.(event, globals, item, element, handle, next);
 
-			reset();
-
-			return;
-		}
-
-		const next = getNextPosition(item, position);
-
-		setStyles(dragged, {
-			position: 'fixed',
-			inset: `${next.y}px auto auto ${next.x}px`,
-			transform: 'translate3d(0, 0, 0)',
-		});
-
-		item.state.options.drag.onBegin?.(event, globals, item, element, handle, next);
-
-		item.state.styling.set();
-		styleToggler.set();
-	});
+	item.state.styling.set();
+	styleToggler.set();
 }
 
 function onPointermove(event: MouseEvent | TouchEvent): void {
@@ -459,15 +457,13 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 		original: position,
 	});
 
-	const dispatched = dispatch(current.state.element, `${current.state.name}:move`, {
-		detail,
-	});
-
-	setTimeout(() => {
-		if (dispatched.defaultPrevented) {
-			cancelDrag(current);
-		}
-	});
+	if (
+		dispatch(current.state.element, `oui:${current.state.name}:move`, {
+			detail,
+		}).defaultPrevented
+	) {
+		cancelDrag(current);
+	}
 }
 
 function onPointerup(event: MouseEvent | TouchEvent): void {

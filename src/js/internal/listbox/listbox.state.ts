@@ -73,7 +73,7 @@ export function initializeListboxState<State extends OuiListboxState>(
 	updateListboxValueLabel(state);
 
 	if (state.options.selected.length > 0) {
-		updateListboxPreview('none', state, state.options.selected[0]);
+		updateListboxPreview('none', state, state.options.selected[0], false);
 	}
 
 	return state;

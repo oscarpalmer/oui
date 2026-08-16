@@ -45,32 +45,6 @@
 		border-radius: 0.25em;
 		position: relative;
 	}
-
-	:where(&:not([disabled], [readonly], [aria-disabled='true' i]):focus) {
-		@include mixins.input-focus;
-	}
-
-	@media (hover: hover) {
-		:where(
-			&:not([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]):hover
-		) {
-			@include mixins.input-hover;
-		}
-	}
-
-	:where(&:is([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i])) {
-		--oui-foreground-percentage: 25%;
-
-		font-style: italic;
-	}
-
-	:where(&:is([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]):focus) {
-		--oui-outline-percentage: 75%;
-	}
-
-	:where(&:is([disabled], [aria-disabled='true' i])) {
-		--oui-background-percentage: 50%;
-	}
 }
 
 :where([oui-listbox-header]) {
@@ -117,11 +91,10 @@
 		outline-offset: -4px;
 		line-height: 1.25;
 		cursor: pointer;
-		transition: 0.125s ease-in-out;
 	}
 
 	:where(&[aria-selected='true' i]) {
-		background-color: var(--oui-blue-3);
+		background-color: var(--oui-blue-2);
 		color: var(--oui-blue-9);
 	}
 
@@ -130,9 +103,7 @@
 		margin: 0 0.75em 0 0;
 	}
 
-	:where(
-		oui-listbox:not([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]) &
-	) {
+	oui-listbox:not([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]) & {
 		@media (hover: hover) {
 			:where(&:hover) {
 				background-color: var(--oui-blue-1);

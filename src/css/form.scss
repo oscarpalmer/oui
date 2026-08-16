@@ -51,6 +51,30 @@
 		font-variant-numeric: tabular-nums;
 	}
 
+	:where(&:is([type='date' i], [type='datetime-local' i], [type='month' i], [type='week' i])) {
+		&::-webkit-calendar-picker-indicator {
+			--oui-outline-percentage: 100%;
+			--oui-outline-value: var(--oui-blue-6);
+
+			outline: 4px solid
+				color-mix(in oklab, var(--oui-outline-value), transparent var(--oui-outline-percentage));
+			outline-offset: 2px;
+			border-radius: 1em;
+			transition: outline 0.125s ease-in-out;
+			cursor: pointer;
+
+			&:focus-within {
+				--oui-outline-percentage: 62.5%;
+			}
+
+			@media (hover: hover) {
+				&:hover {
+					--oui-outline-percentage: 85%;
+				}
+			}
+		}
+	}
+
 	:where(&:is([type='file' i])) {
 		padding-left: 0.5em;
 
@@ -61,6 +85,7 @@
 			--oui-outline-value: var(--oui-grey-6);
 
 			margin: 0 0.75em 0 0;
+			outline: none;
 			font-size: 0.75em;
 			cursor: pointer;
 		}
@@ -108,13 +133,15 @@
 	}
 
 	:where(
-		&.oui-validate:not([disabled], [readonly], [aria-disabled='true' i]):is(
-			:user-invalid:not([aria-invalid='false' i]),
-			[aria-invalid='true' i]
-		)
+		&.oui-validate:not(
+				[disabled],
+				[readonly],
+				[aria-disabled='true' i],
+				[aria-readonly='true' i],
+				:focus-visible,
+				:focus-within
+			):is(:user-invalid:not([aria-invalid='false' i]), [aria-invalid='true' i])
 	) {
-		@include mixins.input-invalid;
-
 		&::file-selector-button {
 			--oui-background-value: var(--oui-red-2);
 			--oui-foreground-value: var(--oui-red-8);
@@ -136,13 +163,15 @@
 	}
 
 	:where(
-		&.oui-validate:not([disabled], [readonly], [aria-disabled='true' i]):is(
-			:user-valid:not([aria-invalid='true' i]),
-			[aria-invalid='false' i]
-		)
+		&.oui-validate:not(
+				[disabled],
+				[readonly],
+				[aria-disabled='true' i],
+				[aria-readonly='true' i],
+				:focus-visible,
+				:focus-within
+			):is(:user-valid:not([aria-invalid='true' i]), [aria-invalid='false' i])
 	) {
-		@include mixins.input-valid;
-
 		&::file-selector-button {
 			--oui-background-value: var(--oui-green-2);
 			--oui-foreground-value: var(--oui-green-8);
@@ -163,72 +192,59 @@
 		}
 	}
 
-	:where(&:not([disabled], [readonly], [aria-disabled='true' i])) {
-		&::-webkit-calendar-picker-indicator {
-			outline: 4px solid transparent;
-			outline-offset: 2px;
-			border-radius: 2em;
-			transition: 0.125s ease-in-out;
-			cursor: pointer;
-
-			@media (hover: hover) {
-				&:hover {
-					outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 75%);
-				}
-			}
-
-			&:focus {
-				outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 75%);
-			}
-		}
-	}
-
-	:where(&:not([disabled], [readonly], [aria-disabled='true' i]):focus),
-	:where(&:not([disabled], [readonly], [aria-disabled='true' i]):focus-within) {
-		@include mixins.input-focus;
-
-		&::file-selector-button {
-			--oui-background-value: var(--oui-blue-2);
-			--oui-foreground-value: var(--oui-blue-8);
-			--oui-outline-value: var(--oui-blue-6);
-		}
-
-		&::range-thumb,
-		&::range-track {
-			@include mixins.input-focus;
-		}
-
-		&::range-thumb {
-			--oui-background-value: var(--oui-blue-6);
-
-			box-shadow: 0 1px 2px 2px rgb(0 0 0 / 25%);
-		}
-	}
-
-	@media (hover: hover) {
-		:where(&:not([disabled], [readonly], [aria-disabled='true' i]):hover) {
-			@include mixins.input-hover;
-
+	&:not([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]) {
+		:where(&:focus-visible, &:focus-within) {
 			&::file-selector-button {
 				--oui-background-value: var(--oui-blue-2);
 				--oui-foreground-value: var(--oui-blue-8);
 				--oui-outline-value: var(--oui-blue-6);
 			}
 
-			&::range-thumb {
-				--oui-background-value: var(--oui-blue-5);
+			&::range-thumb,
+			&::range-track {
+				@include mixins.input-focus;
 			}
 
-			&::range-track {
-				@include mixins.input-hover;
+			&::range-thumb {
+				--oui-background-value: var(--oui-blue-6);
+
+				box-shadow: 0 1px 2px 2px rgb(0 0 0 / 25%);
+			}
+		}
+
+		@media (hover: hover) {
+			:where(&:hover) {
+				&::file-selector-button {
+					--oui-background-value: var(--oui-blue-2);
+					--oui-foreground-value: var(--oui-blue-8);
+					--oui-outline-value: var(--oui-blue-6);
+				}
+
+				&::range-thumb {
+					--oui-background-value: var(--oui-blue-5);
+				}
+
+				&::range-track {
+					@include mixins.input-hover;
+				}
 			}
 		}
 	}
 
-	:where(&:is([disabled], [readonly], [aria-disabled='true' i])) {
-		--oui-foreground-percentage: 25%;
+	:where(&:is([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i])) {
+		&::-webkit-calendar-picker-indicator {
+			&:focus-within {
+				--oui-outline-percentage: 0%;
+				--oui-outline-value: var(--oui-gray-3);
+			}
 
-		font-style: italic;
+			@media (hover: hover) {
+				&:hover {
+					--oui-outline-percentage: 0%;
+					--oui-outline-value: var(--oui-gray-3);
+				}
+			}
+		}
 
 		&::file-selector-button {
 			--oui-background-value: var(--oui-gray-1);
@@ -243,12 +259,10 @@
 		}
 	}
 
-	:where(&:is([disabled], [readonly], [aria-disabled='true' i]):focus) {
-		--oui-outline-percentage: 75%;
-	}
-
 	:where(&:is([disabled], [aria-disabled='true' i])) {
-		--oui-background-percentage: 50%;
+		&::-webkit-calendar-picker-indicator {
+			opacity: 0.5;
+		}
 
 		&::range-thumb {
 			--oui-background-value: var(--oui-gray-1);
@@ -259,10 +273,6 @@
 		&::range-track {
 			--oui-background-percentage: 50%;
 			--oui-background-value: var(--oui-gray-0);
-		}
-
-		&::-webkit-calendar-picker-indicator {
-			opacity: 0.5;
 		}
 	}
 }
@@ -317,12 +327,13 @@ select.oui-input:is([multiple]) {
 :where(.oui-label, .oui-legend) {
 	font-size: 0.875rem;
 	font-weight: bold;
+	align-self: flex-start;
 }
 
 .oui-label {
 	:where(&) {
 		cursor: pointer;
-		transition: 0.125s ease-in-out;
+		transition: color 0.125s ease-in-out;
 	}
 
 	@media (hover: hover) {
@@ -358,6 +369,7 @@ select.oui-input:is([multiple]) {
 		font-family: system-ui, sans-serif;
 		position: absolute;
 		transition: 0.125s ease-in-out;
+		transition-property: background, outline, border, box-shadow, color;
 		pointer-events: none;
 	}
 

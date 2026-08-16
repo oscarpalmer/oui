@@ -32,7 +32,7 @@ export function updateListboxForm<State extends OuiListboxState>(
 	updateListboxValidity(state);
 
 	if (emit ?? true) {
-		dispatch(state.host, 'change');
+		dispatch(state.host, 'oui:change');
 	}
 }
 

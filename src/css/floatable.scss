@@ -8,7 +8,7 @@
 }
 
 :where([oui-dialog], [oui-popover], [oui-tooltip-content]) {
-	@include mixins.shadow-overlay;
+	@include mixins.shadow-5;
 
 	background-color: var(--oui-absolute);
 	scale: 0.9;
@@ -97,49 +97,49 @@
 		position: absolute;
 	}
 
-	&[oui-position^='above'],
-	&[oui-position^='below'],
-	&[oui-position^='bottom'],
-	&[oui-position^='top'] {
+	&[oui-position^='above' i],
+	&[oui-position^='below' i],
+	&[oui-position^='bottom' i],
+	&[oui-position^='top' i] {
 		&::after {
 			width: 100%;
 			height: 1em;
 		}
 	}
 
-	&[oui-position^='above'],
-	&[oui-position^='top'] {
+	&[oui-position^='above' i],
+	&[oui-position^='top' i] {
 		&::after {
 			inset: calc(100% - 0.5em) 0 0;
 		}
 	}
 
-	&[oui-position^='below'],
-	&[oui-position^='bottom'] {
+	&[oui-position^='below' i],
+	&[oui-position^='bottom' i] {
 		&::after {
 			inset: -0.5em 0 0;
 		}
 	}
 
-	&[oui-position^='end'],
-	&[oui-position^='left'],
-	&[oui-position^='right'],
-	&[oui-position^='start'] {
+	&[oui-position^='end' i],
+	&[oui-position^='left' i],
+	&[oui-position^='right' i],
+	&[oui-position^='start' i] {
 		&::after {
 			width: 1em;
 			height: 100%;
 		}
 	}
 
-	&[oui-position^='end'],
-	&[oui-position^='right'] {
+	&[oui-position^='end' i],
+	&[oui-position^='right' i] {
 		&::after {
 			inset: 0 0 0 -0.5em;
 		}
 	}
 
-	&[oui-position^='left'],
-	&[oui-position^='start'] {
+	&[oui-position^='left' i],
+	&[oui-position^='start' i] {
 		&::after {
 			inset: 0 0 0 calc(100% - 0.5em);
 		}

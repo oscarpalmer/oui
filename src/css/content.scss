@@ -3,9 +3,9 @@
 @use './mixins' as mixins;
 
 @mixin thumb($background, $shadow) {
-	@include mixins.shadow-small(
+	@include mixins.shadow-0(
 		color-mix(in oklab, $shadow, transparent 33%),
-		color-mix(in oklab, white, transparent 82.5%)
+		color-mix(in oklab, var(--oui-absolute), transparent 82.5%)
 	);
 
 	appearance: none;
@@ -56,7 +56,7 @@
 			mask-size: contain;
 			mask-position: center;
 			mask-repeat: no-repeat;
-			transition: 0.125s ease-in-out;
+			transition: transform 0.125s ease-in-out;
 			transform: rotate(-90deg);
 		}
 
@@ -149,5 +149,32 @@
 		&::-webkit-progress-value {
 			@include thumb(var(--oui-blue-5), var(--oui-blue-6));
 		}
+	}
+}
+
+.oui-shadow {
+	:where(&),
+	:where(&-0) {
+		@include mixins.shadow-0;
+	}
+
+	:where(&-1) {
+		@include mixins.shadow-1;
+	}
+
+	:where(&-2) {
+		@include mixins.shadow-2;
+	}
+
+	:where(&-3) {
+		@include mixins.shadow-3;
+	}
+
+	:where(&-4) {
+		@include mixins.shadow-4;
+	}
+
+	:where(&-5) {
+		@include mixins.shadow-5;
 	}
 }

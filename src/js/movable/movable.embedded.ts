@@ -199,20 +199,18 @@ function onEnd(
 		setOffset(state, container);
 	}
 
-	const dispatched = dispatch(state.element, 'movable:end', {
-		detail: {
-			from: {...globals.original},
-			to: getEventPosition(event),
-		},
-	});
+	if (
+		dispatch(state.element, 'oui:movable:end', {
+			detail: {
+				from: {...globals.original},
+				to: getEventPosition(event),
+			},
+		}).defaultPrevented
+	) {
+		onCancel(globals, item);
+	}
 
-	setTimeout(() => {
-		if (dispatched.defaultPrevented) {
-			onCancel(globals, item);
-		}
-
-		reset();
-	});
+	reset();
 }
 
 function onMove(

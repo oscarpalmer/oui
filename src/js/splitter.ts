@@ -3,6 +3,7 @@ import {round} from '@oscarpalmer/atoms/math';
 import {clamp} from '@oscarpalmer/atoms/number';
 import {setAria} from '@oscarpalmer/toretto/aria';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
+import {createElement} from '@oscarpalmer/toretto/create';
 import {getEventPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {setStyle, toggleStyles} from '@oscarpalmer/toretto/style';
@@ -238,28 +239,30 @@ type OuiSplitterValuesNow = {
 // #region Functions
 
 function createHandle(): HTMLSpanElement {
-	const handle = document.createElement('span');
-
-	setAria(handle, 'hidden', 'true');
-	setAttribute(handle, ATTRIBUTE_HANDLE, '');
-
-	return handle;
+	return createElement('span', {
+		aria: {
+			hidden: true,
+		},
+		attribute: {
+			[ATTRIBUTE_HANDLE]: '',
+		},
+	});
 }
 
 function createSeparator(splitter: OuiSplitter): HTMLDivElement {
-	const separator = document.createElement('div');
-
-	separator.role = 'separator';
-	separator.tabIndex = 0;
-
-	setAria(separator, {
-		controls: splitter.element.id,
-		label: 'Resize panels',
+	return createElement('div', {
+		aria: {
+			controls: splitter.element.id,
+			label: 'Resize panels',
+		},
+		attribute: {
+			[ATTRIBUTE_SEPARATOR]: '',
+		},
+		property: {
+			role: 'separator',
+			tabIndex: 0,
+		},
 	});
-
-	setAttribute(separator, ATTRIBUTE_SEPARATOR, '');
-
-	return separator;
 }
 
 function getContained(min: number, value: number, max: number): number {

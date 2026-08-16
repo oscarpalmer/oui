@@ -37,38 +37,26 @@
 	// Colors
 
 	:where(&-pill--blue, &-tag--blue) {
-		--oui-background: var(--oui-blue-0);
-		--oui-foreground: var(--oui-blue-8);
-		--oui-shadow: var(--oui-blue-6);
+		@include mixins.badge-blue;
 	}
 
 	:where(&-pill--green, &-tag--green) {
-		--oui-background: var(--oui-green-0);
-		--oui-foreground: var(--oui-green-8);
-		--oui-shadow: var(--oui-green-6);
+		@include mixins.badge-green;
 	}
 
 	:where(&-pill--orange, &-tag--orange) {
-		--oui-background: var(--oui-orange-0);
-		--oui-foreground: var(--oui-orange-8);
-		--oui-shadow: var(--oui-orange-6);
+		@include mixins.badge-orange;
 	}
 
 	:where(&-pill--purple, &-tag--purple) {
-		--oui-background: var(--oui-purple-0);
-		--oui-foreground: var(--oui-purple-8);
-		--oui-shadow: var(--oui-purple-6);
+		@include mixins.badge-purple;
 	}
 
 	:where(&-pill--red, &-tag--red) {
-		--oui-background: var(--oui-red-0);
-		--oui-foreground: var(--oui-red-8);
-		--oui-shadow: var(--oui-red-6);
+		@include mixins.badge-red;
 	}
 
 	:where(&-pill--yellow, &-tag--yellow) {
-		--oui-background: var(--oui-yellow-0);
-		--oui-foreground: var(--oui-yellow-8);
-		--oui-shadow: var(--oui-yellow-6);
+		@include mixins.badge-yellow;
 	}
 }

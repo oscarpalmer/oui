@@ -1,6 +1,7 @@
 import {clamp} from '@oscarpalmer/atoms/number';
-import {getAria, setRole} from '@oscarpalmer/toretto/aria';
-import {dispatch, on} from '@oscarpalmer/toretto/event';
+import {getAria, setAria, setRole} from '@oscarpalmer/toretto/aria';
+import {getAttribute} from '@oscarpalmer/toretto/attribute';
+import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import type {AriaRole, RemovableEventListener} from '@oscarpalmer/toretto/models';
@@ -25,6 +26,16 @@ export class OuiNavigable {
 		this.options = options;
 
 		this.listeners = [
+			on(
+				element,
+				'click',
+				event => {
+					onClick(this, event);
+				},
+				{
+					passive: false,
+				},
+			),
 			on(element, 'focusin', event => {
 				onFocusin(this, event);
 			}),
@@ -40,7 +51,9 @@ export class OuiNavigable {
 			),
 		];
 
-		this.orientation = getOrientation(element, options);
+		this.orientation = options?.orientation ?? getNavigableOrientation(element, options.vertical);
+
+		setAria(element, 'orientation', this.orientation);
 
 		if (options.role != null) {
 			setRole(element, options.role);
@@ -57,6 +70,14 @@ export class OuiNavigable {
 		this.active.element = undefined;
 		this.element = undefined as never;
 	}
+
+	navigate(index: number, focus?: boolean): void {
+		const items = getItems(this.element, this.options.selector);
+
+		if (index >= 0 && index < items.length) {
+			onNavigate(this, index, items, focus ?? false);
+		}
+	}
 }
 
 type OuiNavigableActive = {
@@ -64,17 +85,25 @@ type OuiNavigableActive = {
 	index: number;
 };
 
+type OuiNavigableCallback<ReturnType> = (
+	event: KeyboardEvent,
+	navigable: OuiNavigable,
+) => ReturnType;
+
 export type OuiNavigableOptions = {
+	orientation?: OuiNavigableOrientation;
 	role?: AriaRole;
 	selector: string;
 	vertical: boolean;
-	onDeactivate?: (event: KeyboardEvent, navigable: OuiNavigable) => void;
-	onPreventNavigation?: (event: KeyboardEvent, navigable: OuiNavigable) => boolean;
-	onShouldActivate?: (event: KeyboardEvent, navigable: OuiNavigable) => boolean;
-	onShouldDeactivate?: (event: KeyboardEvent, navigable: OuiNavigable) => boolean | undefined;
+	onActivate?: (navigable: OuiNavigable) => void;
+	onDeactivate?: OuiNavigableCallback<void>;
+	onNavigation?: (navigable: OuiNavigable) => void;
+	onPreventNavigation?: OuiNavigableCallback<boolean>;
+	onShouldActivate?: OuiNavigableCallback<boolean>;
+	onShouldDeactivate?: OuiNavigableCallback<boolean | undefined>;
 };
 
-type OuiNavigableOrientation = 'horizontal' | 'vertical';
+export type OuiNavigableOrientation = 'horizontal' | 'vertical';
 
 // #endregion
 
@@ -88,21 +117,56 @@ export function getNavigable(element: HTMLElement, options: OuiNavigableOptions)
 	return new OuiNavigable(element, options);
 }
 
-function getOrientation(
+export function getNavigableOrientation(
 	element: HTMLElement,
-	options: OuiNavigableOptions,
+	vertical: boolean,
+	aria?: boolean,
 ): OuiNavigableOrientation {
-	const attribute = getAria(element, 'orientation');
+	const attribute =
+		(aria ?? true) ? getAria(element, 'orientation') : getAttribute(element, 'orientation');
 
 	return ORIENTATIONS.has(attribute as OuiNavigableOrientation)
 		? (attribute as OuiNavigableOrientation)
-		: options.vertical
+		: vertical
 			? ORIENTATION_VERTICAL
 			: ORIENTATION_HORIZONTAL;
 }
 
 function isValidItem(element: Element): element is HTMLElement {
 	return 'disabled' in element ? element.disabled !== true : true;
+}
+
+function onClick(navigable: OuiNavigable, event: Event): void {
+	const item = findAncestor(event, navigable.options.selector) as HTMLElement;
+	const items = getItems(navigable.element, navigable.options.selector);
+
+	const index = items.indexOf(item);
+
+	if (index === -1) {
+		return;
+	}
+
+	if (index !== navigable.active.index) {
+		onNavigate(navigable, index, items, false);
+	}
+
+	navigable.options.onActivate?.(navigable);
+
+	item.focus();
+}
+
+function onNavigate(
+	navigable: OuiNavigable,
+	index: number,
+	items: HTMLElement[],
+	focus: boolean,
+): void {
+	navigable.active.element = items[index];
+	navigable.active.index = index;
+
+	updateNavigableFocus(navigable, focus, items);
+
+	navigable.options.onNavigation?.(navigable);
 }
 
 function onFocusin(navigable: OuiNavigable, event: FocusEvent): void {
@@ -155,6 +219,8 @@ function onKeydown(navigable: OuiNavigable, event: KeyboardEvent): void {
 	}
 
 	if (mustActivate || shouldActivate) {
+		navigable.options.onActivate?.(navigable);
+
 		return;
 	}
 
@@ -188,14 +254,9 @@ function onKeydown(navigable: OuiNavigable, event: KeyboardEvent): void {
 		}
 	}
 
-	if (index == null || index === navigable.active.index) {
-		return;
+	if (index != null && index !== navigable.active.index) {
+		onNavigate(navigable, index, items, true);
 	}
-
-	navigable.active.element = items[index];
-	navigable.active.index = index;
-
-	updateNavigableFocus(navigable, true, items);
 }
 
 export function updateNavigableFocus(
@@ -219,10 +280,6 @@ export function updateNavigableFocus(
 	if (focus) {
 		navigable.active.element?.focus();
 	}
-
-	dispatch(navigable.active.element, 'navigable:change', {
-		detail: {...navigable.active},
-	});
 }
 
 // #endregion

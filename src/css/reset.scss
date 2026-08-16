@@ -6,31 +6,29 @@
  * A reset I use for a lot of personal stuff, and elsewhere, of course.
  * It's a mix of a few different resets mixed together with some of my own ideas.
  *
- * When rules are explained, such comments will be suffixed with one ore more square brackets
- * with a two-letter code, all of which are listed below. My own code is "OP", which are my initials.
- *
- * - Andy Bell's "A (more) Modern CSS Reset" [AB]
+ * - Andy Bell's "A (more) Modern CSS Reset"
  *   https://andy-bell.co.uk/a-more-modern-css-reset/
  *
- * - Chris Coyier's "The Coyier CSS Starter" [CC]
+ * - Chris Coyier's "The Coyier CSS Starter"
  *   https://frontendmasters.com/blog/the-coyier-css-starter/
  *
- * - CSS Remedy [CR]
+ * - CSS Remedy
  *   https://github.com/jensimmons/cssremedy
  *
- * - Harry Roberts [HR]
+ * - Harry Roberts
  * - https://github.com/csswizardry
  *
- * - RESS [RS]
+ * - Interface Cheat sheet
+ * - https://interfaces.dev/cheat-sheet
+ *
+ * - RESS
  *   https://github.com/filipelinhares/ress
  *
- * - Sanitize.css [SE]
+ * - Sanitize.css
  *   https://github.com/csstools/sanitize.css
  */
 
-/**
- * Catch-alls
- */
+// #region Globals
 
 :where(*) {
 	padding: 0;
@@ -43,18 +41,19 @@
 	box-sizing: border-box;
 }
 
-/**
- * Document
- */
+// #endregion
+
+// #region Document
 
 :where(:root) {
 	font-family: system-ui, sans-serif;
 	font-size: 100%;
 	line-height: 1.5;
-	/** Prevent text size inflation (e.g., after orientation change) [AB][RE][SE] */
 	text-size-adjust: none;
 	tab-size: 4;
 	overflow-wrap: break-word;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 :where(body) {
@@ -62,13 +61,14 @@
 	font-size: 1rem;
 }
 
-/**
- * General
- */
+// #endregion
+
+// #region General
 
 :where(a) {
 	text-decoration-skip-ink: auto;
 	text-underline-offset: 0.125em;
+	text-underline-position: from-font;
 }
 
 :where(abbr[title], dfn[title]) {
@@ -76,19 +76,15 @@
 }
 
 :where(abbr[title]) {
-	/** Add the correct text decoration in Safari [RS][SE] */
 	text-decoration: underline;
-	/** Ditto */
 	text-decoration: underline dotted;
 }
 
 :where(b, strong) {
-	/** Add the correct font weight in Chrome, Edge, and Safari [RS][SE], without compounding [HR] */
 	font-weight: bold;
 }
 
 :where(button, h1, h2, h3, h4, h5, h6, input, label, legend) {
-	/** Set shorter line heights on headings and interactive elements [AB] */
 	line-height: 1.125;
 }
 
@@ -103,21 +99,16 @@
 	input[type='submit' i],
 	summary
 ) {
-	/** Correct the inability to style clickable types in iOS [HR][RS][SE] */
 	appearance: auto;
-	/** Ditto */
 	cursor: pointer;
 }
 
 :where(code, kbd, output, pre, samp) {
-	/** Specify the font family of code elements [HR][RS][SE] */
 	font-family: monospace, monospace;
-	/** Correct the odd 'em' font sizing in all browsers [HR][RS][SE] */
 	font-size: inherit;
 }
 
 :where(details > summary:first-of-type) {
-	/** Add the correct display in Safari [SE] */
 	display: list-item;
 }
 
@@ -140,7 +131,6 @@
 }
 
 :where(dl, ol, ul) :where(dl, ol, ul) {
-	/** Remove the margin on nested lists in Chrome, Edge, and Safari [SE] */
 	margin: 0;
 }
 
@@ -149,23 +139,18 @@
 }
 
 :where(h1) {
-	/** Consistent sizing across browsers [HR] */
 	font-size: 2em;
 }
 
 :where(hr) {
-	/** Add the correct box sizing in Firefox [CR][RS][SE] */
 	height: 0;
-	/** Show the overflow in Edge and IE [CR][RS] */
 	overflow: visible;
 	border-style: solid;
 	border-width: 1px 0 0;
-	/** // Correct the inheritance of border colour in Firefox [CR][RS][SE] */
 	color: inherit;
 }
 
 :where(ins, u) {
-	/** Prevent link styling [HR] */
 	text-decoration: none;
 }
 
@@ -176,15 +161,12 @@
 }
 
 :where(nav li)::before {
-	/** Prevent VoiceOver from ignoring list semantics in Safari [SE] */
 	content: '\200B';
 	float: left;
 }
 
 :where(pre) {
-	/** Prevent overflow of the container in all browsers [SE] */
 	overflow: auto;
-	/** Overflow by default is bad… [CR] */
 	white-space: pre-wrap;
 }
 
@@ -208,29 +190,22 @@
 
 :where(table) {
 	border-collapse: collapse;
-	/** Correct table border colour in Chrome, Edge, and Safari [SE] */
 	border-color: currentcolor;
-	/** Modernized border spacing [HR] */
 	border-spacing: 0;
-	/** More legible numbers [HR] */
 	font-variant-numeric: tabular-nums;
-	/** Remove text indentation from table contents in Chrome, Edge, and Safari [RS][SE] */
 	text-indent: 0;
 }
 
-/**
- * Form-related
- */
+// #endregion
+
+// #region Forms
 
 :where(button, input, optgroup, select, textarea) {
-	/** Correct the font inheritance in Firefox, Edge, and Safari [HR][RS][SE] */
 	font: inherit;
 }
 
 :where(button, input, select, textarea) {
-	/** Change the inconsistent appearance in all browsers [SE] */
 	padding: 0.25em 0.5em;
-	/** Ditto for all */
 	background-color: transparent;
 	border: 1px solid WindowFrame;
 	color: inherit;
@@ -238,24 +213,19 @@
 }
 
 :where(fieldset) {
-	/** Change the inconsistent appearance in all browsers [SE] */
 	border: 1px solid darkgrey;
 }
 
 :where(optgroup) {
-	/** Restore the font weight unset by previous rules [RS] */
 	font-weight: bold;
 }
 
 :where(progress) {
-	/** Add the correct vertical alignment in Chrome, Edge, and Firefox [RS][SE] */
 	vertical-align: baseline;
 }
 
 :where(select, input[list]) {
-	/** Change the inconsistent appearance in all browsers [SE] */
 	appearance: none;
-	/** Ditto for all */
 	padding-right: 1em;
 	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='4'%3E%3Cpath d='M4 0h6L7 4'/%3E%3C/svg%3E");
 	background-position: right center / 1em;
@@ -264,31 +234,24 @@
 }
 
 :where(select[multiple]) {
-	/** Don't show the arrow for multiple choice selects [SE] */
 	background-image: none;
 }
 
 :where(textarea) {
-	/** Change the resize direction in all browsers [RS][SE] */
 	resize: vertical;
 }
 
 :where([type='color' i], [type='range' i]) {
-	/** Remove the padding in all browsers [SE] */
 	padding: 0;
-	/** Remove the border in all browsers [SE] */
 	border-width: 0;
 }
 
 :where([type='search' i]) {
-	/** Correct the odd appearance in Chrome, Edge, and Safari [RS][SE] */
 	appearance: textfield;
-	/** Correct the outline style in Safari [RS][SE] */
 	outline-offset: -2px;
 }
 
 ::file-selector-button {
-	/** Correct the inability to style upload buttons in iOS and Safari [RS][SE] */
 	appearance: auto;
 	color: inherit;
 	font: inherit;
@@ -296,26 +259,22 @@
 }
 
 ::placeholder {
-	/** Better default text opacity [OP] */
 	opacity: 0.67;
-	/** Better default text color [HR][SE] */
 	color: inherit;
 }
 
 ::-webkit-inner-spin-button,
 ::-webkit-outer-spin-button {
-	/** Correct the cursor style of increment and decrement buttons in Safari [RS][SE] */
 	height: auto;
 }
 
 ::-webkit-search-decoration {
-	/** Remove the inner padding in Chrome, Edge, and Safari on macOS [SE] */
 	appearance: none;
 }
 
-/**
- * Media-related
- */
+// #endregion
+
+// #region Media
 
 :where(audio, canvas, embed, iframe, img, object, picture, svg, video) {
 	max-inline-size: 100%;
@@ -327,7 +286,6 @@
 }
 
 :where(audio) {
-	/** Better default width [CR] */
 	width: 100%;
 }
 
@@ -336,7 +294,6 @@
 }
 
 :where(canvas, img, svg, video) {
-	/** Proportional height based on width [HR] */
 	block-size: auto;
 }
 
@@ -345,21 +302,17 @@
 }
 
 :where(img) {
-	/** CSS magic! [HR] */
 	background-repeat: no-repeat;
-	/** Ditto */
 	background-size: cover;
-	/** Offset alt-text if image does not load [HR] */
+	outline: 1px solid light-dark(rgb(255 255 255 / 8%), rgb(0 0 0 / 8%));
 	font-style: italic;
 }
 
 :where(picture) {
-	/** Remove the unnecessary wrapping 'picture', while maintaining contents [CR] */
 	display: contents;
 }
 
 :where(source) {
-	/** Source elements have nothing to display, so we hide them entirely [CR] */
 	display: none;
 }
 
@@ -367,9 +320,9 @@
 	fill: currentcolor;
 }
 
-/**
- * Attributes
- */
+// #endregion
+
+// #region Attributes
 
 :where([aria-busy='true' i]) {
 	cursor: progress;
@@ -399,37 +352,33 @@
 	display: inherit !important;
 }
 
-/**
- * Pseudo-classes
- */
+// #endregion
+
+// #region Pseudo-classes
 
 :where(:target) {
 	scroll-margin: 2rlh;
 }
 
-/**
- * Media queries
- */
+// #endregion
+
+// #region Media queries
 
 @media (prefers-reduced-motion: no-preference) {
 	:where(:root) {
-		/** Allow for animations on auto-sizes [CC] */
 		interpolate-size: allow-keywords;
 	}
 
 	:where(:root:focus-within) {
-		/** Allow for smooth scrolling to focused elements */
 		scroll-behavior: smooth;
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
 	:where(:root:focus-within) {
-		/** Disable smooth scrolling, when requested */
 		scroll-behavior: auto;
 	}
 
-	/** Disable animations and transitions, when requested */
 	:where(*),
 	::after,
 	::before {
@@ -439,3 +388,5 @@
 		scroll-behavior: auto !important;
 	}
 }
+
+// #endregion

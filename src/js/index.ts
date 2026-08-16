@@ -11,4 +11,5 @@ export * from './popover';
 export * from './resizable/resizable.standalone';
 export * from './sortable/sortable.standalone';
 export * from './splitter';
+export * from './tabs';
 export * from './tooltip';

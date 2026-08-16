@@ -1,0 +1,85 @@
+@use './mixins.scss' as mixins;
+
+oui-tabs {
+	:where(&) {
+		display: flex;
+	}
+
+	:where(&[orientation='horizontal' i]) {
+		flex-flow: column nowrap;
+	}
+
+	:where(&[orientation='vertical' i]) {
+		flex-flow: row nowrap;
+	}
+}
+
+[oui-tabs-content] {
+	:where(&) {
+		padding: 1em;
+		flex: 1;
+		background-color: var(--oui-absolute);
+	}
+
+	:where(oui-tabs[orientation='horizontal' i] > &) {
+		border-radius: 0 0 0.5em 0.5em;
+		box-shadow:
+			0 0 0 1px rgb(0 0 0 / 12.5%),
+			inset 0 1px 2px -0.5px rgb(0 0 0 / 5%),
+			inset 0 2px 4px -1px rgb(0 0 0 / 5%);
+	}
+
+	:where(oui-tabs[orientation='vertical' i] > &) {
+		border-radius: 0 0.5em 0.5em 0;
+		box-shadow:
+			0 0 0 1px rgb(0 0 0 / 12.5%),
+			inset 1px 1px 2px -0.5px rgb(0 0 0 / 5%),
+			inset 2px 2px 4px -1px rgb(0 0 0 / 5%);
+	}
+}
+
+[oui-tabs-tab] {
+	:where(&) {
+		@include mixins.button;
+		@include mixins.button-blue;
+
+		font-size: 0.875rem;
+		align-self: flex-end;
+	}
+
+	:where(&[aria-selected='true' i]) {
+		--oui-background-percentage: 80%;
+
+		box-shadow:
+			0 0 0 1px var(--oui-shadow-value),
+			inset 0 1px 2px -0.5px var(--oui-shadow-value),
+			inset 0 2px 4px -1px var(--oui-shadow-value);
+	}
+}
+
+[oui-tabs-tablist] {
+	:where(&) {
+		display: flex;
+		gap: 0.5em;
+	}
+
+	&[aria-orientation='horizontal' i] {
+		:where(&) {
+			flex-flow: row nowrap;
+		}
+
+		:where(& > [oui-tabs-tab]) {
+			border-radius: 0.25em 0.25em 0 0;
+		}
+	}
+
+	&[aria-orientation='vertical' i] {
+		:where(&) {
+			flex-flow: column nowrap;
+		}
+
+		:where(& > [oui-tabs-tab]) {
+			border-radius: 0.25em 0 0 0.25em;
+		}
+	}
+}

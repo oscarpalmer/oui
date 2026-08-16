@@ -285,31 +285,23 @@ function onTab(event: KeyboardEvent): void {
 
 	const instance = instances.get(element);
 
-	if (instance == null) {
+	if (instance == null || dispatch(element, 'oui:focus-trap').defaultPrevented) {
 		return;
 	}
 
-	const dispatched = dispatch(element, 'focus-trap');
+	if (!instance.disabled) {
+		event.preventDefault();
+	}
 
-	setTimeout(() => {
-		if (dispatched.defaultPrevented) {
-			return;
-		}
+	const elements = getFocusable(element);
 
-		if (!instance.disabled) {
-			event.preventDefault();
-		}
+	const index = elements.indexOf(event.target as HTMLElement);
 
-		const elements = getFocusable(element);
-
-		const index = elements.indexOf(event.target as HTMLElement);
-
-		if (index === -1 || elements.length === 0) {
-			tabToTrap(instance, elements, element);
-		} else {
-			tabToElement(instance, elements, index, event.shiftKey ? -1 : 1);
-		}
-	});
+	if (index === -1 || elements.length === 0) {
+		tabToTrap(instance, elements, element);
+	} else {
+		tabToElement(instance, elements, index, event.shiftKey ? -1 : 1);
+	}
 }
 
 export function removeFocusTrap(element: HTMLElement): void {

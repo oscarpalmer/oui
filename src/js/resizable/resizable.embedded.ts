@@ -101,7 +101,7 @@ function cancelResize(item?: OuiResizableItem): void {
 
 	resetResizable();
 
-	dispatch(item.state.element, 'resizable:cancel');
+	dispatch(item.state.element, 'oui:resizable:cancel');
 }
 
 /**
@@ -289,19 +289,15 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		event.preventDefault();
 	}
 
-	const dispatched = dispatch(element!, 'resizable:begin');
+	if (dispatch(element!, 'oui:resizable:begin').defaultPrevented) {
+		return;
+	}
 
-	setTimeout(() => {
-		if (dispatched.defaultPrevented) {
-			return;
-		}
+	current = stored;
+	start = position;
 
-		current = stored;
-		start = position;
-
-		current.state.styles.set();
-		styleToggler.set();
-	});
+	current.state.styles.set();
+	styleToggler.set();
 }
 
 function onPointermove(event: MouseEvent | TouchEvent): void {
@@ -320,41 +316,31 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 
 	getAndSetDimensions(current.state.element, current.state.options, {height, width});
 
-	const dispatched = dispatch(current.state.element, 'resizable:resize', {
-		detail: {
-			height,
-			width,
-		},
-	});
-
-	setTimeout(() => {
-		if (dispatched.defaultPrevented) {
-			cancelResize(current);
-		}
-	});
+	if (
+		dispatch(current.state.element, 'oui:resizable:resize', {
+			detail: {
+				height,
+				width,
+			},
+		}).defaultPrevented
+	) {
+		cancelResize(current);
+	}
 }
 
 function onPointerup(): void {
-	if (current == null) {
+	if (current == null || dispatch(current.state.element, 'oui:resizable:end').defaultPrevented) {
+		cancelResize(current);
+
 		return;
 	}
 
-	const dispatched = dispatch(current.state.element, 'resizable:end');
+	const {height, width} = current.state.element.getBoundingClientRect();
 
-	setTimeout(() => {
-		if (current == null || dispatched.defaultPrevented) {
-			cancelResize(current);
+	current.state.height = height;
+	current.state.width = width;
 
-			return;
-		}
-
-		const {height, width} = current.state.element.getBoundingClientRect();
-
-		current.state.height = height;
-		current.state.width = width;
-
-		resetResizable();
-	});
+	resetResizable();
 }
 
 function removeResizable(element: HTMLElement): void {
