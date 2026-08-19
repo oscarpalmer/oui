@@ -1,0 +1,313 @@
+import {clamp} from '@oscarpalmer/atoms';
+import {isHexColor} from '@oscarpalmer/atoms/color';
+import {dispatch, getEventPosition, on} from '@oscarpalmer/toretto/event';
+import {findAncestor} from '@oscarpalmer/toretto/find';
+import type {EventPosition} from '@oscarpalmer/toretto/models';
+import {toggleStyles} from '@oscarpalmer/toretto/style';
+import supportsTouch from '@oscarpalmer/toretto/touch';
+import {
+	COLOR_PICKER_EXPRESSION_HEX_PREFIX,
+	COLOR_PICKER_KEYS,
+	COLOR_PICKER_SELECTOR_INPUT,
+	COLOR_PICKER_SELECTOR_WELL,
+	COLOR_PICKER_SELECTOR_WELL_KNOB,
+	COLOR_PICKER_TAGNAME,
+} from './constants.color-picker';
+import {setColorPickerValues} from './misc.color-picker';
+import {
+	OuiColorPickerEvent,
+	type OuiColorPickerMovement,
+	type OuiColorPickerMovementParameters,
+	type OuiColorPickerState,
+} from './models.color-picker';
+import {colorPickers} from './state.color-picker';
+
+// #region Functions
+
+function cancelMove(parameters: OuiColorPickerMovementParameters): void {
+	parameters.state.color.value.hexa = parameters.value;
+
+	setColorPickerValues(parameters.state, true);
+
+	colorPickerMovement.parameters = undefined;
+
+	styleToggler.remove();
+}
+
+export function onColorPickerHue(state: OuiColorPickerState): void {
+	const hue = state.content.hue.input.valueAsNumber;
+
+	state.color.value.hsla = {
+		...state.color.value.hsla,
+		hue,
+	};
+
+	setColorPickerValues(state, false);
+}
+
+export function onColorPickerInput(state: OuiColorPickerState): void {
+	const {alpha, anchor, color, host} = state;
+
+	const value = anchor.input.value.replace(COLOR_PICKER_EXPRESSION_HEX_PREFIX, '');
+
+	if (value.toLowerCase() === (alpha ? color.value.hexa : color.value.hex).toLowerCase()) {
+		return;
+	}
+
+	state.value.current = anchor.input.value;
+
+	const {length} = value;
+
+	let valid: boolean;
+
+	if (alpha) {
+		valid = isHexColor(value, true) && (length === 4 || length === 8);
+	} else {
+		valid = isHexColor(value) && (length === 3 || length === 6);
+	}
+
+	if (valid) {
+		if (length === 3 || length === 6) {
+			color.value.hex = value;
+		} else {
+			color.value.hexa = value;
+		}
+	}
+
+	setColorPickerValues(state, false, anchor.input.value);
+
+	dispatch(host, new OuiColorPickerEvent('oui:input', color.value, valid));
+}
+
+export function onColorPickerOpacity(state: OuiColorPickerState): void {
+	const opacity = state.content.opacity?.input.valueAsNumber;
+
+	if (opacity == null) {
+		return;
+	}
+
+	state.color.value.alpha = opacity;
+
+	setColorPickerValues(state, false);
+}
+
+function onEnter(state: OuiColorPickerState): void {
+	const {alpha, anchor, color, internals} = state;
+
+	const input = anchor.input.value.replace(COLOR_PICKER_EXPRESSION_HEX_PREFIX, '');
+
+	const short = alpha ? input.length === 4 : input.length === 3;
+
+	const valid = isHexColor(input, alpha) && short;
+
+	if (valid) {
+		anchor.input.value = color.value.toHexString(alpha);
+	}
+
+	internals.form?.requestSubmit();
+}
+
+function onKeydown(event: KeyboardEvent): void {
+	if (colorPickerMovement.parameters != null && event.key === 'Escape') {
+		cancelMove(colorPickerMovement.parameters);
+
+		return;
+	}
+
+	const knob = findAncestor(event, COLOR_PICKER_SELECTOR_WELL_KNOB);
+
+	if (
+		!(
+			(event.key === 'Enter' && findAncestor(event, COLOR_PICKER_SELECTOR_INPUT) != null) ||
+			(COLOR_PICKER_KEYS.has(event.key) && knob != null)
+		)
+	) {
+		return;
+	}
+
+	const state = colorPickers.map.get(findAncestor(event, COLOR_PICKER_TAGNAME)!);
+
+	if (state == null || state.disabled || state.readonly) {
+		return;
+	}
+
+	event.preventDefault();
+
+	if (event.key === 'Enter') {
+		onEnter(state);
+
+		return;
+	}
+
+	if (knob == null) {
+		return;
+	}
+
+	const modifier = event.shiftKey ? 10 : 1;
+
+	let {lightness, saturation} = state.color.value.hsl;
+
+	switch (event.key) {
+		case 'ArrowDown':
+			lightness -= 1 * modifier;
+			break;
+
+		case 'ArrowLeft':
+			saturation -= 1 * modifier;
+			break;
+
+		case 'ArrowRight':
+			saturation += 1 * modifier;
+			break;
+
+		case 'ArrowUp':
+			lightness += 1 * modifier;
+			break;
+
+		case 'End':
+			lightness = 0;
+			break;
+
+		case 'Home':
+			lightness = 100;
+			break;
+
+		case 'PageDown':
+			lightness -= 10;
+			break;
+
+		case 'PageUp':
+			lightness += 10;
+			break;
+	}
+
+	state.color.value.hsl = {
+		...state.color.value.hsl,
+		lightness: clamp(lightness, 0, 100),
+		saturation: clamp(saturation, 0, 100),
+	};
+
+	setColorPickerValues(state, false);
+}
+
+function onPointerdown(event: MouseEvent | TouchEvent): void {
+	if (
+		event.altKey ||
+		event.ctrlKey ||
+		event.metaKey ||
+		event.shiftKey ||
+		(supportsTouch.value
+			? event.type === 'mousedown'
+			: event.type === 'touchstart' || (event as MouseEvent).button !== 0)
+	) {
+		return;
+	}
+
+	const well = findAncestor(event, COLOR_PICKER_SELECTOR_WELL);
+
+	if (well == null) {
+		return;
+	}
+
+	const element = findAncestor(event, COLOR_PICKER_TAGNAME);
+
+	if (element == null) {
+		return;
+	}
+
+	if (supportsTouch.value) {
+		event.preventDefault();
+	}
+
+	const position = getEventPosition(event);
+
+	if (position == null) {
+		return;
+	}
+
+	const state = colorPickers.map.get(element);
+
+	if (state == null || state.disabled || state.readonly) {
+		return;
+	}
+
+	colorPickerMovement.parameters = {
+		state,
+		rectangle: well.getBoundingClientRect(),
+		value: state.color.value.hexa,
+	};
+
+	styleToggler.set();
+}
+
+function onPointermove(event: MouseEvent | TouchEvent): void {
+	if (colorPickerMovement.parameters == null) {
+		return;
+	}
+
+	const position = getEventPosition(event);
+
+	if (position != null) {
+		updateColorPickerValues(colorPickerMovement.parameters, position);
+	}
+}
+
+function onPointerup(event: MouseEvent | TouchEvent): void {
+	if (colorPickerMovement.parameters == null) {
+		return;
+	}
+
+	const position = getEventPosition(event);
+
+	if (position != null) {
+		updateColorPickerValues(colorPickerMovement.parameters, position);
+	}
+
+	colorPickerMovement.parameters = undefined;
+
+	styleToggler.remove();
+}
+
+function updateColorPickerValues(
+	parameters: OuiColorPickerMovementParameters,
+	position: EventPosition,
+): void {
+	const {rectangle, state} = parameters;
+	const {x, y} = position;
+
+	const top = clamp((y - rectangle.top) / rectangle.height, 0, 1);
+	const left = clamp((x - rectangle.left) / rectangle.width, 0, 1);
+
+	state.color.value.hsl = {
+		...state.color.value.hsl,
+		lightness: (1 - top) * 100,
+		saturation: left * 100,
+	};
+
+	setColorPickerValues(state, true);
+}
+
+// #endregion
+
+// #region Variables
+
+const styleToggler = toggleStyles(document.body, {
+	touchAction: 'none',
+	userSelect: 'none',
+	webkitUserSelect: 'none',
+});
+
+export const colorPickerMovement: OuiColorPickerMovement = {};
+
+// #endregion
+
+// #region Initialization
+
+on(document, 'keydown', onKeydown, {passive: false});
+on(document, 'mousedown', onPointerdown);
+on(document, 'pointermove', onPointermove);
+on(document, 'pointerup', onPointerup);
+on(document, 'touchcancel', onPointerup);
+on(document, 'touchstart', onPointerdown, {passive: false});
+
+// #endregion
