@@ -70,6 +70,20 @@ export class OuiComboboxElement extends HTMLElement {
 	}
 
 	/**
+	 * Form element associated with the combobox
+	 */
+	get form(): HTMLFormElement | null {
+		return this.#internals.form;
+	}
+
+	/**
+	 * Label elements associated with the combobox
+	 */
+	get labels(): NodeList {
+		return this.#internals.labels;
+	}
+
+	/**
 	 * Maximum number of selected options
 	 */
 	get max(): number | undefined {
@@ -158,6 +172,20 @@ export class OuiComboboxElement extends HTMLElement {
 	}
 
 	/**
+	 * Validation message for the combobox
+	 */
+	get validationMessage(): string {
+		return this.#internals.validationMessage;
+	}
+
+	/**
+	 * Validity state for the combobox
+	 */
+	get validity(): ValidityState {
+		return this.#internals.validity;
+	}
+
+	/**
 	 * Current value
 	 */
 	get value(): string {
@@ -183,6 +211,13 @@ export class OuiComboboxElement extends HTMLElement {
 	 */
 	set values(values: unknown[]) {
 		setListboxValues(this.#state, values);
+	}
+
+	/**
+	 * Can the combobox be validated?
+	 */
+	get willValidate(): boolean {
+		return this.#internals.willValidate;
 	}
 
 	constructor() {
@@ -216,6 +251,15 @@ export class OuiComboboxElement extends HTMLElement {
 	}
 
 	/**
+	 * Check if the combobox is valid
+	 *
+	 * @returns `true` if the combobox is valid, otherwise `false`
+	 */
+	checkValidity(): boolean {
+		return this.#internals.checkValidity();
+	}
+
+	/**
 	 * Clear all selected options
 	 */
 	clear(): void {
@@ -244,7 +288,7 @@ export class OuiComboboxElement extends HTMLElement {
 		setListboxValues(this.#state, this.#state.values.initial);
 	}
 
-	formStateRestoreCallback(state: string | File | FormData, reason: unknown): void {
+	formStateRestoreCallback(state: unknown, reason: unknown): void {
 		if (reason !== 'restore') {
 			return;
 		}
@@ -260,6 +304,24 @@ export class OuiComboboxElement extends HTMLElement {
 		} else {
 			setListboxValues(this.#state, parsed);
 		}
+	}
+
+	/**
+	 * Check if the combobox is valid and report any validation errors
+	 *
+	 * @returns `true` if the combobox is valid, otherwise `false`
+	 */
+	reportValidity(): boolean {
+		return this.#internals.reportValidity();
+	}
+
+	/**
+	 * Set a custom validation message for the combobox
+	 *
+	 * @param message Validation message
+	 */
+	setCustomValidity(message: string): void {
+		this.#internals.setValidity({customError: message !== ''}, message, this);
 	}
 
 	/**

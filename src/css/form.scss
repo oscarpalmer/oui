@@ -1,6 +1,8 @@
 /*! https://github.com/oscarpalmer/oui */
 
-@use 'mixins.scss' as mixins;
+@use './mixins/button.mixins.scss' as buttonMixins;
+@use './mixins/input.mixins.scss' as inputMixins;
+@use './mixins/misc.mixins.scss' as miscMixins;
 
 :where(.oui-fieldset) {
 	padding: 1em;
@@ -14,7 +16,7 @@
 	}
 
 	:where(&:not([type='range' i])) {
-		@include mixins.input;
+		@include inputMixins.input;
 
 		padding: 0.5em 0.75em;
 		border-radius: 0.25em;
@@ -79,7 +81,7 @@
 		padding-left: 0.5em;
 
 		&::file-selector-button {
-			@include mixins.button;
+			@include buttonMixins.button;
 
 			--oui-background-value: var(--oui-grey-2);
 			--oui-outline-value: var(--oui-grey-6);
@@ -96,7 +98,7 @@
 		outline: none;
 
 		&::range-track {
-			@include mixins.input;
+			@include inputMixins.input;
 
 			appearance: none;
 			width: 100%;
@@ -109,7 +111,7 @@
 			--oui-background-percentage: 0%;
 			--oui-background-value: var(--oui-blue-6);
 
-			@include mixins.input-outlined;
+			@include inputMixins.input-outlined;
 
 			appearance: none;
 			width: 1.25em;
@@ -153,7 +155,7 @@
 		}
 
 		&::range-track {
-			@include mixins.input-invalid;
+			@include inputMixins.input-invalid;
 		}
 
 		& > option:checked {
@@ -179,7 +181,7 @@
 		}
 
 		&::range-track {
-			@include mixins.input-valid;
+			@include inputMixins.input-valid;
 		}
 
 		&::range-thumb {
@@ -202,7 +204,7 @@
 
 			&::range-thumb,
 			&::range-track {
-				@include mixins.input-focus;
+				@include inputMixins.input-focus;
 			}
 
 			&::range-thumb {
@@ -225,7 +227,7 @@
 				}
 
 				&::range-track {
-					@include mixins.input-hover;
+					@include inputMixins.input-hover;
 				}
 			}
 		}
@@ -569,5 +571,5 @@ select.oui-input:is([multiple]) {
 }
 
 :where(.oui-switch input, .oui-toggle input) {
-	@include mixins.visually-hidden;
+	@include miscMixins.visually-hidden;
 }

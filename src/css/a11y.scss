@@ -1,6 +1,6 @@
 /*! https://github.com/oscarpalmer/oui */
 
-@use './mixins' as mixins;
+@use './mixins/misc.mixins.scss' as miscMixins;
 
 .oui-vh {
 	:where(&) {
@@ -8,6 +8,6 @@
 	}
 
 	:where(&:not(:active, :focus, :focus-within)) {
-		@include mixins.visually-hidden;
+		@include miscMixins.visually-hidden;
 	}
 }

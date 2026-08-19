@@ -1,0 +1,48 @@
+@use './shadow.mixins.scss' as shadowMixins;
+
+@mixin card(
+	$backgroundColor: var(--oui-absolute),
+	$boxShadowColor: color-mix(in oklab, var(--oui-gray-6), transparent 92.5%)
+) {
+	@include shadowMixins.shadow-1($boxShadowColor);
+
+	padding: 1em 1.25em;
+	background-color: $backgroundColor;
+	border-radius: 0.5em;
+}
+
+@mixin floatable() {
+	--margin-bottom: 0.5em;
+	--margin-left: 0.5em;
+	--margin-right: 0.5em;
+	--margin-top: 0.5em;
+
+	inset-block: var(--margin-top) var(--margin-bottom);
+	inset-inline: var(--margin-left) var(--margin-right);
+
+	&[oui-position$='bottom' i] {
+		--margin-bottom: 0;
+	}
+
+	&[oui-position$='end' i] {
+		--margin-right: 0;
+	}
+
+	&[oui-position$='start' i] {
+		--margin-left: 0;
+	}
+
+	&[oui-position$='top' i] {
+		--margin-top: 0;
+	}
+}
+
+@mixin visually-hidden() {
+	width: 1px !important;
+	height: 1px !important;
+	padding: 0 !important;
+	clip-path: inset(50%) !important;
+	overflow: hidden !important;
+	border: 0 !important;
+	white-space: nowrap !important;
+}

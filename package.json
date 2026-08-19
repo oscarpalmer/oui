@@ -1,6 +1,6 @@
 {
 	"name": "@oscarpalmer/oui",
-	"version": "0.37.0",
+	"version": "0.38.0",
 	"description": "Styles, components, and utilities for building websites and applications.",
 	"keywords": [
 		"css",
@@ -91,15 +91,17 @@
 		"clean": "rm -rf ./dist && rm -rf ./postcss",
 		"css:build": "vp run postcss:build && vpx sass ./postcss:./dist/css --no-source-map",
 		"css:watch": "vpx sass ./postcss:./dist/css --no-source-map --watch",
-		"postcss:build": "vpx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss",
-		"postcss:watch": "vpx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss --watch",
+		"postcss:build": "vp run postcss:build:mixins && vp run postcss:build:styles",
+		"postcss:build:mixins": "vpx postcss ./src/css/mixins/*.scss -d ./postcss/mixins -u autoprefixer postcss-input-range --parser postcss-scss",
+		"postcss:build:styles": "vpx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss",
+		"postcss:watch": "vpx postcss ./src/css/**/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss --watch",
 		"test": "vpx vitest --coverage",
 		"tsdown": "vpx tsdown -c ./tsdown.config.ts --watch",
 		"watch": "vp run clean && concurrently \"php -S localhost:3000\" \"vp run postcss:watch\" \"vp run css:watch\" \"vp run tsdown\""
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.188.1",
-		"@oscarpalmer/toretto": "^0.51"
+		"@oscarpalmer/atoms": "^0.189.1",
+		"@oscarpalmer/toretto": "^0.52"
 	},
 	"devDependencies": {
 		"@oxlint/plugins": "^1.78",

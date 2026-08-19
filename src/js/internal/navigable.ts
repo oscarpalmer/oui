@@ -231,6 +231,8 @@ function onKeydown(navigable: OuiNavigable, event: KeyboardEvent): void {
 		return;
 	}
 
+	event.preventDefault();
+
 	let index: number | undefined;
 
 	if (KEYS_ABSOLUTE.has(event.key)) {

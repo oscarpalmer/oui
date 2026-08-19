@@ -64,6 +64,20 @@ export class OuiListboxElement extends HTMLElement {
 	}
 
 	/**
+	 * Form element associated with the listbox
+	 */
+	get form(): HTMLFormElement | null {
+		return this.#internals.form;
+	}
+
+	/**
+	 * Label elements associated with the listbox
+	 */
+	get labels(): NodeList {
+		return this.#internals.labels;
+	}
+
+	/**
 	 * Maximum number of selected options
 	 */
 	get max(): number | undefined {
@@ -145,6 +159,20 @@ export class OuiListboxElement extends HTMLElement {
 	}
 
 	/**
+	 * Validation message for the listbox
+	 */
+	get validationMessage(): string {
+		return this.#internals.validationMessage;
+	}
+
+	/**
+	 * Validity state for the listbox
+	 */
+	get validity(): ValidityState {
+		return this.#internals.validity;
+	}
+
+	/**
 	 * Current value
 	 */
 	get value(): string {
@@ -170,6 +198,13 @@ export class OuiListboxElement extends HTMLElement {
 	 */
 	set values(values: unknown[]) {
 		setListboxValues(this.#state, values);
+	}
+
+	/**
+	 * Can the listbox be validated?
+	 */
+	get willValidate(): boolean {
+		return this.#internals.willValidate;
 	}
 
 	constructor() {
@@ -200,6 +235,15 @@ export class OuiListboxElement extends HTMLElement {
 			default:
 				break;
 		}
+	}
+
+	/**
+	 * Check if the listbox is valid
+	 *
+	 * @returns `true` if the listbox is valid, otherwise `false`
+	 */
+	checkValidity(): boolean {
+		return this.#internals.checkValidity();
 	}
 
 	/**
@@ -247,6 +291,24 @@ export class OuiListboxElement extends HTMLElement {
 		} else {
 			setListboxValues(this.#state, parsed);
 		}
+	}
+
+	/**
+	 * Check if the listbox is valid and report any validation errors
+	 *
+	 * @returns `true` if the listbox is valid, otherwise `false`
+	 */
+	reportValidity(): boolean {
+		return this.#internals.reportValidity();
+	}
+
+	/**
+	 * Set a custom validation message for the listbox
+	 *
+	 * @param message Validation message
+	 */
+	setCustomValidity(message: string): void {
+		this.#internals.setValidity({customError: message !== ''}, message, this);
 	}
 
 	/**

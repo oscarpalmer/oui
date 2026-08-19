@@ -43,8 +43,6 @@ export function createListboxState(
 
 	element.id = select.id;
 
-	setAttribute(element, 'name', select.name === '' ? select.id : select.name);
-
 	const disabled = getBooleanAriaValue(element, 'disabled') || select.disabled;
 	const multiple = element.multiple || select.multiple;
 	const readonly = getBooleanAriaValue(element, 'readonly');

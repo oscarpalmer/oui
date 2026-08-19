@@ -144,7 +144,7 @@ function attachTabs(state: OuiTabsState): void {
 function createContent(prefix: string, panels: HTMLElement[], active: number): OuiTabsContent {
 	const content = createElement('div', {
 		attribute: {
-			[ATTRIBUTE_CONTENT]: '',
+			[`${TAGNAME}-content`]: '',
 		},
 	});
 
@@ -189,7 +189,7 @@ function createTab(
 			controls: panel.id,
 		},
 		attribute: {
-			[ATTRIBUTE_TAB]: '',
+			[`${TAGNAME}-tab`]: '',
 		},
 		property: {
 			id: `${prefix}_tab_${index}`,
@@ -209,7 +209,7 @@ function createTabList(
 ): OuiTabsTabList {
 	const element = createElement('div', {
 		attribute: {
-			[ATTRIBUTE_TABLIST]: '',
+			[`${TAGNAME}-tablist`]: '',
 		},
 		property: {
 			role: 'tablist',
@@ -420,13 +420,7 @@ function setActive(state: OuiTabsState | undefined, value: unknown): void {
 
 const TAGNAME = 'oui-tabs';
 
-const ATTRIBUTE_CONTENT = `${TAGNAME}-content`;
-
 const ATTRIBUTE_PANEL = `${TAGNAME}-panel`;
-
-const ATTRIBUTE_TAB = `${TAGNAME}-tab`;
-
-const ATTRIBUTE_TABLIST = `${TAGNAME}-tablist`;
 
 const MESSAGE_EMPTY = `<${TAGNAME}> must contain at least one [${ATTRIBUTE_PANEL}] child element`;
 
@@ -434,7 +428,7 @@ const MESSAGE_INVALID = `A [${ATTRIBUTE_PANEL}] child element of <${TAGNAME}> mu
 
 const SELECTOR_PANEL = `:scope > [${ATTRIBUTE_PANEL}]`;
 
-const SELECTOR_TAB = `[${ATTRIBUTE_TAB}]`;
+const SELECTOR_TAB = `[${TAGNAME}-tab]`;
 
 let index = 0;
 

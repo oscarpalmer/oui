@@ -1,5 +1,5 @@
 import {isPlainObject} from '@oscarpalmer/atoms/is';
-import {getAria} from '@oscarpalmer/toretto/aria';
+import {getAria, setAria} from '@oscarpalmer/toretto/aria';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {on} from '@oscarpalmer/toretto/event';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
@@ -45,18 +45,7 @@ export class OuiFloatable {
 	constructor(state: OuiFloatableState, standalone: boolean) {
 		this.#state = state;
 
-		const {anchor, content} = state;
-
-		if (standalone) {
-			setAttribute(content, ATTRIBUTE_FLOATABLE, '');
-
-			content.popover = 'manual';
-		} else {
-			content.popover ??= 'auto';
-		}
-
-		setStyle(anchor, 'anchorName', state.name);
-		setStyle(content, 'positionAnchor', state.name);
+		this.#initialize(state, standalone);
 	}
 
 	/**
@@ -102,6 +91,21 @@ export class OuiFloatable {
 		if (!this.#destroyed) {
 			setPosition(this.#state, position);
 		}
+	}
+
+	#initialize(state: OuiFloatableState, standalone: boolean): void {
+		const {anchor, content} = state;
+
+		if (standalone) {
+			setAttribute(content, ATTRIBUTE_FLOATABLE, '');
+
+			content.popover = 'manual';
+		} else {
+			content.popover ??= 'auto';
+		}
+
+		setStyle(anchor, 'anchorName', state.name);
+		setStyle(content, 'positionAnchor', state.name);
 	}
 }
 
@@ -220,7 +224,7 @@ export function getOnBeforeToggleListener(element: HTMLElement): RemovableEventL
 		event => {
 			const {newState, source} = event;
 
-			if (newState === 'open' && source != null && getAria(source, 'disabled') === 'true') {
+			if (newState === 'open' && source != null && getAria(source, 'disabled') === true) {
 				event.preventDefault();
 			}
 		},

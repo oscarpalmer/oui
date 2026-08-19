@@ -226,9 +226,9 @@
 
 :where(select, input[list]) {
 	appearance: none;
-	padding-right: 1em;
+	padding-right: 1.5em;
 	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='4'%3E%3Cpath d='M4 0h6L7 4'/%3E%3C/svg%3E");
-	background-position: right center / 1em;
+	background-position: right 0.5em center;
 	background-repeat: no-repeat;
 	border-radius: 0;
 }

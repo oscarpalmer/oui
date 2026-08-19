@@ -37,19 +37,33 @@ export function updateListboxForm<State extends OuiListboxState>(
 }
 
 export function updateListboxValidity(state: OuiListboxState): void {
-	if (state.autocomplete.none && !state.listbox) {
-		const valueMissing = state.required && state.filter.element.value.length === 0;
+	const {
+		autocomplete,
+		filter,
+		host,
+		internals,
+		listbox,
+		localizations,
+		max,
+		min,
+		multiple,
+		options,
+		required,
+	} = state;
+
+	if (autocomplete.none && !listbox) {
+		const valueMissing = required && filter.element.value.length === 0;
 
 		const localization = getLocalization(
-			state.localizations.global,
-			state.host,
+			localizations.global,
+			host,
 			'invalid',
-			state.localizations.component,
+			localizations.component,
 		);
 
-		state.internals.setValidity({valueMissing}, localize(localization, {}, []));
+		internals.setValidity({valueMissing}, localize(localization, {}, []));
 
-		state.internals.checkValidity();
+		internals.checkValidity();
 
 		return;
 	}
@@ -60,31 +74,27 @@ export function updateListboxValidity(state: OuiListboxState): void {
 	let parameters: unknown[] = [];
 
 	switch (true) {
-		case state.required && state.options.selected.length === 0: {
+		case required && options.selected.length === 0: {
 			error = 'badInput';
 			key = 'input';
 
 			break;
 		}
 
-		case state.multiple &&
-			typeof state.max === 'number' &&
-			state.options.selected.length > state.max: {
-			data = {amount: state.max};
+		case multiple && typeof max === 'number' && options.selected.length > max: {
+			data = {amount: max};
 			error = 'rangeOverflow';
 			key = 'max';
-			parameters = [state.max];
+			parameters = [max];
 
 			break;
 		}
 
-		case state.multiple &&
-			typeof state.min === 'number' &&
-			state.options.selected.length < state.min: {
-			data = {amount: state.min};
+		case multiple && typeof min === 'number' && options.selected.length < min: {
+			data = {amount: min};
 			error = 'rangeUnderflow';
 			key = 'min';
-			parameters = [state.min];
+			parameters = [min];
 
 			break;
 		}
@@ -96,11 +106,11 @@ export function updateListboxValidity(state: OuiListboxState): void {
 	const localization =
 		key == null
 			? undefined
-			: getLocalization(state.localizations.global, state.host, key, state.localizations.component);
+			: getLocalization(localizations.global, host, key, localizations.component);
 
 	const message = localization == null ? undefined : localize(localization, data, parameters);
 
-	state.internals.setValidity(
+	internals.setValidity(
 		error == null
 			? {}
 			: {
@@ -109,7 +119,7 @@ export function updateListboxValidity(state: OuiListboxState): void {
 		message,
 	);
 
-	state.internals.checkValidity();
+	internals.checkValidity();
 }
 
 // #endregion

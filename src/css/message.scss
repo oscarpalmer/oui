@@ -1,6 +1,7 @@
 /*! https://github.com/oscarpalmer/oui */
 
-@use './mixins.scss' as mixins;
+@use './mixins/message.mixins.scss' as messageMixins;
+@use './mixins/misc.mixins.scss' as miscMixins;
 
 .oui-message {
 	:where(&) {
@@ -13,7 +14,7 @@
 			transparent 92.5%
 		);
 
-		@include mixins.card(
+		@include miscMixins.card(
 			color-mix(in oklab, var(--oui-background), transparent 25%),
 			var(--oui-shadow-mixed)
 		);
@@ -48,26 +49,26 @@
 	}
 
 	:where(&--blue, &--info) {
-		@include mixins.message-blue;
+		@include messageMixins.message-blue;
 	}
 
 	:where(&--green, &--success) {
-		@include mixins.message-green;
+		@include messageMixins.message-green;
 	}
 
 	:where(&--orange, &--warning) {
-		@include mixins.message-orange;
+		@include messageMixins.message-orange;
 	}
 
 	:where(&--purple, &--special) {
-		@include mixins.message-purple;
+		@include messageMixins.message-purple;
 	}
 
 	:where(&--red, &--error) {
-		@include mixins.message-red;
+		@include messageMixins.message-red;
 	}
 
 	:where(&--yellow, &--notice) {
-		@include mixins.message-yellow;
+		@include messageMixins.message-yellow;
 	}
 }

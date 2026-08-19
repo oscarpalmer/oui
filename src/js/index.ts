@@ -1,6 +1,7 @@
 import './menu';
 import './toolbar';
 
+export * from './color-picker';
 export * from './combobox/index';
 export * from './dialog';
 export * from './floatable/floatable.standalone';

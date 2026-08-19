@@ -1,4 +1,7 @@
-@use 'mixins.scss' as mixins;
+/*! https://github.com/oscarpalmer/oui */
+
+@use './mixins/misc.mixins.scss' as miscMixins;
+@use './mixins/shadow.mixins.scss' as shadowMixins;
 
 :where([oui-dialog], [oui-popover], [oui-tooltip-content]),
 :where([oui-dialog])::backdrop {
@@ -8,7 +11,7 @@
 }
 
 :where([oui-dialog], [oui-popover], [oui-tooltip-content]) {
-	@include mixins.shadow-5;
+	@include shadowMixins.shadow-5;
 
 	background-color: var(--oui-absolute);
 	scale: 0.9;
@@ -46,7 +49,7 @@
 }
 
 :where([oui-popover], [oui-tooltip-content]) {
-	@include mixins.floatable;
+	@include miscMixins.floatable;
 }
 
 :where([oui-popover]) {

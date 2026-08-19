@@ -1,10 +1,10 @@
 /*! https://github.com/oscarpalmer/oui */
 
-@use './mixins.scss' as mixins;
+@use './mixins/badge.mixins.scss' as badgeMixins;
 
 .oui {
 	:where(&-pill, &-tag) {
-		@include mixins.badge;
+		@include badgeMixins.badge;
 	}
 
 	:where(&-pill) {
@@ -37,26 +37,26 @@
 	// Colors
 
 	:where(&-pill--blue, &-tag--blue) {
-		@include mixins.badge-blue;
+		@include badgeMixins.badge-blue;
 	}
 
 	:where(&-pill--green, &-tag--green) {
-		@include mixins.badge-green;
+		@include badgeMixins.badge-green;
 	}
 
 	:where(&-pill--orange, &-tag--orange) {
-		@include mixins.badge-orange;
+		@include badgeMixins.badge-orange;
 	}
 
 	:where(&-pill--purple, &-tag--purple) {
-		@include mixins.badge-purple;
+		@include badgeMixins.badge-purple;
 	}
 
 	:where(&-pill--red, &-tag--red) {
-		@include mixins.badge-red;
+		@include badgeMixins.badge-red;
 	}
 
 	:where(&-pill--yellow, &-tag--yellow) {
-		@include mixins.badge-yellow;
+		@include badgeMixins.badge-yellow;
 	}
 }

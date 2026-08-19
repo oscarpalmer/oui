@@ -1,6 +1,7 @@
 /*! https://github.com/oscarpalmer/oui */
 
-@use './mixins.scss' as mixins;
+@use './mixins/input.mixins.scss' as inputMixins;
+@use './mixins/misc.mixins.scss' as miscMixins;
 
 :where(oui-listbox, [oui-listbox-content]) {
 	display: flex;
@@ -36,7 +37,7 @@
 
 [oui-listbox-filter-input] {
 	:where(&) {
-		@include mixins.input;
+		@include inputMixins.input;
 
 		--oui-background-value: var(--oui-absolute);
 
@@ -58,7 +59,7 @@
 }
 
 :where([oui-listbox-hidden]) {
-	@include mixins.visually-hidden;
+	@include miscMixins.visually-hidden;
 
 	position: absolute;
 }

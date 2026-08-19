@@ -1,0 +1,344 @@
+/*! https://github.com/oscarpalmer/oui */
+
+@use './mixins/button.mixins.scss' as buttonMixins;
+@use './mixins/input.mixins.scss' as inputMixins;
+@use './mixins/misc.mixins.scss' as miscMixins;
+@use './mixins/shadow.mixins.scss' as shadowMixins;
+
+oui-color-picker {
+	:where(&) {
+		outline: none;
+	}
+}
+
+:where(
+	oui-color-picker[inline] [oui-color-picker-content],
+	[oui-color-picker-content]:popover-open
+) {
+	display: flex !important;
+	flex-flow: column nowrap;
+}
+
+:where(
+	oui-color-picker[inline] [oui-color-picker-content],
+	[oui-color-picker-hue],
+	[oui-color-picker-opacity]
+) {
+	margin: 1em 0 0;
+}
+
+[oui-color-picker-anchor] {
+	:where(&) {
+		display: flex;
+		flex-flow: row nowrap;
+		align-items: stretch;
+	}
+
+	& * {
+		:where(&) {
+			position: relative;
+		}
+
+		:where(&:focus) {
+			z-index: 1;
+		}
+
+		@media (hover: hover) {
+			:where(&:hover) {
+				z-index: 1;
+			}
+		}
+	}
+}
+
+[oui-color-picker-button] {
+	:where(&) {
+		@include buttonMixins.button;
+		@include shadowMixins.shadow-1(var(--oui-shadow-value));
+
+		--oui-background-value: var(--oui-color-picker-hex);
+		--oui-outline-value: var(--oui-gray-6);
+
+		width: 2.5em;
+		margin: 1px 0;
+		border: 2px solid var(--oui-absolute);
+		border-top-left-radius: 0;
+		border-bottom-left-radius: 0;
+		position: relative;
+
+		&::after {
+			display: none;
+			color: var(--oui-color-picker-foreground);
+			font-size: 8px;
+			position: absolute;
+			inset: 50% auto auto 50%;
+			transform: translate3d(-50%, -50%, 0);
+		}
+
+		&[aria-expanded='false' i]::after {
+			content: '▶';
+			display: inline-flex;
+		}
+
+		&[aria-expanded='true' i]::after {
+			content: '▼';
+			display: inline-flex;
+		}
+	}
+
+	:where(&:active) {
+		scale: 1;
+	}
+}
+
+[oui-color-picker-content] {
+	&[popover] {
+		:where(&) {
+			@include miscMixins.floatable;
+			@include shadowMixins.shadow-5;
+
+			min-width: anchor-size(width);
+			border-radius: 0.25em;
+		}
+
+		:where(&:not(:has(> [oui-color-picker-opacity]))) {
+			border-radius: 0.25em 0.25em 0.75em 0.75em;
+		}
+
+		:where(
+			[oui-color-picker-content],
+			[oui-color-picker-hue],
+			[oui-color-picker-opacity],
+			[oui-color-picker-well]
+		) {
+			margin: 1em 1em 0;
+		}
+
+		:where(& > :last-child) {
+			margin-bottom: 1em !important;
+		}
+	}
+}
+
+:where([oui-color-picker-hue], [oui-color-picker-opacity]) {
+	position: relative;
+}
+
+:where([oui-color-picker-hue-input], [oui-color-picker-opacity-input]) {
+	opacity: 0;
+	position: absolute;
+	inset: -0.25em -0.75em;
+	z-index: 1;
+}
+
+:where([oui-color-picker-hue-label], [oui-color-picker-opacity-label]) {
+	display: none;
+}
+
+:where([oui-color-picker-hue-knob]),
+:where([oui-color-picker-hue-track]),
+:where([oui-color-picker-opacity-knob]),
+:where([oui-color-picker-opacity-track]),
+:where([oui-color-picker-well-knob]) {
+	--oui-outline-percentage: 100%;
+	--oui-outline-value: var(--oui-blue-6);
+
+	outline: 4px solid
+		color-mix(in oklab, var(--oui-outline-value), transparent var(--oui-outline-percentage));
+	transition: outline 0.125s ease-in-out;
+}
+
+:where([oui-color-picker-hue-knob]),
+:where([oui-color-picker-opacity-knob]),
+:where([oui-color-picker-well-knob]) {
+	@include shadowMixins.shadow-5(rgb(0 0 0 / 6.25%));
+
+	width: 1.5em;
+	height: 1.5em;
+	border: 0.3333em solid var(--oui-absolute);
+	border-radius: 1.5em;
+	position: absolute;
+	z-index: 1;
+}
+
+:where([oui-color-picker-hue-knob]),
+:where([oui-color-picker-well-knob]) {
+	background-color: var(--oui-color-picker-hex);
+}
+
+:where([oui-color-picker-hue-knob]),
+:where([oui-color-picker-opacity-knob]) {
+	transform: translate3d(-50%, -0.25em, 0);
+}
+
+:where([oui-color-picker-hue-knob]) {
+	inset: 0 0 0 calc((var(--oui-color-picker-hue) / 360) * 100%);
+	pointer-events: none;
+}
+
+:where([oui-color-picker-hue-track]),
+:where([oui-color-picker-opacity-track]),
+:where([oui-color-picker-well]) {
+	box-shadow:
+		inset 0 0 0 1px rgb(0 0 0 / 5%),
+		inset 0 1px 2px -0.5px rgb(0 0 0 / 5%),
+		inset 0 2px 4px -1px rgb(0 0 0 / 5%),
+		inset 0 4px 8px -2px rgb(0 0 0 / 5%);
+}
+
+:where([oui-color-picker-hue-track]),
+:where([oui-color-picker-opacity-track]) {
+	height: 1em;
+	border: 1px solid transparent;
+	border-radius: 1em;
+	pointer-events: none;
+}
+
+:where([oui-color-picker-hue-track]) {
+	background-image: linear-gradient(
+		to right,
+		hsl(0deg 100% 50%) 0%,
+		hsl(60deg 100% 50%) 16.6667%,
+		hsl(120deg 100% 50%) 33.3333%,
+		hsl(180deg 100% 50%) 50%,
+		hsl(240deg 100% 50%) 66.6667%,
+		hsl(300deg 100% 50%) 83.3333%,
+		hsl(360deg 100% 50%) 100%
+	);
+}
+
+[oui-color-picker-hue-input]:focus-visible + [oui-color-picker-hue-track],
+[oui-color-picker-opacity-input]:focus-visible + [oui-color-picker-opacity-track] {
+	:where(&, & [oui-color-picker-hue-knob], & [oui-color-picker-opacity-knob]) {
+		--oui-outline-percentage: 75%;
+	}
+
+	:where(&) {
+		border-color: var(--oui-absolute);
+	}
+}
+
+[oui-color-picker-input] {
+	:where(&) {
+		@include inputMixins.input;
+
+		--oui-background-value: var(--oui-absolute);
+
+		padding: 0.5em 0.75em;
+		border-radius: 0.25em;
+		font-family: monospace, monospace;
+	}
+
+	:where(&:has(+ button)) {
+		border-radius: 0.25em 0 0 0.25em;
+	}
+
+	:where(&:is([disabled], [aria-disabled='true' i])) {
+		--oui-background-percentage: 50%;
+	}
+}
+
+:where([oui-color-picker-opacity-knob]) {
+	background-color: var(--oui-absolute);
+	background-image: linear-gradient(
+		to right,
+		color-mix(
+				in oklab,
+				var(--oui-color-picker-hex),
+				transparent calc((100 - var(--oui-color-picker-alpha)) * 1%)
+			)
+			0%,
+		color-mix(
+				in oklab,
+				var(--oui-color-picker-hex),
+				transparent calc((100 - var(--oui-color-picker-alpha)) * 1%)
+			)
+			100%
+	);
+	inset: 0 0 0 calc(var(--oui-color-picker-alpha) * 1%);
+}
+
+:where([oui-color-picker-opacity-track]) {
+	background-color: var(--oui-absolute);
+	background-image: linear-gradient(
+		to right,
+		transparent 0%,
+		hsl(var(--oui-color-picker-hue) 100% 50%) 100%
+	);
+	position: relative;
+
+	&::after {
+		content: '';
+		background-image:
+			linear-gradient(45deg, rgb(0 0 0 / 10%) 25%, transparent 25%),
+			linear-gradient(135deg, rgb(0 0 0 / 10%) 25%, transparent 25%),
+			linear-gradient(45deg, transparent 75%, rgb(0 0 0 / 10%) 75%),
+			linear-gradient(135deg, transparent 75%, rgb(0 0 0 / 10%) 75%);
+		background-size: 0.5em 0.5em;
+		background-position:
+			0 0,
+			0.25em 0,
+			0.25em -0.25em,
+			0 0.25em;
+		border-radius: 1em;
+		position: absolute;
+		inset: 0;
+	}
+}
+
+[oui-color-picker-well] {
+	:where(&) {
+		--oui-outline-percentage: 100%;
+		--oui-outline-value: var(--oui-blue-6);
+
+		padding: 100% 0 0;
+		background-color: hsl(var(--oui-color-picker-hue) 100% 50%);
+		background-image:
+			linear-gradient(
+				to bottom,
+				hsl(0deg 0% 100%) 0%,
+				hsl(0deg 0% 100% / 0%) 50%,
+				hsl(0deg 0% 0% / 0%) 50%,
+				hsl(0deg 0% 0%) 100%
+			),
+			linear-gradient(to right, hsl(0deg 0% 50%) 0%, hsl(0deg 0% 50% / 0%) 100%);
+		outline: 4px solid
+			color-mix(in oklab, var(--oui-outline-value), transparent var(--oui-outline-percentage));
+		outline-offset: 4px;
+		border-radius: 0.125em;
+		position: relative;
+		transition: outline 0.125s ease-in-out;
+	}
+
+	:where(&:has(:focus-visible)) {
+		--oui-outline-percentage: 75%;
+	}
+
+	@media (hover: hover) {
+		:where(&:hover) {
+			--oui-outline-percentage: 75%;
+		}
+	}
+}
+
+[oui-color-picker-well-knob] {
+	:where(&) {
+		--oui-outline-value: var(--oui-absolute);
+
+		outline-offset: 2px;
+		inset: calc((100 - var(--oui-color-picker-lightness)) * 1%) 0 0
+			calc(var(--oui-color-picker-saturation) * 1%);
+		transform: translate3d(-50%, -50%, 0);
+		cursor: move;
+	}
+
+	:where(&:focus-visible) {
+		--oui-outline-percentage: 33.3333%;
+	}
+
+	@media (hover: hover) {
+		:where(&:hover) {
+			--oui-outline-percentage: 33.3333%;
+		}
+	}
+}

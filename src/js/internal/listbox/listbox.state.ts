@@ -18,10 +18,10 @@ export function attachListbox<State extends OuiListboxState>(
 	states: OuiListboxStates<State>,
 	onAttach: (state: State) => void,
 ): void {
-	const {filter, host, label} = state;
+	const {filter, host, id, label} = state;
 
 	label.element.htmlFor = filter.element.id;
-	label.element.id = `${state.id}_label`;
+	label.element.id = `${id}_label`;
 
 	onAttach(state);
 

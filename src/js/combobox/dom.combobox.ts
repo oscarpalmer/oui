@@ -73,6 +73,7 @@ export function createComboboxButton(parameters: CreateListboxContentParameters)
 		},
 		property: {
 			textContent: multiple ? '' : (select.selectedOptions[0]?.textContent ?? ''),
+			type: 'button',
 		},
 	});
 
@@ -188,6 +189,9 @@ export function createComboboxSelectionItem(
 		},
 		data: {
 			option: option.id,
+		},
+		property: {
+			type: 'button',
 		},
 	});
 

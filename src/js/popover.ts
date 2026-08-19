@@ -125,7 +125,7 @@ function getState(anchor: HTMLElement, content: HTMLElement): OuiPopoverState {
 		content,
 		floatable: createEmbeddedFloatable(anchor, content, options),
 		focusTrap:
-			getAria(content, 'modal') === 'true'
+			getAria(content, 'modal') === true
 				? createFocusTrap(content, {
 						noescape: true,
 					})

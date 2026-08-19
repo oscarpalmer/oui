@@ -1,0 +1,112 @@
+@use './shadow.mixins.scss' as shadowMixins;
+
+@mixin button() {
+	--oui-background-percentage: 25%;
+	--oui-background-value: var(--oui-gray-2);
+	--oui-foreground-percentage: 0%;
+	--oui-foreground-value: var(--oui-gray-8);
+	--oui-outline-percentage: 100%;
+	--oui-outline-value: var(--oui-gray-6);
+	--oui-shadow-inset: color-mix(in oklab, var(--oui-absolute), transparent 75%);
+	--oui-shadow-percentage: 82.5%;
+
+	--oui-shadow-value: color-mix(
+		in oklab,
+		var(--oui-outline-value),
+		transparent var(--oui-shadow-percentage)
+	);
+
+	@include shadowMixins.shadow-2(var(--oui-shadow-value), var(--oui-shadow-inset));
+
+	padding: 0.5em 0.75em;
+	display: inline-flex;
+	flex-flow: row wrap;
+	gap: 0.75em;
+	align-items: center;
+	border-radius: 0.25em;
+	background-color: color-mix(
+		in oklab,
+		var(--oui-background-value),
+		transparent var(--oui-background-percentage)
+	);
+	outline: 4px solid
+		color-mix(in oklab, var(--oui-outline-value), transparent var(--oui-outline-percentage));
+	border: none;
+	color: color-mix(
+		in oklab,
+		var(--oui-foreground-value),
+		transparent var(--oui-foreground-percentage)
+	);
+	line-height: 1.25;
+	transition: 0.125s ease-in-out;
+	transition-property: background, outline, box-shadow, color;
+
+	&:focus-visible {
+		--oui-outline-percentage: 75%;
+	}
+
+	@media (hover: hover) {
+		&:not([disabled], [aria-disabled='true' i]):hover {
+			--oui-background-percentage: 50%;
+			--oui-foreground-percentage: 25%;
+			--oui-shadow-percentage: 90%;
+		}
+	}
+
+	&:not([disabled], [aria-disabled='true' i]):active {
+		box-shadow:
+			0 0 0 1px var(--oui-shadow-value),
+			inset 0 1px 2px 0 var(--oui-shadow-value),
+			inset 0 2px 4px 0 var(--oui-shadow-value);
+		scale: 0.95;
+
+		&[aria-pressed='true' i], &[aria-selected='true' i] {
+			scale: 1;
+		}
+	}
+
+	&[disabled],
+	&[aria-disabled='true' i] {
+		--oui-background-percentage: 80%;
+		--oui-foreground-percentage: 25%;
+		--oui-shadow-percentage: 92.5%;
+
+		font-style: italic;
+	}
+}
+
+@mixin button-blue() {
+	--oui-background-value: var(--oui-blue-3);
+	--oui-foreground-value: var(--oui-blue-8);
+	--oui-outline-value: var(--oui-blue-6);
+}
+
+@mixin button-green() {
+	--oui-background-value: var(--oui-green-3);
+	--oui-foreground-value: var(--oui-green-8);
+	--oui-outline-value: var(--oui-green-6);
+}
+
+@mixin button-orange() {
+	--oui-background-value: var(--oui-orange-3);
+	--oui-foreground-value: var(--oui-orange-8);
+	--oui-outline-value: var(--oui-orange-6);
+}
+
+@mixin button-purple() {
+	--oui-background-value: var(--oui-purple-3);
+	--oui-foreground-value: var(--oui-purple-8);
+	--oui-outline-value: var(--oui-purple-6);
+}
+
+@mixin button-red() {
+	--oui-background-value: var(--oui-red-3);
+	--oui-foreground-value: var(--oui-red-8);
+	--oui-outline-value: var(--oui-red-6);
+}
+
+@mixin button-yellow() {
+	--oui-background-value: var(--oui-yellow-3);
+	--oui-foreground-value: var(--oui-yellow-8);
+	--oui-outline-value: var(--oui-yellow-6);
+}

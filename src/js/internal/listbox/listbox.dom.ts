@@ -199,13 +199,14 @@ export function createListboxInput(
 			autocorrect: 'off',
 			autocomplete: 'off',
 			form: '',
+			inputmode: 'text',
 			spellcheck: 'false',
-			type: 'text',
 		},
 		property: {
 			id,
 			value,
 			role: isAutocomplete || listbox ? 'combobox' : 'searchbox',
+			type: 'text',
 		},
 	});
 

@@ -1,11 +1,13 @@
-@use './mixins.scss' as mixins;
+/*! https://github.com/oscarpalmer/oui */
+
+@use './mixins/button.mixins.scss' as buttonMixins;
 
 oui-tabs {
 	:where(&) {
 		display: flex;
 	}
 
-	:where(&[orientation='horizontal' i]) {
+	:where(&:not([orientation='horizontal' i])) {
 		flex-flow: column nowrap;
 	}
 
@@ -19,31 +21,18 @@ oui-tabs {
 		padding: 1em;
 		flex: 1;
 		background-color: var(--oui-absolute);
-	}
-
-	:where(oui-tabs[orientation='horizontal' i] > &) {
-		border-radius: 0 0 0.5em 0.5em;
-		box-shadow:
-			0 0 0 1px rgb(0 0 0 / 12.5%),
-			inset 0 1px 2px -0.5px rgb(0 0 0 / 5%),
-			inset 0 2px 4px -1px rgb(0 0 0 / 5%);
-	}
-
-	:where(oui-tabs[orientation='vertical' i] > &) {
-		border-radius: 0 0.5em 0.5em 0;
-		box-shadow:
-			0 0 0 1px rgb(0 0 0 / 12.5%),
-			inset 1px 1px 2px -0.5px rgb(0 0 0 / 5%),
-			inset 2px 2px 4px -1px rgb(0 0 0 / 5%);
+		border: 1px solid var(--oui-gray-3);
+		position: relative;
+		z-index: 0;
 	}
 }
 
 [oui-tabs-tab] {
 	:where(&) {
-		@include mixins.button;
-		@include mixins.button-blue;
+		@include buttonMixins.button;
 
-		font-size: 0.875rem;
+		font-size: 0.75rem;
+		flex-shrink: 0;
 		align-self: flex-end;
 	}
 
@@ -61,25 +50,25 @@ oui-tabs {
 	:where(&) {
 		display: flex;
 		gap: 0.5em;
+		position: relative;
+		z-index: 0;
+	}
+
+	:where(&:focus-within) {
+		z-index: 1;
 	}
 
 	&[aria-orientation='horizontal' i] {
 		:where(&) {
-			flex-flow: row nowrap;
-		}
-
-		:where(& > [oui-tabs-tab]) {
-			border-radius: 0.25em 0.25em 0 0;
+			margin: 0 0 0.5em;
+			flex-flow: row wrap;
 		}
 	}
 
 	&[aria-orientation='vertical' i] {
 		:where(&) {
-			flex-flow: column nowrap;
-		}
-
-		:where(& > [oui-tabs-tab]) {
-			border-radius: 0.25em 0 0 0.25em;
+			margin: 0 0.5em 0 0;
+			flex-flow: column wrap;
 		}
 	}
 }

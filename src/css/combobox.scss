@@ -1,10 +1,13 @@
 /*! https://github.com/oscarpalmer/oui */
 
-@use './mixins.scss' as mixins;
+@use './mixins/button.mixins.scss' as buttonMixins;
+@use './mixins/input.mixins.scss' as inputMixins;
+@use './mixins/misc.mixins.scss' as miscMixins;
+@use './mixins/shadow.mixins.scss' as shadowMixins;
 
 [oui-combobox-anchor] {
 	:where(&) {
-		@include mixins.input;
+		@include inputMixins.input;
 
 		--oui-background-value: var(--oui-absolute);
 
@@ -19,12 +22,12 @@
 
 	&:not([disabled], [readonly], [aria-disabled='true' i], [aria-readonly='true' i]) {
 		:where(&:focus-visible, &:focus-within, &:has(+ [oui-combobox-content]:focus-within)) {
-			@include mixins.input-focus;
+			@include inputMixins.input-focus;
 		}
 
 		@media (hover: hover) {
 			:where(&:hover) {
-				@include mixins.input-hover;
+				@include inputMixins.input-hover;
 			}
 		}
 	}
@@ -58,8 +61,8 @@
 }
 
 :where([oui-combobox-content]) {
-	@include mixins.floatable;
-	@include mixins.shadow-5;
+	@include miscMixins.floatable;
+	@include shadowMixins.shadow-5;
 
 	width: fit-content;
 	height: fit-content;
@@ -95,7 +98,7 @@
 }
 
 :where([oui-combobox-filter-input]) {
-	@include mixins.input;
+	@include inputMixins.input;
 
 	--oui-background-value: var(--oui-absolute);
 	--oui-border-value: var(--oui-yellow-3);
@@ -118,7 +121,7 @@
 }
 
 :where([oui-combobox-hidden]) {
-	@include mixins.visually-hidden;
+	@include miscMixins.visually-hidden;
 
 	position: absolute;
 }
@@ -184,7 +187,7 @@
 
 [oui-combobox-selection-item] {
 	:where(&) {
-		@include mixins.button;
+		@include buttonMixins.button;
 
 		--oui-background-value: var(--oui-blue-2);
 		--oui-foreground-value: var(--oui-blue-8);

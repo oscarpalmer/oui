@@ -1,0 +1,53 @@
+@use './shadow.mixins.scss' as shadowMixins;
+
+@mixin badge() {
+	--oui-shadow-inset: color-mix(in oklab, var(--oui-absolute), transparent 50%);
+	--oui-shadow-value: var(--oui-gray-6);
+	--oui-shadow-mixed: color-mix(in oklab, var(--oui-shadow-value), transparent 87.5%);
+
+	@include shadowMixins.shadow-1(var(--oui-shadow-mixed), var(--oui-shadow-inset));
+
+	display: inline-flex;
+	flex-flow: row nowrap;
+	gap: 0.5em;
+	background-color: color-mix(in oklab, var(--oui-background, var(--oui-gray-1)), transparent 25%);
+	color: var(--oui-foreground, var(--oui-gray-8));
+	text-shadow: 0 1px 0 var(--oui-absolute);
+	line-height: 1.25;
+}
+
+@mixin badge-blue() {
+	--oui-background: var(--oui-blue-1);
+	--oui-foreground: var(--oui-blue-8);
+	--oui-shadow-value: var(--oui-blue-6);
+}
+
+@mixin badge-green() {
+	--oui-background: var(--oui-green-1);
+	--oui-foreground: var(--oui-green-8);
+	--oui-shadow-value: var(--oui-green-6);
+}
+
+@mixin badge-orange() {
+	--oui-background: var(--oui-orange-1);
+	--oui-foreground: var(--oui-orange-8);
+	--oui-shadow-value: var(--oui-orange-6);
+}
+
+@mixin badge-purple() {
+	--oui-background: var(--oui-purple-1);
+	--oui-foreground: var(--oui-purple-8);
+	--oui-shadow-value: var(--oui-purple-6);
+}
+
+@mixin badge-red() {
+	--oui-background: var(--oui-red-1);
+	--oui-foreground: var(--oui-red-8);
+	--oui-shadow-value: var(--oui-red-6);
+}
+
+@mixin badge-yellow() {
+	--oui-background: var(--oui-yellow-1);
+	--oui-foreground: var(--oui-yellow-8);
+	--oui-shadow-value: var(--oui-yellow-6);
+}

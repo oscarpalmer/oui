@@ -199,7 +199,7 @@ function getState(element: HTMLDialogElement): OuiDialogState {
 				}
 			}),
 		],
-		modal: getAria(element, 'modal') === 'true' || element.matches(':modal'),
+		modal: getAria(element, 'modal') === true || element.matches(':modal'),
 	};
 
 	state.dialog = new OuiDialog(state);

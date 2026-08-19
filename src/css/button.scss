@@ -1,34 +1,34 @@
 /*! https://github.com/oscarpalmer/oui */
 
-@use './mixins' as mixins;
+@use './mixins/button.mixins.scss' as buttonMixins;
 
 .oui-button {
 	:where(&) {
-		@include mixins.button;
+		@include buttonMixins.button;
 	}
 
 	:where(&--blue) {
-		@include mixins.button-blue;
+		@include buttonMixins.button-blue;
 	}
 
 	:where(&--green) {
-		@include mixins.button-green;
+		@include buttonMixins.button-green;
 	}
 
 	:where(&--orange) {
-		@include mixins.button-orange;
+		@include buttonMixins.button-orange;
 	}
 
 	:where(&--purple) {
-		@include mixins.button-purple;
+		@include buttonMixins.button-purple;
 	}
 
 	:where(&--red) {
-		@include mixins.button-red;
+		@include buttonMixins.button-red;
 	}
 
 	:where(&--yellow) {
-		@include mixins.button-yellow;
+		@include buttonMixins.button-yellow;
 	}
 
 	:where(&--rounded) {
