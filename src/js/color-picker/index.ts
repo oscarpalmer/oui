@@ -6,10 +6,9 @@ import {
 	type RGBAColor,
 	type RGBColor,
 } from '@oscarpalmer/atoms/color';
-import {COLOR_PICKER_TAGNAME} from './constants.color-picker';
+import {COLOR_PICKER_TAGNAME, colorPickerLocalizations} from './constants.color-picker';
 import {onColorPickerInput} from './event.color-picker';
 import {
-	colorPickerLocalizations,
 	setColorPickerDisabled,
 	setColorPickerRequired,
 	setColorPickerValue,

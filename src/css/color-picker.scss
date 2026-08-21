@@ -7,6 +7,9 @@
 
 oui-color-picker {
 	:where(&) {
+		display: flex;
+		flex-flow: column nowrap;
+		gap: 1em;
 		outline: none;
 	}
 }
@@ -19,19 +22,15 @@ oui-color-picker {
 	flex-flow: column nowrap;
 }
 
-:where(
-	oui-color-picker[inline] [oui-color-picker-content],
-	[oui-color-picker-hue],
-	[oui-color-picker-opacity]
-) {
-	margin: 1em 0 0;
-}
-
 [oui-color-picker-anchor] {
 	:where(&) {
 		display: flex;
 		flex-flow: row nowrap;
 		align-items: stretch;
+	}
+
+	:where(& > [oui-color-picker-copy]) {
+		margin: 0 0 0 1em;
 	}
 
 	& * {
@@ -51,52 +50,18 @@ oui-color-picker {
 	}
 }
 
-[oui-color-picker-button] {
-	:where(&) {
-		@include buttonMixins.button;
-		@include shadowMixins.shadow-1(var(--oui-shadow-value));
-
-		--oui-background-value: var(--oui-color-picker-hex);
-		--oui-outline-value: var(--oui-gray-6);
-
-		width: 2.5em;
-		margin: 1px 0;
-		border: 2px solid var(--oui-absolute);
-		border-top-left-radius: 0;
-		border-bottom-left-radius: 0;
-		position: relative;
-
-		&::after {
-			display: none;
-			color: var(--oui-color-picker-foreground);
-			font-size: 8px;
-			position: absolute;
-			inset: 50% auto auto 50%;
-			transform: translate3d(-50%, -50%, 0);
-		}
-
-		&[aria-expanded='false' i]::after {
-			content: '▶';
-			display: inline-flex;
-		}
-
-		&[aria-expanded='true' i]::after {
-			content: '▼';
-			display: inline-flex;
-		}
-	}
-
-	:where(&:active) {
-		scale: 1;
-	}
-}
-
 [oui-color-picker-content] {
+	:where(&) {
+		flex-flow: column nowrap;
+		gap: 1em;
+	}
+
 	&[popover] {
 		:where(&) {
 			@include miscMixins.floatable;
 			@include shadowMixins.shadow-5;
 
+			padding: 1em;
 			min-width: anchor-size(width);
 			border-radius: 0.25em;
 		}
@@ -104,19 +69,53 @@ oui-color-picker {
 		:where(&:not(:has(> [oui-color-picker-opacity]))) {
 			border-radius: 0.25em 0.25em 0.75em 0.75em;
 		}
+	}
+}
 
-		:where(
-			[oui-color-picker-content],
-			[oui-color-picker-hue],
-			[oui-color-picker-opacity],
-			[oui-color-picker-well]
-		) {
-			margin: 1em 1em 0;
-		}
+:where([oui-color-picker-copy]) {
+	@include buttonMixins.button;
 
-		:where(& > :last-child) {
-			margin-bottom: 1em !important;
-		}
+	width: 2.5em;
+	height: 2em;
+	align-self: center;
+	color: transparent;
+	font-size: 0.75em;
+
+	&::before {
+		@include miscMixins.icon(
+			'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJpY29uIGljb24tdGFibGVyIGljb25zLXRhYmxlci1vdXRsaW5lIGljb24tdGFibGVyLWNvcHkiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIgLz48cGF0aCBkPSJNNyA5LjY2N2EyLjY2NyAyLjY2NyAwIDAgMSAyLjY2NyAtMi42NjdoOC42NjZhMi42NjcgMi42NjcgMCAwIDEgMi42NjcgMi42Njd2OC42NjZhMi42NjcgMi42NjcgMCAwIDEgLTIuNjY3IDIuNjY3aC04LjY2NmEyLjY2NyAyLjY2NyAwIDAgMSAtMi42NjcgLTIuNjY3bDAgLTguNjY2IiAvPjxwYXRoIGQ9Ik00LjAxMiAxNi43MzdhMi4wMDUgMi4wMDUgMCAwIDEgLTEuMDEyIC0xLjczN3YtMTBjMCAtMS4xIC45IC0yIDIgLTJoMTBjLjc1IDAgMS4xNTggLjM4NSAxLjUgMSIgLz48L3N2Zz4=',
+			var(--oui-foreground-value),
+			var(--oui-foreground-percentage),
+			1
+		);
+	}
+}
+
+:where([oui-color-picker-copy-error], [oui-color-picker-copy-success]) {
+	color: transparent;
+
+	&::before {
+		opacity: 0;
+	}
+
+	&::after {
+		opacity: 1;
+	}
+}
+
+:where([oui-color-picker-copy-error]) {
+	@include buttonMixins.button-red;
+
+	&::after {
+		mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJpY29uIGljb24tdGFibGVyIGljb25zLXRhYmxlci1vdXRsaW5lIGljb24tdGFibGVyLXgiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIgLz48cGF0aCBkPSJNMTggNmwtMTIgMTIiIC8+PHBhdGggZD0iTTYgNmwxMiAxMiIgLz48L3N2Zz4=');
+	}
+}
+
+:where([oui-color-picker-copy-success]) {
+	@include buttonMixins.button-green;
+
+	&::after {
+		mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJpY29uIGljb24tdGFibGVyIGljb25zLXRhYmxlci1vdXRsaW5lIGljb24tdGFibGVyLWNoZWNrIj48cGF0aCBzdHJva2U9Im5vbmUiIGQ9Ik0wIDBoMjR2MjRIMHoiIGZpbGw9Im5vbmUiIC8+PHBhdGggZD0iTTUgMTJsNSA1bDEwIC0xMCIgLz48L3N2Zz4=');
 	}
 }
 
@@ -131,8 +130,15 @@ oui-color-picker {
 	z-index: 1;
 }
 
-:where([oui-color-picker-hue-label], [oui-color-picker-opacity-label]) {
-	display: none;
+:where(
+	[oui-color-picker-hue-label],
+	[oui-color-picker-opacity-label],
+	[oui-color-picker-output-input-label],
+	[oui-color-picker-output-format-label]
+) {
+	@include miscMixins.visually-hidden;
+
+	position: absolute;
 }
 
 :where([oui-color-picker-hue-knob]),
@@ -224,12 +230,13 @@ oui-color-picker {
 
 		--oui-background-value: var(--oui-absolute);
 
+		width: 100%;
 		padding: 0.5em 0.75em;
 		border-radius: 0.25em;
 		font-family: monospace, monospace;
 	}
 
-	:where(&:has(+ button)) {
+	:where(&:has(+ [oui-color-picker-toggle])) {
 		border-radius: 0.25em 0 0 0.25em;
 	}
 
@@ -283,6 +290,110 @@ oui-color-picker {
 		border-radius: 1em;
 		position: absolute;
 		inset: 0;
+	}
+}
+
+[oui-color-picker-output] {
+	:where(&) {
+		padding: 1em 0 0;
+		display: flex;
+		flex-flow: column nowrap;
+		gap: 1em;
+		border-top: 1px solid var(--oui-gray-3);
+	}
+
+	:where([oui-color-picker-content][popover] &) {
+		padding: 1em 1em 0;
+		margin: 0 -1em;
+	}
+}
+
+:where([oui-color-picker-output-format]) {
+	display: flex;
+	flex-flow: row nowrap;
+	align-items: stretch;
+	justify-content: flex-end;
+	gap: 0.5em;
+}
+
+:where([oui-color-picker-output-format-value]) {
+	@include inputMixins.input;
+
+	padding-right: 2em;
+	background-color: var(--oui-absolute);
+	background-position: right 0.5em center;
+	border-radius: 0.25em;
+}
+
+:where([oui-color-picker-output-input]) {
+	@include inputMixins.input;
+
+	width: 4em;
+	background-color: var(--oui-absolute);
+	border-radius: 0.25em;
+	font-family: monospace, monospace;
+}
+
+[oui-color-picker-output-item] {
+	:where(&) {
+		display: flex;
+		flex-flow: row wrap;
+		gap: 1em;
+	}
+
+	:where(& [oui-color-picker-output-input]) {
+		width: auto;
+		flex: 1;
+	}
+
+	&:only-child {
+		:where(&)::before {
+			@include miscMixins.label;
+
+			content: attr(aria-label);
+			align-self: center;
+			cursor: default;
+		}
+	}
+}
+
+[oui-color-picker-toggle] {
+	:where(&) {
+		@include buttonMixins.button;
+		@include shadowMixins.shadow-1(var(--oui-shadow-value));
+
+		--oui-background-value: var(--oui-color-picker-hex);
+		--oui-outline-value: var(--oui-gray-6);
+
+		width: 2.5em;
+		margin: 1px 0;
+		border: 2px solid var(--oui-absolute);
+		border-top-left-radius: 0;
+		border-bottom-left-radius: 0;
+		position: relative;
+
+		&::after {
+			display: none;
+			color: var(--oui-color-picker-foreground);
+			font-size: 8px;
+			position: absolute;
+			inset: 50% auto auto 50%;
+			transform: translate3d(-50%, -50%, 0);
+		}
+
+		&[aria-expanded='false' i]::after {
+			content: '▶';
+			display: inline-flex;
+		}
+
+		&[aria-expanded='true' i]::after {
+			content: '▼';
+			display: inline-flex;
+		}
+	}
+
+	:where(&:active) {
+		scale: 1;
 	}
 }
 

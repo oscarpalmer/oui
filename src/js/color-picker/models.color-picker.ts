@@ -15,7 +15,8 @@ import type {OuiColorPickerElement} from './index';
 // #region Types
 
 export type OuiColorPickerAnchor = {
-	button?: HTMLButtonElement;
+	copy?: OuiColorPickerCopy;
+	toggle?: HTMLButtonElement;
 	container: HTMLDivElement;
 	input: HTMLInputElement;
 };
@@ -29,6 +30,7 @@ export type OuiColorPickerContent = {
 	element: HTMLDivElement;
 	hue: OuiColorPickerContentHue;
 	opacity?: OuiColorPickerContentOpacity;
+	output?: OuiColorPickerContentOutput;
 	well: OuiColorPickerContentWell;
 };
 
@@ -46,19 +48,33 @@ export type OuiColorPickerContentOpacity = {
 	label: HTMLLabelElement;
 };
 
+export type OuiColorPickerContentOutput = {
+	container: HTMLDivElement;
+	copy?: OuiColorPickerCopy;
+	inputs: HTMLInputElement[];
+	items: HTMLDivElement[];
+	toggle?: HTMLSelectElement;
+};
+
 export type OuiColorPickerContentWell = {
 	element: HTMLDivElement;
 	knob: HTMLSpanElement;
 	label: HTMLSpanElement;
 };
 
+export type OuiColorPickerCopy = {
+	button: HTMLButtonElement;
+	timer?: number;
+};
+
 export type OuiColorPickerCreateParameters = {
 	alpha: boolean;
 	color: Color;
+	copy: boolean;
 	id: string;
 	inline: boolean;
 	input: HTMLInputElement;
-	output: OuiColorPickerOutput;
+	output: OuiColorPickerOutputType;
 };
 
 export class OuiColorPickerEvent extends Event {
@@ -106,12 +122,25 @@ type OuiColorPickerLabel = {
 };
 
 export type OuiColorPickerLocalizations = {
+	blackness: string;
+	blue: string;
+	copy: string;
+	green: string;
+	hex: string;
+	hsl: string;
 	hue: string;
+	hwb: string;
 	invalid: string;
-	lightnessSaturationLabel: string;
-	lightnessSaturationValue: string | ((lightness: number, saturation: number) => string);
+	lightness: string;
 	opacity: string;
+	output: string;
+	red: string;
+	rgb: string;
+	saturation: string;
 	toggle: string;
+	wellLabel: string;
+	wellValue: string | ((lightness: number, saturation: number) => string);
+	whiteness: string;
 };
 
 export type OuiColorPickerMovement = {
@@ -124,14 +153,25 @@ export type OuiColorPickerMovementParameters = {
 	value: string;
 };
 
-export type OuiColorPickerOutput = 'all' | 'none' | OuiColorPickerOutputColor;
-
 export type OuiColorPickerOutputColor = 'hsl' | 'hwb' | 'rgb';
+
+export type OuiColorPickerOutputColorProperty =
+	| 'blackness'
+	| 'blue'
+	| 'green'
+	| 'hue'
+	| 'lightness'
+	| 'red'
+	| 'saturation'
+	| 'whiteness';
+
+export type OuiColorPickerOutputType = 'all' | 'none' | OuiColorPickerOutputColor;
 
 export type OuiColorPickerState = {
 	alpha: boolean;
 	anchor: OuiColorPickerAnchor;
 	color: OuiColorPickerColor;
+	copy: boolean;
 	content: OuiColorPickerContent;
 	disabled: boolean;
 	floatable?: OuiFloatable;
@@ -143,7 +183,7 @@ export type OuiColorPickerState = {
 	label: OuiColorPickerLabel;
 	listeners: RemovableEventListener[];
 	localizations: OuiColorPickerStateLocalizations;
-	output: OuiColorPickerOutput;
+	output: OuiColorPickerOutputType;
 	readonly: boolean;
 	required: boolean;
 	style: HTMLStyleElement;

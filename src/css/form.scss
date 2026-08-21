@@ -327,22 +327,7 @@ select.oui-input:is([multiple]) {
 }
 
 :where(.oui-label, .oui-legend) {
-	font-size: 0.875rem;
-	font-weight: bold;
-	align-self: flex-start;
-}
-
-.oui-label {
-	:where(&) {
-		cursor: pointer;
-		transition: color 0.125s ease-in-out;
-	}
-
-	@media (hover: hover) {
-		:where(&[for]:hover) {
-			color: var(--oui-blue-8);
-		}
-	}
+	@include miscMixins.label;
 }
 
 :where(.oui-legend) {

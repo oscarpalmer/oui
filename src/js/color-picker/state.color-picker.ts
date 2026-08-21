@@ -8,6 +8,7 @@ import {
 	COLOR_PICKER_INPUT_TYPES,
 	COLOR_PICKER_MESSAGE_INPUT,
 	COLOR_PICKER_MESSAGE_LABEL,
+	colorPickerLocalizations,
 } from './constants.color-picker';
 import {createColorPickerAnchor, createColorPickerContent} from './dom.color-picker';
 import {
@@ -15,11 +16,12 @@ import {
 	onColorPickerHue,
 	onColorPickerInput,
 	onColorPickerOpacity,
+	onColorPickerOutputFormat,
+	onColorPickerOutputValue,
 } from './event.color-picker';
 import {updateColorPickerValidity} from './form.color-picker';
 import type {OuiColorPickerElement} from './index';
 import {
-	colorPickerLocalizations,
 	getColorPickerId,
 	getColorPickerOutput,
 	setColorPickerDisabled,
@@ -61,8 +63,8 @@ export function attachColorPicker(state: OuiColorPickerState): void {
 	label.element.htmlFor = anchor.input.id;
 	label.element.id = labelId;
 
-	if (anchor.button != null) {
-		setAria(anchor.button, 'expanded', false);
+	if (anchor.toggle != null) {
+		setAria(anchor.toggle, 'expanded', false);
 	}
 
 	input.before(style, anchor.container, content.element);
@@ -98,8 +100,8 @@ export function attachColorPicker(state: OuiColorPickerState): void {
 		on(content.element, 'toggle', event => {
 			const open = event.newState === 'open';
 
-			if (anchor.button != null) {
-				setAria(anchor.button, 'expanded', open);
+			if (anchor.toggle != null) {
+				setAria(anchor.toggle, 'expanded', open);
 			}
 
 			if (open) {
@@ -115,6 +117,20 @@ export function attachColorPicker(state: OuiColorPickerState): void {
 		listeners.push(
 			on(content.opacity.input, 'input', () => {
 				onColorPickerOpacity(state);
+			}),
+		);
+	}
+
+	if (content.output?.toggle != null) {
+		listeners.push(
+			on(content.element, 'change', event => {
+				onColorPickerOutputValue(event, state);
+			}),
+			on(content.element, 'input', event => {
+				onColorPickerOutputValue(event, state);
+			}),
+			on(content.output.toggle, 'change', () => {
+				onColorPickerOutputFormat(state);
 			}),
 		);
 	}
@@ -181,6 +197,7 @@ export function initializeColorPicker(
 
 	const alpha = element.hasAttribute('alpha');
 	const color = getColor(input.value);
+	const copy = element.hasAttribute('copy');
 	const disabled = element.hasAttribute('disabled') || input.disabled;
 	const inline = element.hasAttribute('inline');
 	const output = getColorPickerOutput(element);
@@ -190,6 +207,7 @@ export function initializeColorPicker(
 	const parameters: OuiColorPickerCreateParameters = {
 		alpha,
 		color,
+		copy,
 		id,
 		inline,
 		input,
@@ -205,6 +223,7 @@ export function initializeColorPicker(
 		alpha,
 		anchor,
 		content,
+		copy,
 		disabled,
 		id,
 		inline,
@@ -239,6 +258,7 @@ export function initializeColorPicker(
 	setAttributes(element, {
 		output,
 		alpha: alpha ? '' : undefined,
+		copy: copy ? '' : undefined,
 		inline: inline ? '' : undefined,
 	});
 

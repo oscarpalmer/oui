@@ -37,6 +37,35 @@
 	}
 }
 
+@mixin icon($url, $color, $percentage, $opacity: 0, $size: 1em) {
+	content: '';
+	width: $size;
+	height: $size;
+	opacity: $opacity;
+	background-color: color-mix(in oklab, $color, transparent $percentage);
+	mask-image: url($url);
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: $size $size;
+	pointer-events: none;
+	transition: 0.125s ease-in-out;
+	transition-property: background-color, color, mask-image, opacity;
+}
+
+@mixin label() {
+	font-size: 0.875rem;
+	font-weight: bold;
+	align-self: flex-start;
+	cursor: pointer;
+	transition: color 0.125s ease-in-out;
+
+	@media (hover: hover) {
+		:where(&:hover) {
+			color: var(--oui-blue-8);
+		}
+	}
+}
+
 @mixin visually-hidden() {
 	width: 1px !important;
 	height: 1px !important;

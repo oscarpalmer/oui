@@ -8,24 +8,18 @@ import {
 	isRgbaColor,
 	isRgbColor,
 } from '@oscarpalmer/atoms/color';
-import {round} from '@oscarpalmer/atoms/math';
 import {getAttribute, setAria, setProperty} from '@oscarpalmer/toretto';
-import {
-	getLocalization,
-	getLocalizations,
-	localize,
-	OuiLocalizations,
-	updateLocalizations,
-} from '../l10n';
-import {COLOR_PICKER_OUTPUTS} from './constants.color-picker';
+import {getLocalization, localize, OuiLocalizations, updateLocalizations} from '../l10n';
+import {COLOR_PICKER_OUTPUTS, colorPickerLocalizations} from './constants.color-picker';
 import {updateColorPickerForm, updateColorPickerValidity} from './form.color-picker';
 import type {OuiColorPickerElement} from './index';
 import type {
 	OuiColorPickerLocalizations,
-	OuiColorPickerOutput,
+	OuiColorPickerOutputType,
 	OuiColorPickerState,
 	OuiColorPickerValueType,
 } from './models.color-picker';
+import {updateColorPickerOutputInputs, updateColorPickerOutputLabels} from './output.color-picker';
 import {colorPickers} from './state.color-picker';
 
 // #region Functions
@@ -36,11 +30,11 @@ export function getColorPickerId(): string {
 	return `oui_color_picker_${index}`;
 }
 
-export function getColorPickerOutput(element: OuiColorPickerElement): OuiColorPickerOutput {
+export function getColorPickerOutput(element: OuiColorPickerElement): OuiColorPickerOutputType {
 	const attribute = getAttribute(element, 'output');
 
-	return COLOR_PICKER_OUTPUTS.has(attribute as OuiColorPickerOutput)
-		? (attribute as OuiColorPickerOutput)
+	return COLOR_PICKER_OUTPUTS.has(attribute as OuiColorPickerOutputType)
+		? (attribute as OuiColorPickerOutputType)
 		: 'none';
 }
 
@@ -121,8 +115,8 @@ export function setColorPickerDisabled(
 	setAria(state.anchor.input, type, value);
 	setProperty(state.content.hue.input, 'disabled', state.disabled || state.readonly);
 
-	if (state.anchor.button != null) {
-		setAria(state.anchor.button, 'disabled', state.disabled);
+	if (state.anchor.toggle != null) {
+		setAria(state.anchor.toggle, 'disabled', state.disabled);
 	}
 
 	if (state.content.opacity != null) {
@@ -196,6 +190,7 @@ export function setColorPickerValues(
 }`;
 
 	updateColorPickerForm(state, isHexColor(state.value.current, state.alpha));
+	updateColorPickerOutputInputs(state);
 	updateColorPickerWell(state);
 
 	if (focus) {
@@ -207,9 +202,9 @@ export function updateColorPickerLabels(state: OuiColorPickerState): void {
 	const {anchor, content, host, localizations} = state;
 	const {component, global} = localizations;
 
-	if (anchor.button != null) {
+	if (anchor.toggle != null) {
 		setAria(
-			anchor.button,
+			anchor.toggle,
 			'label',
 			localize(getLocalization(global, host, 'toggle', component), {}, []),
 		);
@@ -218,11 +213,12 @@ export function updateColorPickerLabels(state: OuiColorPickerState): void {
 	content.hue.label.textContent = localize(getLocalization(global, host, 'hue', component), {}, []);
 
 	content.well.label.textContent = localize(
-		getLocalization(global, host, 'lightnessSaturationLabel', component),
+		getLocalization(global, host, 'wellLabel', component),
 		{},
 		[],
 	);
 
+	updateColorPickerOutputLabels(state);
 	updateColorPickerWell(state);
 
 	if (content.opacity != null) {
@@ -256,7 +252,7 @@ export function updateColorPickerLocalizations(
 	);
 }
 
-export function updateColorPickerWell(state: OuiColorPickerState): void {
+function updateColorPickerWell(state: OuiColorPickerState): void {
 	const {color, content, host, localizations} = state;
 	const {component, global} = localizations;
 	const {lightness, saturation} = color.value.hsl;
@@ -265,7 +261,7 @@ export function updateColorPickerWell(state: OuiColorPickerState): void {
 		content.well.knob,
 		'valuetext',
 		localize(
-			getLocalization(global, host, 'lightnessSaturationValue', component),
+			getLocalization(global, host, 'wellValue', component),
 			{
 				lightness,
 				saturation,
@@ -278,16 +274,6 @@ export function updateColorPickerWell(state: OuiColorPickerState): void {
 // #endregion
 
 // #region Variables
-
-export const colorPickerLocalizations = getLocalizations<OuiColorPickerLocalizations>({
-	hue: 'Hue',
-	invalid: 'Please enter or select a color',
-	lightnessSaturationLabel: 'Lightness and saturation',
-	lightnessSaturationValue: (lightness: number, saturation: number) =>
-		`Lightness: ${round(lightness, 1)}%, saturation: ${round(saturation, 1)}%`,
-	opacity: 'Opacity',
-	toggle: 'Toggle color picker',
-});
 
 let index = 0;
 

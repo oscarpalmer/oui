@@ -1,17 +1,22 @@
 import {createElement} from '@oscarpalmer/toretto/create';
 import {
+	COLOR_PICKER_ATTRIBUTE_COPY,
 	COLOR_PICKER_ATTRIBUTE_WELL,
 	COLOR_PICKER_ATTRIBUTE_WELL_KNOB,
 	COLOR_PICKER_TAGNAME,
+	colorPickerLocalizations,
 } from './constants.color-picker';
 import type {
 	OuiColorPickerAnchor,
 	OuiColorPickerContent,
 	OuiColorPickerContentHue,
 	OuiColorPickerContentOpacity,
+	OuiColorPickerContentOutput,
 	OuiColorPickerContentWell,
+	OuiColorPickerCopy,
 	OuiColorPickerCreateParameters,
 } from './models.color-picker';
+import {createColorPickerOutput} from './output.color-picker';
 
 // #region Functions
 
@@ -43,15 +48,15 @@ export function createColorPickerAnchor(
 		},
 	});
 
-	let button: HTMLButtonElement | undefined;
+	let toggle: HTMLButtonElement | undefined;
 
 	if (!inline) {
-		button = createElement('button', {
+		toggle = createElement('button', {
 			aria: {
 				label: '',
 			},
 			attribute: {
-				[`${COLOR_PICKER_TAGNAME}-button`]: '',
+				[`${COLOR_PICKER_TAGNAME}-toggle`]: '',
 				popovertarget: `${id}_content`,
 			},
 			property: {
@@ -60,16 +65,27 @@ export function createColorPickerAnchor(
 		});
 	}
 
+	let copy: OuiColorPickerCopy | undefined;
+
+	if (parameters.copy) {
+		copy = createColorPickerCopy(parameters, 'hex');
+	}
+
 	container.append(input);
 
-	if (button != null) {
-		container.append(button);
+	if (toggle != null) {
+		container.append(toggle);
+	}
+
+	if (copy != null) {
+		container.append(copy.button);
 	}
 
 	return {
-		button,
 		container,
+		copy,
 		input,
+		toggle,
 	};
 }
 
@@ -92,17 +108,55 @@ export function createColorPickerContent(
 	const opacity = createColorPickerOpacity(parameters);
 	const well = createColorPickerWell(parameters);
 
+	let output: OuiColorPickerContentOutput | undefined;
+
 	element.append(well.element, hue.container);
 
 	if (opacity != null) {
 		element.append(opacity.container);
 	}
 
+	if (parameters.output !== 'none') {
+		output = createColorPickerOutput(parameters, createColorPickerCopy(parameters));
+
+		if (output != null) {
+			element.append(output.container);
+		}
+	}
+
 	return {
 		element,
 		hue,
 		opacity,
+		output,
 		well,
+	};
+}
+
+function createColorPickerCopy(
+	parameters: OuiColorPickerCreateParameters,
+	color?: string,
+): OuiColorPickerCopy | undefined {
+	if (!parameters.copy) {
+		return;
+	}
+
+	return {
+		button: createElement('button', {
+			attribute: {
+				[COLOR_PICKER_ATTRIBUTE_COPY]: '',
+			},
+			aria: {
+				label: colorPickerLocalizations.defaults.copy,
+			},
+			data: {
+				color,
+			},
+			property: {
+				textContent: colorPickerLocalizations.defaults.copy,
+				type: 'button',
+			},
+		}),
 	};
 }
 

@@ -1,3 +1,4 @@
+@use './misc.mixins.scss' as miscMixins;
 @use './shadow.mixins.scss' as shadowMixins;
 
 @mixin button() {
@@ -38,8 +39,17 @@
 		transparent var(--oui-foreground-percentage)
 	);
 	line-height: 1.25;
+	position: relative;
 	transition: 0.125s ease-in-out;
 	transition-property: background, outline, box-shadow, color;
+
+	&::after {
+		@include miscMixins.icon('', var(--oui-foreground-value), var(--oui-foreground-percentage));
+
+		position: absolute;
+		inset: 50% auto auto 50%;
+		transform: translate3d(-50%, -50%, 0);
+	}
 
 	&:focus-visible {
 		--oui-outline-percentage: 75%;
@@ -53,15 +63,41 @@
 		}
 	}
 
-	&:not([disabled], [aria-disabled='true' i]):active {
-		box-shadow:
-			0 0 0 1px var(--oui-shadow-value),
-			inset 0 1px 2px 0 var(--oui-shadow-value),
-			inset 0 2px 4px 0 var(--oui-shadow-value);
-		scale: 0.95;
+	&:not([disabled], [aria-disabled='true' i]) {
+		&[aria-busy='true' i] {
+			@include button-blue;
 
-		&[aria-pressed='true' i], &[aria-selected='true' i] {
-			scale: 1;
+			color: transparent;
+
+			&::after {
+				opacity: 1;
+				mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJpY29uIGljb24tdGFibGVyIGljb25zLXRhYmxlci1vdXRsaW5lIGljb24tdGFibGVyLWxvYWRlci0yIj48cGF0aCBzdHJva2U9Im5vbmUiIGQ9Ik0wIDBoMjR2MjRIMHoiIGZpbGw9Im5vbmUiIC8+PHBhdGggZD0iTTEyIDNhOSA5IDAgMSAwIDkgOSIgLz48L3N2Zz4=');
+				transform-origin: center;
+				animation: rotation 1s linear infinite;
+
+				@keyframes rotation {
+					from {
+						transform: translate3d(-50%, -50%, 0), rotate(0deg);
+					}
+
+					to {
+						transform: translate3d(-50%, -50%, 0) rotate(360deg);
+					}
+				}
+			}
+		}
+
+		&:active {
+			box-shadow:
+				0 0 0 1px var(--oui-shadow-value),
+				inset 0 1px 2px 0 var(--oui-shadow-value),
+				inset 0 2px 4px 0 var(--oui-shadow-value);
+			scale: 0.95;
+
+			&[aria-pressed='true' i],
+			&[aria-selected='true' i] {
+				scale: 1;
+			}
 		}
 	}
 

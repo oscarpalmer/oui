@@ -1,14 +1,20 @@
 import {clamp} from '@oscarpalmer/atoms';
 import {isHexColor} from '@oscarpalmer/atoms/color';
+import {setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
 import {dispatch, getEventPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {toggleStyles} from '@oscarpalmer/toretto/style';
 import supportsTouch from '@oscarpalmer/toretto/touch';
+import {copyValue} from '../internal/misc';
 import {
+	COLOR_PICKER_ATTRIBUTE_COPY_ERROR,
+	COLOR_PICKER_ATTRIBUTE_COPY_SUCCESS,
 	COLOR_PICKER_EXPRESSION_HEX_PREFIX,
 	COLOR_PICKER_KEYS,
+	COLOR_PICKER_SELECTOR_COPY,
 	COLOR_PICKER_SELECTOR_INPUT,
+	COLOR_PICKER_SELECTOR_OUTPUT_INPUT,
 	COLOR_PICKER_SELECTOR_WELL,
 	COLOR_PICKER_SELECTOR_WELL_KNOB,
 	COLOR_PICKER_TAGNAME,
@@ -16,10 +22,13 @@ import {
 import {setColorPickerValues} from './misc.color-picker';
 import {
 	OuiColorPickerEvent,
+	type OuiColorPickerCopy,
 	type OuiColorPickerMovement,
 	type OuiColorPickerMovementParameters,
+	type OuiColorPickerOutputColor,
 	type OuiColorPickerState,
 } from './models.color-picker';
+import {getColorPickerOutputFormat, updateColorPickerOutputCopyLabel} from './output.color-picker';
 import {colorPickers} from './state.color-picker';
 
 // #region Functions
@@ -32,6 +41,82 @@ function cancelMove(parameters: OuiColorPickerMovementParameters): void {
 	colorPickerMovement.parameters = undefined;
 
 	styleToggler.remove();
+}
+
+function onClick(event: Event): void {
+	const button = findAncestor(event, COLOR_PICKER_SELECTOR_COPY);
+
+	if (!(button instanceof HTMLButtonElement)) {
+		return;
+	}
+
+	setAttributes(button, {
+		[COLOR_PICKER_ATTRIBUTE_COPY_ERROR]: undefined,
+		[COLOR_PICKER_ATTRIBUTE_COPY_SUCCESS]: undefined,
+	});
+
+	const state = colorPickers.map.get(findAncestor(event, COLOR_PICKER_TAGNAME)!);
+
+	if (state == null || state.disabled) {
+		return;
+	}
+
+	const copy = button.dataset.color == null ? state.content.output?.copy : state.anchor.copy;
+
+	if (copy == null) {
+		return;
+	}
+
+	if (copy.timer != null) {
+		clearTimeout(copy.timer);
+
+		copy.timer = undefined;
+	}
+
+	const color = button.dataset.color ?? getColorPickerOutputFormat(state);
+
+	if (color == null) {
+		return;
+	}
+
+	let value: string | undefined;
+
+	switch (color) {
+		case 'hex':
+			value = state.color.value.toHexString(state.alpha);
+			break;
+
+		case 'hsl':
+			value = state.color.value.toHslString(state.alpha);
+			break;
+
+		case 'hwb':
+			value = state.color.value.toHwbString(state.alpha);
+			break;
+
+		case 'rgb':
+			value = state.color.value.toRgbString(state.alpha);
+			break;
+
+		default:
+			break;
+	}
+
+	if (value != null) {
+		copyValue(
+			value,
+			() => {
+				console.log('Copied value to clipboard:', value);
+
+				updateColorPickerCopy(copy, COLOR_PICKER_ATTRIBUTE_COPY_SUCCESS);
+			},
+			() => {
+				console.warn('Failed to copy value to clipboard:', value);
+
+				updateColorPickerCopy(copy, COLOR_PICKER_ATTRIBUTE_COPY_ERROR);
+			},
+		);
+	}
 }
 
 export function onColorPickerHue(state: OuiColorPickerState): void {
@@ -89,6 +174,54 @@ export function onColorPickerOpacity(state: OuiColorPickerState): void {
 	state.color.value.alpha = opacity;
 
 	setColorPickerValues(state, false);
+}
+
+export function onColorPickerOutputFormat(state: OuiColorPickerState): void {
+	const {items, toggle} = state.content.output ?? {};
+
+	if (items == null || toggle == null) {
+		return;
+	}
+
+	const attribute = `${COLOR_PICKER_TAGNAME}-output-${toggle.value}`;
+
+	for (const item of items) {
+		item.hidden = !item.hasAttribute(attribute);
+	}
+
+	if (state.content.output?.copy != null) {
+		updateColorPickerOutputCopyLabel(state, state.content.output.copy.button);
+	}
+}
+
+export function onColorPickerOutputValue(event: Event, state: OuiColorPickerState): void {
+	const input = findAncestor(event, COLOR_PICKER_SELECTOR_OUTPUT_INPUT);
+
+	if (!(input instanceof HTMLInputElement)) {
+		return;
+	}
+
+	const color = input.dataset.color as OuiColorPickerOutputColor | undefined;
+	const property = input.dataset.property;
+
+	if (color == null || property == null) {
+		return;
+	}
+
+	if (outputTimer != null) {
+		clearTimeout(outputTimer);
+	}
+
+	outputTimer = setTimeout(() => {
+		outputTimer = undefined;
+
+		state.color.value[color] = {
+			...state.color.value[color],
+			[property]: input.valueAsNumber,
+		} as never;
+
+		setColorPickerValues(state, false);
+	});
 }
 
 function onEnter(state: OuiColorPickerState): void {
@@ -268,6 +401,18 @@ function onPointerup(event: MouseEvent | TouchEvent): void {
 	styleToggler.remove();
 }
 
+function updateColorPickerCopy(copy: OuiColorPickerCopy, attribute: string): void {
+	const {button} = copy;
+
+	setAttribute(button, attribute, '');
+
+	copy.timer = setTimeout(() => {
+		copy.timer = undefined;
+
+		setAttribute(button, attribute, undefined);
+	}, styleTime);
+}
+
 function updateColorPickerValues(
 	parameters: OuiColorPickerMovementParameters,
 	position: EventPosition,
@@ -299,10 +444,15 @@ const styleToggler = toggleStyles(document.body, {
 
 export const colorPickerMovement: OuiColorPickerMovement = {};
 
+const styleTime = 2_500;
+
+let outputTimer: number | undefined;
+
 // #endregion
 
 // #region Initialization
 
+on(document, 'click', onClick);
 on(document, 'keydown', onKeydown, {passive: false});
 on(document, 'mousedown', onPointerdown);
 on(document, 'pointermove', onPointermove);

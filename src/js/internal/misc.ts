@@ -1,8 +1,17 @@
+import {noop} from '@oscarpalmer/atoms/function';
 import {getAria} from '@oscarpalmer/toretto/aria';
 import {getAttribute} from '@oscarpalmer/toretto/attribute';
 import type {AnyAriaBooleanAttribute} from '@oscarpalmer/toretto/models';
 
 // #region Functions
+
+export function copyValue(value: string, onSuccess?: () => void, onError?: () => void): void {
+	try {
+		navigator.clipboard.writeText(value).then(onSuccess ?? noop, onError ?? noop);
+	} catch {
+		onError?.();
+	}
+}
 
 export function getAttributeValue<Value>(
 	element: HTMLElement,
