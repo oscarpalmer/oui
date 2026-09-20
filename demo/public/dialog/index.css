@@ -1,0 +1,39 @@
+.dialog {
+	border-radius: 0.5rem;
+}
+
+.dialog[open] {
+	min-width: fit-content;
+	min-height: fit-content;
+	display: flex !important;
+	flex-flow: column nowrap;
+}
+
+.dialog__header,
+.dialog__content,
+.dialog__footer {
+	padding: 1rem;
+}
+
+.dialog__header,
+.dialog__footer {
+	background: #fafafa;
+}
+
+.dialog__header {
+	display: flex;
+	flex-flow: row nowrap;
+	align-items: center;
+	justify-content: space-between;
+	border-bottom: 1px solid #eee;
+	border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.dialog__content {
+	flex: 1;
+}
+
+.dialog__footer {
+	border-top: 1px solid #eee;
+	border-radius: 0 0 0.5rem 0.5rem;
+}

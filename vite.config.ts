@@ -15,10 +15,8 @@ export default defineConfig({
 			...rules,
 		},
 	},
+	logLevel: 'silent',
 	pack: {
-		deps: {
-			onlyBundle: false,
-		},
 		dts: true,
 		entry: ['./src/js/**/*.ts'],
 		minify: 'dce-only',

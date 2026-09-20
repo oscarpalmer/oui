@@ -22,8 +22,7 @@
 		"url": "git+https://github.com/oscarpalmer/oui.git"
 	},
 	"files": [
-		"dist",
-		"src"
+		"dist"
 	],
 	"type": "module",
 	"module": "dist/js/index.mjs",
@@ -90,32 +89,30 @@
 		"build": "vp run clean && vp pack && vp run css:build",
 		"clean": "rm -rf ./dist && rm -rf ./postcss",
 		"css:build": "vp run postcss:build && vpx sass ./postcss:./dist/css --no-source-map",
-		"css:watch": "vpx sass ./postcss:./dist/css --no-source-map --watch",
-		"postcss:build": "vp run postcss:build:mixins && vp run postcss:build:styles",
-		"postcss:build:mixins": "vpx postcss ./src/css/mixins/*.scss -d ./postcss/mixins -u autoprefixer postcss-input-range --parser postcss-scss",
-		"postcss:build:styles": "vpx postcss ./src/css/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss",
-		"postcss:watch": "vpx postcss ./src/css/**/*.scss -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss --watch",
+		"css:watch": "concurrently \"vpx sass ./postcss:./demo/public/assets/css --no-source-map --watch\" \"vpx sass ./demo/app/css/styles.scss:./demo/public/assets/css/styles.css --no-source-map --watch\"",
+		"postcss:build": "vpx postcss ./src/css/**/*.scss --base ./src/css -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss",
+		"postcss:watch": "vpx postcss ./src/css/**/*.scss --base ./src/css -d ./postcss -u autoprefixer postcss-input-range --parser postcss-scss --watch",
 		"test": "vpx vitest --coverage",
 		"tsdown": "vpx tsdown -c ./tsdown.config.ts --watch",
-		"watch": "vp run clean && concurrently \"php -S localhost:3000\" \"vp run postcss:watch\" \"vp run css:watch\" \"vp run tsdown\""
+		"watch": "concurrently \"cd ./demo/public && php -qS localhost:3000 \" \"vp run postcss:watch\" \"vp run css:watch\" \"vp run tsdown\""
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.189.1",
-		"@oscarpalmer/toretto": "^0.52"
+		"@oscarpalmer/atoms": "^0.204",
+		"@oscarpalmer/toretto": "^0.54"
 	},
 	"devDependencies": {
-		"@oxlint/plugins": "^1.78",
+		"@oxlint/plugins": "^1.83",
 		"@vitest/coverage-istanbul": "^4.1",
-		"autoprefixer": "^10.5",
+		"autoprefixer": "^10.6",
 		"concurrently": "^10",
-		"jsdom": "^30",
-		"postcss-cli": "^11",
+		"jsdom": "^30.1",
+		"postcss-cli": "^12",
 		"postcss-input-range": "^6",
 		"postcss-scss": "^4",
-		"sass": "^1.102",
-		"stylelint": "^17.14",
+		"sass": "^1.104",
+		"stylelint": "^17.15",
 		"stylelint-config-standard-scss": "^17",
-		"tsdown": "^0.22",
+		"tsdown": "^0.23",
 		"typescript": "^6",
 		"vite": "npm:@voidzero-dev/vite-plus-core@latest",
 		"vite-plus": "latest",

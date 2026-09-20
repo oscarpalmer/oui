@@ -9,5 +9,5 @@ export default defineConfig({
 	entry: './src/js/index.ts',
 	hash: false,
 	minify: 'dce-only',
-	outDir: './dist/js',
+	outDir: './demo/public/assets/js',
 });

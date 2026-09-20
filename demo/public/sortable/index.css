@@ -1,0 +1,16 @@
+.container {
+	border: 1px solid #ddd;
+}
+
+[oui-sortable] > * {
+	padding: 1em;
+	border-bottom: 1px solid #ddd;
+}
+
+[oui-sortable] > *:last-child {
+	border-bottom: none;
+}
+
+[oui-sortable-origin] {
+	opacity: 0.3333;
+}

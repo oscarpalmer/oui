@@ -1,10 +1,11 @@
 import {isPlainObject} from '@oscarpalmer/atoms/is';
-import type {EventPosition} from '@oscarpalmer/atoms/models';
+import type {} from '@oscarpalmer/atoms/models';
 import {getNumber} from '@oscarpalmer/atoms/number';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {dispatch, getEventPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
+import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {setStyles, toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
 import supportsTouch from '@oscarpalmer/toretto/touch';
 import {attributable} from '../internal/attributable';

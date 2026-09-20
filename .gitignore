@@ -1,5 +1,4 @@
+demo/public/assets
 dist/
 node_modules/
 postcss/
-types/
-www/

@@ -1,9 +1,10 @@
-import type {EventPosition, PlainObject} from '@oscarpalmer/atoms/models';
+import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {getAttribute, setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createElement} from '@oscarpalmer/toretto/create';
 import {dispatch, getEventPosition} from '@oscarpalmer/toretto/event';
 import {findAncestor, getElementFromPosition} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
+import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {setStyle} from '@oscarpalmer/toretto/style';
 import {attributable} from '../internal/attributable';
 import {

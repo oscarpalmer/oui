@@ -30,6 +30,8 @@
 .oui-card {
 	:where(&) {
 		@include miscMixins.card;
+
+		--stack-gap: 1em;
 	}
 }
 

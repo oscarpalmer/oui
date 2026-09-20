@@ -1,0 +1,134 @@
+.oui {
+	&-blockquote {
+		font-size: 1.125rem;
+
+		&:not(:has(p))::before,
+		&:has(p) p:first-child::before {
+			content: '“';
+			width: 1em;
+			margin: 0 0 0 -1em;
+			display: inline-block;
+			text-align: right;
+			position: absolute;
+		}
+
+		&:not(:has(p)) {
+			&::after {
+				content: '”';
+			}
+		}
+
+		&:has(p) {
+			& > * + * {
+				margin-top: 1em;
+			}
+
+			& p:last-child {
+				&::after {
+					content: '”';
+				}
+			}
+		}
+	}
+
+	&-font {
+		&-antique {
+			font-family:
+				Superclarendon, 'Bookman Old Style', 'URW Bookman', 'URW Bookman L', 'Georgia Pro', Georgia,
+				serif;
+			font-weight: 300;
+		}
+
+		&-didot {
+			font-family:
+				Didot, 'Bodoni MT', 'Noto Serif Display', 'URW Palladio L', 'P052', Sylfaen, serif;
+		}
+
+		&-handwritten {
+			font-family: 'Segoe Print', 'Bradley Hand', Chilanka, TSCu_Comic, casual, cursive;
+		}
+
+		&-humanist {
+			font-family:
+				Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif;
+
+			&--classical {
+				font-family: Optima, Candara, 'Noto Sans', source-sans-pro, sans-serif;
+			}
+
+			&--geometric {
+				font-family: Avenir, Montserrat, Corbel, 'URW Gothic', source-sans-pro, sans-serif;
+			}
+		}
+
+		&-industrial {
+			font-family:
+				Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium', 'Nimbus Sans Narrow',
+				sans-serif-condensed, sans-serif;
+		}
+
+		&-monospace {
+			font-family:
+				ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono',
+				monospace;
+
+			&--slab-serif {
+				font-family: 'Nimbus Mono PS', 'Courier New', monospace;
+			}
+		}
+
+		&-neogrotesque {
+			font-family: Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial, sans-serif;
+		}
+
+		&-oldstyle {
+			font-family: 'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', 'P052', serif;
+		}
+
+		&-sans {
+			font-family: sans-serif;
+
+			&--rounded {
+				font-family:
+					ui-rounded, 'Hiragino Maru Gothic ProN', Quicksand, Comfortaa, Manjari,
+					'Arial Rounded MT', 'Arial Rounded MT Bold', Calibri, source-sans-pro, sans-serif;
+			}
+		}
+
+		&-serif {
+			font-family: serif;
+
+			&--slab {
+				font-family: Rockwell, 'Rockwell Nova', 'Roboto Slab', 'DejaVu Serif', 'Sitka Small', serif;
+			}
+		}
+
+		&-system {
+			font-family: system-ui, sans-serif;
+		}
+
+		&-transitional {
+			font-family: Charter, 'Bitstream Charter', 'Sitka Text', Cambria, serif;
+		}
+
+		&--x-small {
+			font-size: 0.75rem;
+		}
+
+		&--small {
+			font-size: 0.875rem;
+		}
+
+		&--medium {
+			font-size: 1rem;
+		}
+
+		&--large {
+			font-size: 1.25rem;
+		}
+
+		&--x-large {
+			font-size: 1.5rem;
+		}
+	}
+}

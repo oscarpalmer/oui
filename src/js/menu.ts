@@ -230,7 +230,9 @@ function onDeactivate(_: KeyboardEvent, navigable: OuiNavigable): void {
 function onPreventNavigation(_: KeyboardEvent, navigable: OuiNavigable): boolean {
 	const instance = menubars.get(navigable.element) ?? menus.get(navigable.element);
 
-	return findAncestor(instance?.element.parentElement!, SELECTORS) != null;
+	return instance == null
+		? false
+		: findAncestor(instance.element.parentElement!, SELECTORS) != null;
 }
 
 function onShouldActivate(event: KeyboardEvent, navigable: OuiNavigable): boolean {
@@ -266,13 +268,13 @@ function onShouldActivate(event: KeyboardEvent, navigable: OuiNavigable): boolea
 
 function onShouldDeactivate(event: KeyboardEvent, navigable: OuiNavigable): boolean | undefined {
 	if (menubars.has(navigable.element)) {
-		return;
+		return undefined;
 	}
 
 	const menu = menus.get(navigable.element);
 
 	if (menu == null) {
-		return;
+		return undefined;
 	}
 
 	const horizontal = navigable.orientation === 'horizontal';
@@ -291,6 +293,8 @@ function onShouldDeactivate(event: KeyboardEvent, navigable: OuiNavigable): bool
 	) {
 		return false;
 	}
+
+	return undefined;
 }
 
 function removeInstance<Instance extends OuiBasicMenu>(

@@ -1,0 +1,22 @@
+[oui-resizable] {
+	min-width: 6em;
+	min-height: 2em;
+	padding: 1em;
+	align-self: flex-start;
+	outline: 1px solid red;
+	position: relative;
+}
+
+[oui-resizable-handle] {
+	outline: 1px solid blue;
+	font-size: 12px;
+	position: absolute;
+	inset: auto 0 0 auto;
+}
+
+.dimensional {
+	max-width: 500px;
+	min-width: 100px;
+	max-height: 500px;
+	min-height: 100px;
+}

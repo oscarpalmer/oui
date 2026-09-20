@@ -1,0 +1,98 @@
+@import './reset.css';
+@import './a11y.css';
+@import './badge.css';
+@import './button.css';
+@import './color.css';
+@import './combobox.css';
+@import './content.css';
+@import './flex.css';
+@import './floatable.css';
+@import './form.css';
+@import './listbox.css';
+@import './message.css';
+@import './splitter.css';
+@import './table.css';
+@import './tabs.css';
+@import './typography.css';
+
+:root {
+	--spacing: clamp(.5rem, 3vw, 3rem);
+	--flow-gap: var(--spacing);
+	--stack-gap: var(--spacing);
+}
+
+body {
+	color-scheme: light;
+	display: flex;
+	flex-flow: column nowrap;
+	background-color: light-dark(var(--oui-stone-0), var(--oui-slate-0));
+	color: light-dark(var(--oui-stone-9), var(--oui-slate-9));
+
+	@media (prefers-color-scheme: dark) {
+		color-scheme: dark;
+	}
+}
+
+/** */
+
+a {
+	color: var(--oui-blue-7);
+	outline: 2px solid transparent;
+	outline-offset: .25em;
+	border-radius: 1em;
+	transition: .125s ease-in-out;
+}
+
+a[aria-current='page'] {
+	color: var(--oui-gray-7);
+	font-style: italic;
+}
+
+a:focus-visible {
+	outline-color: var(--oui-blue-4);
+	text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	color: var(--oui-stone-10);
+}
+
+hr {
+	border-color: light-dark(var(--oui-stone-3), var(--oui-slate-3));
+}
+
+/** */
+
+.header,
+.footer {
+	padding: var(--spacing);
+	background-color: var(--oui-absolute);
+}
+
+.header {
+	border-bottom: 1px solid light-dark(var(--oui-stone-2), var(--oui-slate-2));
+
+	p {
+		font-weight: bold;
+	}
+}
+
+.footer {
+	border-top: 1px solid light-dark(var(--oui-stone-2), var(--oui-slate-2));
+	font-size: .875rem;
+	font-style: italic;
+	line-height: 1;
+}
+
+.main {
+	padding: var(--spacing);
+}
+
+.nav {
+	font-size: .875rem;
+}

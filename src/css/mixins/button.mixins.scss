@@ -2,7 +2,7 @@
 @use './shadow.mixins.scss' as shadowMixins;
 
 @mixin button() {
-	--oui-background-percentage: 25%;
+	--oui-background-percentage: 50%;
 	--oui-background-value: var(--oui-gray-2);
 	--oui-foreground-percentage: 0%;
 	--oui-foreground-value: var(--oui-gray-8);
@@ -112,37 +112,37 @@
 }
 
 @mixin button-blue() {
-	--oui-background-value: var(--oui-blue-3);
+	--oui-background-value: var(--oui-blue-2);
 	--oui-foreground-value: var(--oui-blue-8);
 	--oui-outline-value: var(--oui-blue-6);
 }
 
 @mixin button-green() {
-	--oui-background-value: var(--oui-green-3);
+	--oui-background-value: var(--oui-green-2);
 	--oui-foreground-value: var(--oui-green-8);
 	--oui-outline-value: var(--oui-green-6);
 }
 
 @mixin button-orange() {
-	--oui-background-value: var(--oui-orange-3);
+	--oui-background-value: var(--oui-orange-2);
 	--oui-foreground-value: var(--oui-orange-8);
 	--oui-outline-value: var(--oui-orange-6);
 }
 
 @mixin button-purple() {
-	--oui-background-value: var(--oui-purple-3);
+	--oui-background-value: var(--oui-purple-2);
 	--oui-foreground-value: var(--oui-purple-8);
 	--oui-outline-value: var(--oui-purple-6);
 }
 
 @mixin button-red() {
-	--oui-background-value: var(--oui-red-3);
+	--oui-background-value: var(--oui-red-2);
 	--oui-foreground-value: var(--oui-red-8);
 	--oui-outline-value: var(--oui-red-6);
 }
 
 @mixin button-yellow() {
-	--oui-background-value: var(--oui-yellow-3);
+	--oui-background-value: var(--oui-yellow-2);
 	--oui-foreground-value: var(--oui-yellow-8);
 	--oui-outline-value: var(--oui-yellow-6);
 }

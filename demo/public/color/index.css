@@ -1,0 +1,15 @@
+.colors {
+	display: flex;
+	flex-flow: column nowrap;
+
+	& & {
+		flex-flow: row nowrap;
+	}
+}
+
+.color {
+	aspect-ratio: 1;
+	flex: 1;
+	align-content: center;
+	text-align: center;
+}
