@@ -6,7 +6,7 @@ import {findAncestor} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {setStyle, setStyles, toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
-import supportsTouch from '@oscarpalmer/toretto/touch';
+import {supportsTouch} from '@oscarpalmer/toretto/touch';
 import type {OuiMovable} from '../movable/movable.embedded';
 import type {OuiSortable} from '../sortable/sortable.embedded';
 

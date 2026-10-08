@@ -7,7 +7,7 @@ import {createElement} from '@oscarpalmer/toretto/create';
 import {getEventPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {setStyle, toggleStyles} from '@oscarpalmer/toretto/style';
-import supportsTouch from '@oscarpalmer/toretto/touch';
+import {supportsTouch} from '@oscarpalmer/toretto/touch';
 
 // #region Special variables
 
@@ -103,7 +103,7 @@ class OuiSplitter {
 }
 
 export class OuiSplitterElement extends HTMLElement {
-	static readonly observedAttributes = [
+	static readonly observedAttributes: string[] = [
 		ATTRIBUTE_MAX,
 		ATTRIBUTE_MIN,
 		ATTRIBUTE_SIZE,

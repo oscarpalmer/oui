@@ -7,7 +7,7 @@ import {findAncestor} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {setStyles, toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
-import supportsTouch from '@oscarpalmer/toretto/touch';
+import {supportsTouch} from '@oscarpalmer/toretto/touch';
 import {attributable} from '../internal/attributable';
 
 // #region Types
@@ -364,7 +364,7 @@ function resetResizable(): void {
 
 export const RESIZABLE_ATTRIBUTE = 'oui-resizable';
 
-export const RESIZABLE_ATTRIBUTE_HANDLE = `${RESIZABLE_ATTRIBUTE}-handle`;
+export const RESIZABLE_ATTRIBUTE_HANDLE: string = `${RESIZABLE_ATTRIBUTE}-handle`;
 
 const ATTRIBUTE_MAXIMUM = `${RESIZABLE_ATTRIBUTE}-maximum`;
 

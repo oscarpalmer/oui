@@ -5,7 +5,7 @@ import {dispatch, getEventPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {toggleStyles} from '@oscarpalmer/toretto/style';
-import supportsTouch from '@oscarpalmer/toretto/touch';
+import {supportsTouch} from '@oscarpalmer/toretto/touch';
 import {copyValue} from '../internal/misc';
 import {
 	COLOR_PICKER_ATTRIBUTE_COPY_ERROR,
@@ -29,7 +29,7 @@ import {
 	type OuiColorPickerState,
 } from './models.color-picker';
 import {getColorPickerOutputFormat, updateColorPickerOutputCopyLabel} from './output.color-picker';
-import {colorPickers} from './state.color-picker';
+import {colorPickerMap} from './state.color-picker';
 
 // #region Functions
 
@@ -55,7 +55,7 @@ function onClick(event: Event): void {
 		[COLOR_PICKER_ATTRIBUTE_COPY_SUCCESS]: undefined,
 	});
 
-	const state = colorPickers.map.get(findAncestor(event, COLOR_PICKER_TAGNAME)!);
+	const state = colorPickerMap.get(findAncestor(event, COLOR_PICKER_TAGNAME)!);
 
 	if (state == null || state.disabled) {
 		return;
@@ -258,7 +258,7 @@ function onKeydown(event: KeyboardEvent): void {
 		return;
 	}
 
-	const state = colorPickers.map.get(findAncestor(event, COLOR_PICKER_TAGNAME)!);
+	const state = colorPickerMap.get(findAncestor(event, COLOR_PICKER_TAGNAME)!);
 
 	if (state == null || state.disabled || state.readonly) {
 		return;
@@ -358,7 +358,7 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		return;
 	}
 
-	const state = colorPickers.map.get(element);
+	const state = colorPickerMap.get(element);
 
 	if (state == null || state.disabled || state.readonly) {
 		return;

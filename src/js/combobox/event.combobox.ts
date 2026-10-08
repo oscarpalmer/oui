@@ -1,7 +1,7 @@
 import {clamp} from '@oscarpalmer/atoms/number';
 import {findAncestor, getData} from '@oscarpalmer/toretto';
 import {on} from '@oscarpalmer/toretto/event';
-import {LISTBOX_KEYS} from '../internal/listbox/listbox.constants';
+import {LISTBOX_KEYS_ACTIVATION} from '../internal/listbox/listbox.constants';
 import {
 	applyListboxSelection,
 	filterListbox,
@@ -211,7 +211,7 @@ export function onComboboxKeydownSelection(
 	state: OuiComboboxState,
 	item: HTMLElement,
 ): void {
-	if (LISTBOX_KEYS.activation.has(event.key)) {
+	if (LISTBOX_KEYS_ACTIVATION.has(event.key)) {
 		event.preventDefault();
 
 		onComboboxRemoveSelection(state, item);

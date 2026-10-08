@@ -103,7 +103,7 @@ include_once(__DIR__ . '/../../app/partials/prefix.php');
 		<fieldset class="oui-fieldset">
 			<legend class="oui-legend"><?php echo $toggle['labels'][$typeIndex] ?></legend>
 
-			<ul class="flow flow-small">
+			<ul class="flow flow--small">
 				<?php foreach ($toggle['attributes'] as $attributeIndex => $attribute): ?>
 					<li>
 						<label class="<?php echo $toggle['classes'][$typeIndex] ?>" <?php echo $attribute ?>>
@@ -126,9 +126,9 @@ include_once(__DIR__ . '/../../app/partials/prefix.php');
 			<fieldset class="oui-fieldset">
 				<legend class="oui-legend"><?php echo $input['labels'][$typeIndex] ?></legend>
 
-				<ul class="flow flow-small">
+				<ul class="flow flow--small">
 					<?php foreach ($variation['attributes'] as $attributeIndex => $attribute): ?>
-						<li class="stack stack-small">
+						<li class="stack stack--small">
 							<label class="oui-label" for="<?php echo $type . '_' . $typeIndex . '_' . $attributeIndex ?>"><?php echo $input['labels'][$typeIndex] ?><?php echo $variation['labels'][$attributeIndex] ? ' <i>(' . $variation['labels'][$attributeIndex] . ')</i>' : '' ?></label>
 							<input class="oui-input<?php echo $variation['classes'][$attributeIndex] ?>" id="<?php echo $type . '_' . $typeIndex . '_' . $attributeIndex ?>" type="<?php echo $type; ?>" <?php echo $attribute ?>>
 						</li>
@@ -145,9 +145,9 @@ include_once(__DIR__ . '/../../app/partials/prefix.php');
 	<h2>Textarea</h2>
 
 	<form>
-		<ul class="flow flow-small">
+		<ul class="flow flow--small">
 			<?php foreach ($variation['attributes'] as $attributeIndex => $attribute): ?>
-				<li class="stack stack-small">
+				<li class="stack stack--small">
 					<label class="oui-label" for="<?php echo $type . '_' . $typeIndex . '_' . $attributeIndex ?>"><?php echo $input['labels'][$typeIndex] ?><?php echo $variation['labels'][$attributeIndex] ? ' <i>(' . $variation['labels'][$attributeIndex] . ')</i>' : '' ?></label>
 					<textarea class="oui-input<?php echo $variation['classes'][$attributeIndex] ?>" id="<?php echo $type . '_' . $typeIndex . '_' . $attributeIndex ?>" <?php echo $attribute ?>></textarea>
 				</li>

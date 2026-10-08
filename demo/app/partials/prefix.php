@@ -20,10 +20,10 @@ include_once(__DIR__ . '/../data/pages.php');
 
 <body>
 
-	<header class="stack stack-small header">
+	<header class="stack stack--small header">
 		<p>Oui</p>
 		<nav class="nav">
-			<ul oui-menubar class="flow flow-small">
+			<ul oui-menubar class="flow flow--small">
 				<?php foreach ($pages as $page): ?>
 					<li><a oui-menubar-item href="<?php echo $page->url; ?>" <?php echo $meta->url == $page->url ? ' aria-current="page"' : '' ?>><?php echo $page->title; ?></a></li>
 				<?php endforeach; ?>

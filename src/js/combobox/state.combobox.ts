@@ -13,7 +13,7 @@ import type {
 } from '../internal/listbox/listbox.model';
 import {initializeListboxState} from '../internal/listbox/listbox.state';
 import {getAttributeValue, getBooleanAriaValue} from '../internal/misc';
-import {getLocalizations} from '../l10n';
+import {getLocalizations, OuiLocalizations} from '../l10n';
 import {COMBOBOX_ATTRIBUTES, COMBOBOX_MESSAGES} from './constants.combobox';
 import {createComboboxAnchor, createComboboxContent} from './dom.combobox';
 import {
@@ -227,16 +227,17 @@ const comboboxCallbacks: OuiListboxCallbacks<OuiComboboxState> = {
 	},
 };
 
-export const comboboxLocalizations = getLocalizations<OuiListboxLocalizations>({
-	empty: 'No results found',
-	input: 'Please enter a value',
-	invalid: 'Please select an option from the list',
-	max: max => `Please select fewer options (maximum is ${max})`,
-	min: min => `Please select more options (minimum is ${min})`,
-	remove: label => `Remove ${label}`,
-	results: amount => `${amount} results available`,
-	selected: amount => `${amount} selected`,
-});
+export const comboboxLocalizations: OuiLocalizations<OuiListboxLocalizations> =
+	getLocalizations<OuiListboxLocalizations>({
+		empty: 'No results found',
+		input: 'Please enter a value',
+		invalid: 'Please select an option from the list',
+		max: max => `Please select fewer options (maximum is ${max})`,
+		min: min => `Please select more options (minimum is ${min})`,
+		remove: label => `Remove ${label}`,
+		results: amount => `${amount} results available`,
+		selected: amount => `${amount} selected`,
+	});
 
 export const comboboxStates: OuiListboxStates<OuiComboboxState> = {
 	map: new WeakMap(),

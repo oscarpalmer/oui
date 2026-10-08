@@ -2,3 +2,4 @@ demo/public/assets
 dist/
 node_modules/
 postcss/
+.vitest/

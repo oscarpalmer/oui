@@ -3,11 +3,13 @@
 @import './badge.css';
 @import './button.css';
 @import './color.css';
+@import './color-picker.css';
 @import './combobox.css';
 @import './content.css';
 @import './flex.css';
 @import './floatable.css';
 @import './form.css';
+@import './icon.css';
 @import './listbox.css';
 @import './message.css';
 @import './splitter.css';
@@ -16,7 +18,7 @@
 @import './typography.css';
 
 :root {
-	--spacing: clamp(.5rem, 3vw, 3rem);
+	--spacing: clamp(0.5rem, 3vw, 3rem);
 	--flow-gap: var(--spacing);
 	--stack-gap: var(--spacing);
 }
@@ -26,7 +28,8 @@ body {
 	display: flex;
 	flex-flow: column nowrap;
 	background-color: light-dark(var(--oui-stone-0), var(--oui-slate-0));
-	color: light-dark(var(--oui-stone-9), var(--oui-slate-9));
+	color: light-dark(var(--oui-stone-9), var(--oui-slate-8));
+	font-family: Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial, sans-serif;
 
 	@media (prefers-color-scheme: dark) {
 		color-scheme: dark;
@@ -38,9 +41,9 @@ body {
 a {
 	color: var(--oui-blue-7);
 	outline: 2px solid transparent;
-	outline-offset: .25em;
+	outline-offset: 0.25em;
 	border-radius: 1em;
-	transition: .125s ease-in-out;
+	transition: 0.125s ease-in-out;
 }
 
 a[aria-current='page'] {
@@ -84,7 +87,7 @@ hr {
 
 .footer {
 	border-top: 1px solid light-dark(var(--oui-stone-2), var(--oui-slate-2));
-	font-size: .875rem;
+	font-size: 0.875rem;
 	font-style: italic;
 	line-height: 1;
 }
@@ -94,5 +97,5 @@ hr {
 }
 
 .nav {
-	font-size: .875rem;
+	font-size: 0.875rem;
 }

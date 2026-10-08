@@ -135,8 +135,8 @@ export function attachColorPicker(state: OuiColorPickerState): void {
 		);
 	}
 
-	colorPickers.map.set(host, state);
-	colorPickers.set.add(state);
+	colorPickerMap.set(host, state);
+	colorPickerSet.add(state);
 }
 
 export function detachColorPicker(state: OuiColorPickerState): void {
@@ -169,8 +169,8 @@ export function detachColorPicker(state: OuiColorPickerState): void {
 		listeners[index]();
 	}
 
-	colorPickers.map.delete(state.host);
-	colorPickers.set.delete(state);
+	colorPickerMap.delete(state.host);
+	colorPickerSet.delete(state);
 }
 
 export function initializeColorPicker(
@@ -278,9 +278,7 @@ export function initializeColorPicker(
 
 // #region Variables
 
-export const colorPickers = {
-	map: new WeakMap<OuiColorPickerElement, OuiColorPickerState>(),
-	set: new Set<OuiColorPickerState>(),
-};
+export const colorPickerMap: WeakMap<OuiColorPickerElement, OuiColorPickerState> = new WeakMap();
+export const colorPickerSet: Set<OuiColorPickerState> = new Set();
 
 // #endregion

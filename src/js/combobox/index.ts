@@ -31,7 +31,7 @@ declare global {
 export class OuiComboboxElement extends HTMLElement {
 	static formAssociated = true;
 
-	static observedAttributes = ['max', 'min', 'required', 'value'];
+	static observedAttributes: string[] = ['max', 'min', 'required', 'value'];
 
 	readonly #internals: ElementInternals;
 

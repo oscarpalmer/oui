@@ -1,5 +1,5 @@
 import {noop} from '@oscarpalmer/atoms/function';
-import {setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
+import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {getData} from '@oscarpalmer/toretto/data';
 import {createListboxContent} from '../internal/listbox/listbox.dom';
 import {generateListboxIds} from '../internal/listbox/listbox.misc';
@@ -12,7 +12,7 @@ import type {
 } from '../internal/listbox/listbox.model';
 import {initializeListboxState} from '../internal/listbox/listbox.state';
 import {getBooleanAriaValue} from '../internal/misc';
-import {getLocalizations} from '../l10n';
+import {getLocalizations, OuiLocalizations} from '../l10n';
 import {LISTBOX_ATTRIBUTES, LISTBOX_MESSAGES} from './constants.listbox';
 import {
 	onListboxEnter,
@@ -175,16 +175,17 @@ const listboxCallbacks: OuiListboxCallbacks = {
 	},
 };
 
-export const listboxLocalizations = getLocalizations<OuiListboxLocalizations>({
-	empty: 'No results found',
-	input: '',
-	invalid: 'Please select an option from the list',
-	max: max => `Please select fewer options (maximum is ${max})`,
-	min: min => `Please select more options (minimum is ${min})`,
-	remove: '',
-	results: amount => `${amount} results available`,
-	selected: amount => `${amount} selected`,
-});
+export const listboxLocalizations: OuiLocalizations<OuiListboxLocalizations> =
+	getLocalizations<OuiListboxLocalizations>({
+		empty: 'No results found',
+		input: '',
+		invalid: 'Please select an option from the list',
+		max: max => `Please select fewer options (maximum is ${max})`,
+		min: min => `Please select more options (minimum is ${min})`,
+		remove: '',
+		results: amount => `${amount} results available`,
+		selected: amount => `${amount} selected`,
+	});
 
 export const listboxStates: OuiListboxStates = {
 	map: new WeakMap(),

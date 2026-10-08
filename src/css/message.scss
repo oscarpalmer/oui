@@ -11,11 +11,12 @@
 		--oui-shadow-mixed: color-mix(
 			in oklab,
 			var(--oui-shadow-value, var(--oui-gray-6)),
-			transparent 92.5%
+			transparent var(--oui-shadow-percentage)
 		);
+		--oui-shadow-percentage: 92.5%;
 
 		@include miscMixins.card(
-			color-mix(in oklab, var(--oui-background), transparent 25%),
+			color-mix(in oklab, var(--oui-background), transparent 75%),
 			var(--oui-shadow-mixed)
 		);
 
@@ -36,7 +37,7 @@
 	:where(& hr) {
 		height: 1px;
 		margin: 0 -1.25em;
-		background-color: var(--oui-border);
+		background-color: color-mix(in oklab, var(--oui-border), transparent 25%);
 		border: none;
 	}
 

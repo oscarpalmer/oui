@@ -408,6 +408,7 @@ select.oui-input:is([multiple]) {
 			text-align: center;
 			top: 0.25em;
 			right: 1.5em;
+			transition: right 0.125s ease-in-out;
 		}
 	}
 
@@ -419,6 +420,13 @@ select.oui-input:is([multiple]) {
 			content: attr(oui-on, '\2713');
 			box-shadow: 0 1px 2px 1px rgb(0 0 0 / 25%);
 			right: 0.25em;
+		}
+	}
+
+	:where(&:has(input:active)) {
+		&::after {
+			content: '';
+			right: 1em;
 		}
 	}
 }

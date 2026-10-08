@@ -48,12 +48,12 @@ export const LISTBOX_ATTRIBUTES: OuiListboxAttributes = {
 	option: attributeOption,
 };
 
-export const LISTBOX_MESSAGES = {
+export const LISTBOX_MESSAGES: Record<string, string> = {
 	label: messageLabel,
 	select: messageSelect,
 };
 
-export const LISTBOX_SELECTORS = {
+export const LISTBOX_SELECTORS: Record<string, string> = {
 	filter: selectorFilter,
 	option: selectorOption,
 };

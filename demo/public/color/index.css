@@ -1,6 +1,7 @@
 .colors {
 	display: flex;
 	flex-flow: column nowrap;
+	gap: 1px;
 
 	& & {
 		flex-flow: row nowrap;

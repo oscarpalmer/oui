@@ -376,9 +376,9 @@ function tabToTrap(
 
 export const ATTRIBUTE_FOCUSTRAP = 'oui-focus-trap';
 
-export const ATTRIBUTE_FOCUSTRAP_CONTAIN = `${ATTRIBUTE_FOCUSTRAP}-contain`;
+export const ATTRIBUTE_FOCUSTRAP_CONTAIN: string = `${ATTRIBUTE_FOCUSTRAP}-contain`;
 
-export const ATTRIBUTE_FOCUSTRAP_NOESCAPE = `${ATTRIBUTE_FOCUSTRAP}-noescape`;
+export const ATTRIBUTE_FOCUSTRAP_NOESCAPE: string = `${ATTRIBUTE_FOCUSTRAP}-noescape`;
 
 const EVENT_OPTIONS: AddEventListenerOptions = {
 	capture: true,

@@ -36,7 +36,7 @@ type OuiTabsContent = {
 };
 
 export class OuiTabsElement extends HTMLElement {
-	static observedAttributes = ['active'];
+	static observedAttributes: string[] = ['active'];
 
 	#state?: OuiTabsState;
 

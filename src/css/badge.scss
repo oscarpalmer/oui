@@ -21,6 +21,10 @@
 		font-size: 0.875em;
 	}
 
+	:where(&-pill--small) {
+		padding: 0.3333em 0.875em;
+	}
+
 	:where(&-pill--tiny, &-tag--tiny) {
 		color: color-mix(in oklab, var(--oui-foreground, var(--oui-gray-8)), transparent 12.5%);
 		font-size: 0.75em;

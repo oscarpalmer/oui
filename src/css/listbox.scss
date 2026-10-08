@@ -94,6 +94,10 @@
 		cursor: pointer;
 	}
 
+	:where(oui-listbox:has([oui-listbox-header]) &) {
+		scroll-margin-top: 2em;
+	}
+
 	:where(&[aria-selected='true' i]) {
 		background-color: var(--oui-blue-2);
 		color: var(--oui-blue-9);

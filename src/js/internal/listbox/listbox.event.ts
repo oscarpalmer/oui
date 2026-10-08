@@ -1,5 +1,5 @@
 import {clamp} from '@oscarpalmer/atoms/number';
-import {LISTBOX_KEYS} from './listbox.constants';
+import {LISTBOX_KEYS_NAVIGATION, LISTBOX_KEYS_SELECTION} from './listbox.constants';
 import {getListboxVisibleOptions} from './listbox.misc';
 import type {OuiListboxPreview, OuiListboxState} from './listbox.model';
 
@@ -45,7 +45,7 @@ export function processListboxKeydown<State extends OuiListboxState>(
 			break;
 		}
 
-		case !isSelect && LISTBOX_KEYS.selection.has(event.key): {
+		case !isSelect && LISTBOX_KEYS_SELECTION.has(event.key): {
 			if (!ignore) {
 				state.callbacks.keydown.onSelection?.(state);
 			}
@@ -53,7 +53,7 @@ export function processListboxKeydown<State extends OuiListboxState>(
 			break;
 		}
 
-		case LISTBOX_KEYS.navigation.has(event.key): {
+		case LISTBOX_KEYS_NAVIGATION.has(event.key): {
 			if (!state.disabled) {
 				onNavigation(event, state);
 			}

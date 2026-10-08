@@ -200,7 +200,8 @@ export function createComboboxSelectionItem(
 			hidden: true,
 		},
 		property: {
-			innerHTML: '&times;',
+			className: 'oui-icon oui-icon--x',
+			innerHTML: '',
 		},
 	});
 

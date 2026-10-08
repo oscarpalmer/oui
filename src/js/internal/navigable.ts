@@ -292,9 +292,9 @@ const KEYS_ABSOLUTE = new Set(['End', 'Home']);
 
 const KEYS_ACTIVATE = new Set(['Enter', ' ']);
 
-export const NAVIGABLE_KEYS_HORIZONTAL = new Set(['ArrowRight', 'ArrowLeft']);
+export const NAVIGABLE_KEYS_HORIZONTAL: Set<string> = new Set(['ArrowRight', 'ArrowLeft']);
 
-export const NAVIGABLE_KEYS_VERTICAL = new Set(['ArrowDown', 'ArrowUp']);
+export const NAVIGABLE_KEYS_VERTICAL: Set<string> = new Set(['ArrowDown', 'ArrowUp']);
 
 const KEYS_ALL = new Set([
 	...KEYS_ABSOLUTE,

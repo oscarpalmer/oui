@@ -28,7 +28,7 @@ declare global {
 export class OuiColorPickerElement extends HTMLElement {
 	static formAssociated = true;
 
-	static observedAttributes = ['disabled', 'required', 'value'];
+	static observedAttributes: string[] = ['disabled', 'required', 'value'];
 
 	readonly #internals: ElementInternals;
 

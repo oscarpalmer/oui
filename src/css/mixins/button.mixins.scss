@@ -7,7 +7,7 @@
 	--oui-foreground-percentage: 0%;
 	--oui-foreground-value: var(--oui-gray-8);
 	--oui-outline-percentage: 100%;
-	--oui-outline-value: var(--oui-gray-6);
+	--oui-outline-value: var(--oui-gray-5);
 	--oui-shadow-inset: color-mix(in oklab, var(--oui-absolute), transparent 75%);
 	--oui-shadow-percentage: 82.5%;
 
@@ -51,6 +51,16 @@
 		transform: translate3d(-50%, -50%, 0);
 	}
 
+	&:has(.oui-icon:is(:first-child))::after {
+		inset: auto;
+		transform: none;
+	}
+
+	&:has(.oui-icon:is(:last-child))::after {
+		inset: auto 0.75em auto auto;
+		transform: none;
+	}
+
 	&:focus-visible {
 		--oui-outline-percentage: 75%;
 	}
@@ -64,26 +74,66 @@
 	}
 
 	&:not([disabled], [aria-disabled='true' i]) {
-		&[aria-busy='true' i] {
-			@include button-blue;
-
-			color: transparent;
+		&[aria-busy='true' i],
+		&[data-state='busy' i],
+		&[data-state='error' i],
+		&[data-state='loading' i],
+		&[data-state='success' i] {
+			&:not(:has(.oui-icon:is(:first-child, :last-child))) {
+				color: transparent;
+			}
 
 			&::after {
 				opacity: 1;
-				mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJpY29uIGljb24tdGFibGVyIGljb25zLXRhYmxlci1vdXRsaW5lIGljb24tdGFibGVyLWxvYWRlci0yIj48cGF0aCBzdHJva2U9Im5vbmUiIGQ9Ik0wIDBoMjR2MjRIMHoiIGZpbGw9Im5vbmUiIC8+PHBhdGggZD0iTTEyIDNhOSA5IDAgMSAwIDkgOSIgLz48L3N2Zz4=');
+			}
+
+			.oui-icon {
+				opacity: 0;
+			}
+		}
+
+		&[aria-busy='true' i],
+		&[data-state='busy' i],
+		&[data-state='loading' i] {
+			@include button-blue;
+
+			&::after {
+				@include miscMixins.icon-loader;
+
 				transform-origin: center;
-				animation: rotation 1s linear infinite;
+				animation: oui-button-icon-centered 1s linear infinite;
 
-				@keyframes rotation {
-					from {
-						transform: translate3d(-50%, -50%, 0), rotate(0deg);
-					}
-
+				@keyframes oui-button-icon-centered {
 					to {
-						transform: translate3d(-50%, -50%, 0) rotate(360deg);
+						transform: translate3d(-50%, -50%, 0) rotate3d(0, 0, 1, 360deg);
 					}
 				}
+			}
+
+			&:has(.oui-icon:is(:first-child, :last-child))::after {
+				animation: oui-button-icon-offset 1s linear infinite;
+
+				@keyframes oui-button-icon-offset {
+					to {
+						transform: rotate3d(0, 0, 1, 360deg);
+					}
+				}
+			}
+		}
+
+		&[data-state='error' i] {
+			@include button-red;
+
+			&::after {
+				@include miscMixins.icon-x;
+			}
+		}
+
+		&[data-state='success' i] {
+			@include button-green;
+
+			&::after {
+				@include miscMixins.icon-check;
 			}
 		}
 
@@ -109,40 +159,49 @@
 
 		font-style: italic;
 	}
+
+	.oui-icon {
+		width: 1em;
+		height: 1em;
+
+		&:is(:first-child, :last-child) {
+			transition: opacity 0.125s ease-in-out;
+		}
+	}
 }
 
 @mixin button-blue() {
 	--oui-background-value: var(--oui-blue-2);
 	--oui-foreground-value: var(--oui-blue-8);
-	--oui-outline-value: var(--oui-blue-6);
+	--oui-outline-value: var(--oui-blue-5);
 }
 
 @mixin button-green() {
 	--oui-background-value: var(--oui-green-2);
 	--oui-foreground-value: var(--oui-green-8);
-	--oui-outline-value: var(--oui-green-6);
+	--oui-outline-value: var(--oui-green-5);
 }
 
 @mixin button-orange() {
 	--oui-background-value: var(--oui-orange-2);
 	--oui-foreground-value: var(--oui-orange-8);
-	--oui-outline-value: var(--oui-orange-6);
+	--oui-outline-value: var(--oui-orange-5);
 }
 
 @mixin button-purple() {
 	--oui-background-value: var(--oui-purple-2);
 	--oui-foreground-value: var(--oui-purple-8);
-	--oui-outline-value: var(--oui-purple-6);
+	--oui-outline-value: var(--oui-purple-5);
 }
 
 @mixin button-red() {
 	--oui-background-value: var(--oui-red-2);
 	--oui-foreground-value: var(--oui-red-8);
-	--oui-outline-value: var(--oui-red-6);
+	--oui-outline-value: var(--oui-red-5);
 }
 
 @mixin button-yellow() {
 	--oui-background-value: var(--oui-yellow-2);
 	--oui-foreground-value: var(--oui-yellow-8);
-	--oui-outline-value: var(--oui-yellow-6);
+	--oui-outline-value: var(--oui-yellow-5);
 }

@@ -20,7 +20,7 @@ import type {
 	OuiColorPickerValueType,
 } from './models.color-picker';
 import {updateColorPickerOutputInputs, updateColorPickerOutputLabels} from './output.color-picker';
-import {colorPickers} from './state.color-picker';
+import {colorPickerSet} from './state.color-picker';
 
 // #region Functions
 
@@ -67,6 +67,8 @@ export function getColorPickerValueType(
 		default:
 			break;
 	}
+
+	return undefined;
 }
 
 /**
@@ -245,7 +247,7 @@ export function updateColorPickerLocalizations(
 			: first,
 		destination,
 		() => {
-			for (const state of colorPickers.set) {
+			for (const state of colorPickerSet) {
 				updateColorPickerLabels(state);
 			}
 		},

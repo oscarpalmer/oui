@@ -2,19 +2,13 @@ import type {OuiListboxType} from './listbox.model';
 
 // #region Variables
 
-const keysActivation = new Set([' ', 'Backspace', 'Delete', 'Enter']);
+export const LISTBOX_KEYS_ACTIVATION: Set<string> = new Set([' ', 'Backspace', 'Delete', 'Enter']);
 
-const keysNavigation = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp']);
+export const LISTBOX_KEYS_NAVIGATION: Set<string> = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp']);
 
-const keysSelection = new Set(['ArrowRight', 'End']);
+export const LISTBOX_KEYS_SELECTION: Set<string> = new Set(['ArrowRight', 'End']);
 
-export const LISTBOX_KEYS = {
-	activation: keysActivation,
-	navigation: keysNavigation,
-	selection: keysSelection,
-};
-
-export const LISTBOX_TYPES = new Set<OuiListboxType>(['autocomplete', 'select']);
+export const LISTBOX_TYPES: Set<OuiListboxType> = new Set(['autocomplete', 'select']);
 
 export const listboxScrollOptions: ScrollIntoViewOptions = {
 	behavior: 'auto',

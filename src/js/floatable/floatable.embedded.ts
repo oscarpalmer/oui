@@ -1,5 +1,5 @@
 import {isPlainObject} from '@oscarpalmer/atoms/is';
-import {getAria, setAria} from '@oscarpalmer/toretto/aria';
+import {getAria} from '@oscarpalmer/toretto/aria';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {on} from '@oscarpalmer/toretto/event';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';

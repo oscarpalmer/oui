@@ -7,7 +7,7 @@ oui-tabs {
 		display: flex;
 	}
 
-	:where(&:not([orientation='horizontal' i])) {
+	:where(&:not([orientation='vertical' i])) {
 		flex-flow: column nowrap;
 	}
 
