@@ -1,2 +1,3 @@
-export type {CreateOuiDraggableOptions as CreateOuiSortableOptions} from '../internal/draggable';
-export {createSortable, type OuiSortable} from './sortable.embedded';
+export type {CreateOuiDraggableOptions as CreateOuiSortableOptions} from '../internal/draggable/draggable.model';
+export {createSortable} from './sortable.embedded';
+export type {OuiSortable} from './sortable.model';

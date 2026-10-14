@@ -10,7 +10,11 @@
 	display: inline-flex;
 	flex-flow: row nowrap;
 	gap: 0.5em;
-	background-color: color-mix(in oklab, var(--oui-background, var(--oui-gray-1)), transparent 62.5%);
+	background-color: color-mix(
+		in oklab,
+		var(--oui-background, var(--oui-gray-1)),
+		transparent 62.5%
+	);
 	color: var(--oui-foreground, var(--oui-gray-8));
 	text-shadow: 0 1px 0 var(--oui-absolute);
 	line-height: 1.25;

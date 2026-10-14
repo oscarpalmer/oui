@@ -6,58 +6,38 @@ import {dispatch, getEventPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import type {EventPosition} from '@oscarpalmer/toretto/models';
-import {setStyles, toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
+import {setStyles, toggleStyles} from '@oscarpalmer/toretto/style';
 import {supportsTouch} from '@oscarpalmer/toretto/touch';
 import {attributable} from '../internal/attributable';
+import {
+	RESIZABLE_ATTRIBUTE,
+	RESIZABLE_ATTRIBUTE_MAXIMUM,
+	RESIZABLE_ATTRIBUTE_MINIMUM,
+	RESIZABLE_MESSAGE_ELEMENT,
+	RESIZABLE_MESSAGE_HANDLE,
+	RESIZABLE_MESSAGE_HEIGHT,
+	RESIZABLE_MESSAGE_WIDTH,
+	RESIZABLE_SELECTOR,
+	RESIZABLE_SELECTOR_HANDLE,
+	RESIZABLE_SELECTOR_HANDLE_SCOPED,
+	RESIZABLE_SYMBOL,
+	resizableItems,
+	resizableStyles,
+	type CreateOuiResizableOptions,
+	type OuiResizable,
+	type OuiResizableItem,
+	type OuiResizableState,
+} from './resizable.model';
 
-// #region Types
+// #region Instancs
 
-export type CreateOuiResizableOptions = {
-	maximumHeight?: number;
-	maximumWidth?: number;
-	minimumHeight?: number;
-	minimumWidth?: number;
-};
-
-export class OuiResizable {
-	readonly #state: OuiResizableState;
-
-	constructor(state: OuiResizableState) {
-		this.#state = state;
-	}
-
-	destroy(): void {
-		destroyResizable(this.#state);
-	}
-
-	set(): void {
-		const [width, height] = getAndSetDimensions(this.#state.element, this.#state.options);
-
-		this.#state.width = width;
-		this.#state.height = height;
-	}
-
-	reset(): void {
-		setStyles(this.#state.element, {
-			height: '',
-			width: '',
-		});
-	}
+function OuiResizable(this: OuiResizable, state: OuiResizableState): void {
+	this[RESIZABLE_SYMBOL] = state;
 }
 
-type OuiResizableItem = {
-	instance: OuiResizable;
-	state: OuiResizableState;
-};
-
-type OuiResizableState = {
-	element: HTMLElement;
-	handle: HTMLElement;
-	height: number;
-	options: Required<CreateOuiResizableOptions>;
-	styles: StyleToggler;
-	width: number;
-};
+OuiResizable.prototype.destroy = destroyResizable;
+OuiResizable.prototype.reset = resetResizable;
+OuiResizable.prototype.set = setResizable;
 
 // #endregion
 
@@ -67,16 +47,18 @@ function addResizable(
 	element: HTMLElement,
 	options?: CreateOuiResizableOptions,
 ): OuiResizable | undefined {
-	let item = items.get(element);
+	let item = resizableItems.get(element);
 
 	if (item == null) {
-		const handle = element.querySelector(SELECTOR_HANDLE_SCOPED);
+		const handle = element.querySelector(RESIZABLE_SELECTOR_HANDLE_SCOPED);
 
 		if (!isHTMLOrSVGElement(handle)) {
 			return;
 		}
 
 		const state = getState(element, handle, options);
+
+		// @ts-expect-error All good, no worries :-)
 		const instance = new OuiResizable(state);
 
 		item = {
@@ -84,7 +66,7 @@ function addResizable(
 			state,
 		};
 
-		items.set(element, item);
+		resizableItems.set(element, item);
 	}
 
 	return item?.instance;
@@ -100,7 +82,7 @@ function cancelResize(item?: OuiResizableItem): void {
 		width: `${item.state.width}px`,
 	});
 
-	resetResizable();
+	resetResizableStyles();
 
 	dispatch(item.state.element, 'oui:resizable:cancel');
 }
@@ -116,19 +98,23 @@ export function createResizable(
 	options?: CreateOuiResizableOptions,
 ): OuiResizable {
 	if (!isHTMLOrSVGElement(element)) {
-		throw new TypeError(MESSAGE_ELEMENT);
+		throw new TypeError(RESIZABLE_MESSAGE_ELEMENT);
 	}
 
-	if (!isHTMLOrSVGElement(element.querySelector(SELECTOR_HANDLE_SCOPED))) {
-		throw new Error(MESSAGE_HANDLE);
+	if (!isHTMLOrSVGElement(element.querySelector(RESIZABLE_SELECTOR_HANDLE_SCOPED))) {
+		throw new Error(RESIZABLE_MESSAGE_HANDLE);
 	}
 
 	return addResizable(element, options ?? {})!;
 }
 
-function destroyResizable(state: OuiResizableState): void {
+function destroyResizable(this: OuiResizable): void {
+	const state = this[RESIZABLE_SYMBOL];
+
 	state.element = undefined as never;
 	state.handle = undefined as never;
+	state.options = undefined as never;
+	state.styles = undefined as never;
 }
 
 function getAndSetDimensions(
@@ -185,11 +171,11 @@ function getRestrictions(
 	);
 
 	if (maximumWidth > -1 && minimumWidth > -1 && maximumWidth <= minimumWidth) {
-		throw new Error(MESSAGE_WIDTH);
+		throw new Error(RESIZABLE_MESSAGE_WIDTH);
 	}
 
 	if (maximumHeight > -1 && minimumHeight > -1 && maximumHeight <= minimumHeight) {
-		throw new Error(MESSAGE_HEIGHT);
+		throw new Error(RESIZABLE_MESSAGE_HEIGHT);
 	}
 
 	return {
@@ -217,7 +203,7 @@ function getState(
 		height,
 		options,
 		width,
-		styles: toggleStyles(element, styles),
+		styles: toggleStyles(element, resizableStyles),
 	};
 }
 
@@ -230,11 +216,11 @@ function getValidOptions(
 	return {
 		...getRestrictions(
 			input == null
-				? (getAttribute(element, ATTRIBUTE_MAXIMUM) ??
+				? (getAttribute(element, RESIZABLE_ATTRIBUTE_MAXIMUM) ??
 						getProperties(element, 'maxWidth', 'maxHeight'))
 				: [original.maximumWidth, original.maximumHeight],
 			input == null
-				? (getAttribute(element, ATTRIBUTE_MINIMUM) ??
+				? (getAttribute(element, RESIZABLE_ATTRIBUTE_MINIMUM) ??
 						getProperties(element, 'minWidth', 'minHeight'))
 				: [original.minimumWidth, original.minimumHeight],
 		),
@@ -277,9 +263,9 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		return;
 	}
 
-	const handle = findAncestor(event, SELECTOR_HANDLE);
-	const element = handle && findAncestor(handle, SELECTOR);
-	const stored = element && items.get(element as HTMLElement);
+	const handle = findAncestor(event, RESIZABLE_SELECTOR_HANDLE);
+	const element = handle && findAncestor(handle, RESIZABLE_SELECTOR);
+	const stored = element && resizableItems.get(element as HTMLElement);
 	const position = getEventPosition(event);
 
 	if (stored == null || position == null) {
@@ -341,16 +327,23 @@ function onPointerup(): void {
 	current.state.height = height;
 	current.state.width = width;
 
-	resetResizable();
+	resetResizableStyles();
 }
 
 function removeResizable(element: HTMLElement): void {
-	items.get(element)?.instance.destroy();
+	resizableItems.get(element)?.instance.destroy();
 
-	items.delete(element);
+	resizableItems.delete(element);
 }
 
-function resetResizable(): void {
+function resetResizable(this: OuiResizable): void {
+	setStyles(this[RESIZABLE_SYMBOL].element, {
+		height: '',
+		width: '',
+	});
+}
+
+function resetResizableStyles(): void {
 	current?.state.styles.remove();
 	styleToggler.remove();
 
@@ -358,41 +351,20 @@ function resetResizable(): void {
 	start = undefined;
 }
 
+function setResizable(this: OuiResizable): void {
+	const state = this[RESIZABLE_SYMBOL];
+
+	const [width, height] = getAndSetDimensions(state.element, state.options);
+
+	state.width = width;
+	state.height = height;
+}
+
 // #endregion
 
 // #region Variables
 
-export const RESIZABLE_ATTRIBUTE = 'oui-resizable';
-
-export const RESIZABLE_ATTRIBUTE_HANDLE: string = `${RESIZABLE_ATTRIBUTE}-handle`;
-
-const ATTRIBUTE_MAXIMUM = `${RESIZABLE_ATTRIBUTE}-maximum`;
-
-const ATTRIBUTE_MINIMUM = `${RESIZABLE_ATTRIBUTE}-minimum`;
-
-const MESSAGE_ELEMENT = 'The element must be an instance of HTMLElement or SVGElement';
-
-const MESSAGE_HEIGHT = 'The maximum height must be greater than the minimum height';
-
-const MESSAGE_HANDLE = `The element must contain a child with the attribute "${RESIZABLE_ATTRIBUTE_HANDLE}"`;
-
-const MESSAGE_WIDTH = 'The maximum width must be greater than the minimum width';
-
-const SELECTOR = `[${RESIZABLE_ATTRIBUTE}]`;
-
-const SELECTOR_HANDLE = `[${RESIZABLE_ATTRIBUTE_HANDLE}]`;
-
-const SELECTOR_HANDLE_SCOPED = `:scope > ${SELECTOR_HANDLE}`;
-
-const items = new WeakMap<HTMLElement, OuiResizableItem>();
-
-const styles = {
-	touchAction: 'none',
-	userSelect: 'none',
-	webkitUserSelect: 'none',
-};
-
-const styleToggler = toggleStyles(document.body, styles);
+const styleToggler = toggleStyles(document.body, resizableStyles);
 
 let current: OuiResizableItem | undefined;
 

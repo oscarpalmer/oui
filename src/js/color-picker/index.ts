@@ -6,16 +6,24 @@ import {
 	type RGBAColor,
 	type RGBColor,
 } from '@oscarpalmer/atoms/color';
-import {COLOR_PICKER_TAGNAME, colorPickerLocalizations} from './constants.color-picker';
-import {onColorPickerInput} from './event.color-picker';
+import {
+	COLOR_PICKER_SYMBOL,
+	COLOR_PICKER_TAGNAME,
+	colorPickerLocalizations,
+} from './color-picker.constants';
+import {onColorPickerInput} from './color-picker.event';
 import {
 	setColorPickerDisabled,
 	setColorPickerRequired,
 	setColorPickerValue,
 	updateColorPickerLocalizations,
-} from './misc.color-picker';
-import type {OuiColorPickerLocalizations, OuiColorPickerState} from './models.color-picker';
-import {attachColorPicker, detachColorPicker, initializeColorPicker} from './state.color-picker';
+} from './color-picker.misc';
+import type {OuiColorPickerLocalizations, OuiColorPickerState} from './color-picker.model';
+import {
+	attachColorPicker,
+	detachColorPicker,
+	initializeColorPickerComponent,
+} from './color-picker.state';
 
 // #region Types
 
@@ -25,30 +33,35 @@ declare global {
 	}
 }
 
+// oxlint-disable-next-line typescript/no-unsafe-declaration-merging
+export interface OuiColorPickerElement {
+	[COLOR_PICKER_SYMBOL]: OuiColorPickerState;
+}
+
 export class OuiColorPickerElement extends HTMLElement {
 	static formAssociated = true;
 
 	static observedAttributes: string[] = ['disabled', 'required', 'value'];
 
-	readonly #internals: ElementInternals;
-
-	#restored?: string;
-
-	#state!: OuiColorPickerState;
-
 	/**
 	 * Is the color picker disabled?
 	 */
 	get disabled(): boolean {
-		return this.#state?.disabled ?? false;
+		return this[COLOR_PICKER_SYMBOL]?.component.disabled ?? false;
 	}
 
 	/**
 	 * Should the color picker be disabled?
 	 */
 	set disabled(value: boolean) {
-		if (this.#state != null && typeof value === 'boolean' && value !== this.#state.disabled) {
-			setColorPickerDisabled(this.#state, 'disabled', value);
+		const state = this[COLOR_PICKER_SYMBOL];
+
+		if (
+			state.component != null &&
+			typeof value === 'boolean' &&
+			value !== state.component.disabled
+		) {
+			setColorPickerDisabled(state, 'disabled', value);
 		}
 	}
 
@@ -56,120 +69,144 @@ export class OuiColorPickerElement extends HTMLElement {
 	 * Form element associated with the color picker
 	 */
 	get form(): HTMLFormElement | null {
-		return this.#internals.form;
+		return this[COLOR_PICKER_SYMBOL].form.internals.form;
 	}
 
 	/**
 	 * Color value as hexadecimal string
 	 */
 	get hex(): string {
-		return this.#state?.color.value.hex ?? '';
+		return this[COLOR_PICKER_SYMBOL]?.component.color.value.hex ?? '';
 	}
 
 	/**
 	 * Set color value from a hexadecimal string
 	 */
 	set hex(value: string) {
-		setColorPickerValue(this.#state, value, 'hex');
+		setColorPickerValue(this[COLOR_PICKER_SYMBOL], value, 'hex');
 	}
 
 	/**
 	 * Color value as hexadecimal string with alpha channel
 	 */
 	get hexa(): string {
-		return this.#state?.color.value.hexa ?? '';
+		return this[COLOR_PICKER_SYMBOL]?.component.color.value.hexa ?? '';
 	}
 
 	/**
 	 * Set color value from a hexadecimal string with alpha channel
 	 */
 	set hexa(value: string) {
-		setColorPickerValue(this.#state, value, 'hexa');
+		setColorPickerValue(this[COLOR_PICKER_SYMBOL], value, 'hexa');
 	}
 
 	/**
 	 * Color value as an _HSL_ color object
 	 */
 	get hsl(): HSLColor {
-		return this.#state?.color.value.hsl ?? {hue: 0, lightness: 0, saturation: 0};
+		return (
+			this[COLOR_PICKER_SYMBOL]?.component.color.value.hsl ?? {hue: 0, lightness: 0, saturation: 0}
+		);
 	}
 
 	/**
 	 * Set color value from an _HSL_ color object
 	 */
 	set hsl(value: HSLColor) {
-		setColorPickerValue(this.#state, value, 'hsl');
+		setColorPickerValue(this[COLOR_PICKER_SYMBOL], value, 'hsl');
 	}
 
 	/**
 	 * Color value as an _HSLA_ color object _(HSL with alpha channel)_
 	 */
 	get hsla(): HSLAColor {
-		return this.#state?.color.value.hsla ?? {hue: 0, lightness: 0, saturation: 0, alpha: 100};
+		return (
+			this[COLOR_PICKER_SYMBOL]?.component.color.value.hsla ?? {
+				hue: 0,
+				lightness: 0,
+				saturation: 0,
+				alpha: 100,
+			}
+		);
 	}
 
 	/**
 	 * Set color value from an _HSLA_ color object _(HSL with alpha channel)_
 	 */
 	set hsla(value: HSLAColor) {
-		setColorPickerValue(this.#state, value, 'hsla');
+		setColorPickerValue(this[COLOR_PICKER_SYMBOL], value, 'hsla');
 	}
 
 	/**
 	 * Color value as an _HWB_ color object
 	 */
 	get hwb(): HWBColor {
-		return this.#state?.color.value.hwb ?? {hue: 0, whiteness: 0, blackness: 0};
+		return (
+			this[COLOR_PICKER_SYMBOL]?.component.color.value.hwb ?? {hue: 0, whiteness: 0, blackness: 0}
+		);
 	}
 
 	/**
 	 * Set color value from an _HWB_ color object
 	 */
 	set hwb(value: HWBColor) {
-		setColorPickerValue(this.#state, value, 'hwb');
+		setColorPickerValue(this[COLOR_PICKER_SYMBOL], value, 'hwb');
 	}
 
 	/**
 	 * Color value as an _HWBA_ color object _(HWB with alpha channel)_
 	 */
 	get hwba(): HWBAColor {
-		return this.#state?.color.value.hwba ?? {hue: 0, whiteness: 0, blackness: 0, alpha: 100};
+		return (
+			this[COLOR_PICKER_SYMBOL]?.component.color.value.hwba ?? {
+				hue: 0,
+				whiteness: 0,
+				blackness: 0,
+				alpha: 100,
+			}
+		);
 	}
 
 	/**
 	 * Set color value from an _HWBA_ color object _(HWB with alpha channel)_
 	 */
 	set hwba(value: HWBAColor) {
-		setColorPickerValue(this.#state, value, 'hwba');
+		setColorPickerValue(this[COLOR_PICKER_SYMBOL], value, 'hwba');
 	}
 
 	/**
 	 * Text input value
 	 */
 	get input(): string {
-		return this.#state?.anchor.input.value ?? '';
+		return this[COLOR_PICKER_SYMBOL]?.component.anchor.input.value ?? '';
 	}
 
 	/**
 	 * Label elements associated with the color picker
 	 */
 	get labels(): NodeList {
-		return this.#internals.labels;
+		return this[COLOR_PICKER_SYMBOL].form.internals.labels;
 	}
 
 	/**
 	 * Is the color picker readonly?
 	 */
 	get readonly(): boolean {
-		return this.#state?.readonly ?? false;
+		return this[COLOR_PICKER_SYMBOL]?.component.readonly ?? false;
 	}
 
 	/**
 	 * Should the color picker be readonly?
 	 */
 	set readonly(value: boolean) {
-		if (this.#state != null && typeof value === 'boolean' && value !== this.#state.readonly) {
-			setColorPickerDisabled(this.#state, 'readonly', value);
+		const state = this[COLOR_PICKER_SYMBOL];
+
+		if (
+			state.component != null &&
+			typeof value === 'boolean' &&
+			value !== state.component.readonly
+		) {
+			setColorPickerDisabled(state, 'readonly', value);
 		}
 	}
 
@@ -177,15 +214,21 @@ export class OuiColorPickerElement extends HTMLElement {
 	 * Is the color picker required?
 	 */
 	get required(): boolean {
-		return this.#state?.required ?? false;
+		return this[COLOR_PICKER_SYMBOL]?.component.required ?? false;
 	}
 
 	/**
 	 * Should the color picker be required?
 	 */
 	set required(value: boolean) {
-		if (this.#state != null && typeof value === 'boolean' && value !== this.#state.required) {
-			setColorPickerRequired(this.#state, value);
+		const state = this[COLOR_PICKER_SYMBOL];
+
+		if (
+			state.component != null &&
+			typeof value === 'boolean' &&
+			value !== state.component.required
+		) {
+			setColorPickerRequired(state, value);
 		}
 	}
 
@@ -193,61 +236,74 @@ export class OuiColorPickerElement extends HTMLElement {
 	 * Color value as an _RGB_ color object
 	 */
 	get rgb(): RGBColor {
-		return this.#state?.color.value.rgb ?? {red: 0, green: 0, blue: 0};
+		return this[COLOR_PICKER_SYMBOL]?.component.color.value.rgb ?? {red: 0, green: 0, blue: 0};
 	}
 
 	/**
 	 * Set color value from an _RGB_ color object
 	 */
 	set rgb(value: RGBColor) {
-		setColorPickerValue(this.#state, value, 'rgb');
+		setColorPickerValue(this[COLOR_PICKER_SYMBOL], value, 'rgb');
 	}
 
 	/**
 	 * Color value as an _RGBA_ color object _(RGB with alpha channel)_
 	 */
 	get rgba(): RGBAColor {
-		return this.#state?.color.value.rgba ?? {red: 0, green: 0, blue: 0, alpha: 100};
+		return (
+			this[COLOR_PICKER_SYMBOL]?.component.color.value.rgba ?? {
+				red: 0,
+				green: 0,
+				blue: 0,
+				alpha: 100,
+			}
+		);
 	}
 
 	/**
 	 * Set color value from an _RGBA_ color object _(RGB with alpha channel)_
 	 */
 	set rgba(value: RGBAColor) {
-		setColorPickerValue(this.#state, value, 'rgba');
+		setColorPickerValue(this[COLOR_PICKER_SYMBOL], value, 'rgba');
 	}
 
 	/**
 	 * Validation message for the color picker
 	 */
 	get validationMessage(): string {
-		return this.#internals.validationMessage;
+		return this[COLOR_PICKER_SYMBOL].form.internals.validationMessage;
 	}
 
 	/**
 	 * Validity state for the color picker
 	 */
 	get validity(): ValidityState {
-		return this.#internals.validity;
+		return this[COLOR_PICKER_SYMBOL].form.internals.validity;
 	}
 
 	/**
 	 * Current color value
 	 */
 	get value(): string {
-		return this.#state?.value.current ?? '';
+		return this[COLOR_PICKER_SYMBOL]?.component.value.current ?? '';
 	}
 
 	/**
 	 * Set color value from a string, _HSL(A)_, _HWB(A)_, or _RGB(A)_ color object
 	 */
 	set value(value: string | HSLColor | HSLAColor | HWBColor | HWBAColor | RGBColor | RGBAColor) {
-		if (typeof value === 'string') {
-			this.#state.anchor.input.value = value;
+		const state = this[COLOR_PICKER_SYMBOL];
 
-			onColorPickerInput(this.#state);
+		if (state.component == null) {
+			return;
+		}
+
+		if (typeof value === 'string') {
+			state.component.anchor.input.value = value;
+
+			onColorPickerInput(state);
 		} else {
-			setColorPickerValue(this.#state, value);
+			setColorPickerValue(state, value);
 		}
 	}
 
@@ -255,17 +311,22 @@ export class OuiColorPickerElement extends HTMLElement {
 	 * Can the color picker be validated?
 	 */
 	get willValidate(): boolean {
-		return this.#internals.willValidate;
+		return this[COLOR_PICKER_SYMBOL].form.internals.willValidate;
 	}
 
 	constructor() {
 		super();
 
-		this.#internals = this.attachInternals();
+		this[COLOR_PICKER_SYMBOL] = {
+			component: null as never,
+			form: {
+				internals: this.attachInternals(),
+			},
+		};
 	}
 
 	attributeChangedCallback(name: string, _: string | null, value: string | null): void {
-		if (this.#state == null) {
+		if (this[COLOR_PICKER_SYMBOL].component == null) {
 			return;
 		}
 
@@ -290,7 +351,7 @@ export class OuiColorPickerElement extends HTMLElement {
 	 * @returns `true` if the color picker is valid, otherwise `false`
 	 */
 	checkValidity(): boolean {
-		return this.#internals.checkValidity();
+		return this[COLOR_PICKER_SYMBOL].form.internals.checkValidity();
 	}
 
 	/**
@@ -301,16 +362,21 @@ export class OuiColorPickerElement extends HTMLElement {
 	}
 
 	connectedCallback(): void {
-		if (this.#state == null) {
-			this.#initialize();
+		const state = this[COLOR_PICKER_SYMBOL];
+		const {component} = state;
+
+		if (component == null) {
+			initializeColorPickerComponent(this, state);
 		} else {
-			attachColorPicker(this.#state);
+			attachColorPicker(state);
 		}
 	}
 
 	disconnectedCallback(): void {
-		if (this.#state != null) {
-			detachColorPicker(this.#state);
+		const state = this[COLOR_PICKER_SYMBOL];
+
+		if (state.component != null) {
+			detachColorPicker(state);
 		}
 	}
 
@@ -319,16 +385,18 @@ export class OuiColorPickerElement extends HTMLElement {
 	}
 
 	formResetCallback(): void {
-		this.value = this.#state?.value.initial ?? '';
+		this.value = this[COLOR_PICKER_SYMBOL]?.component.value.initial ?? '';
 	}
 
 	formStateRestoreCallback(state: unknown, reason: unknown): void {
-		if (reason !== 'restore' || typeof state !== 'string' || this.#state == null) {
+		const {component, form} = this[COLOR_PICKER_SYMBOL];
+
+		if (reason !== 'restore' || typeof state !== 'string' || component == null) {
 			return;
 		}
 
-		if (this.#state == null) {
-			this.#restored = state;
+		if (component == null) {
+			form.restored = state;
 		} else {
 			this.value = state;
 		}
@@ -340,7 +408,7 @@ export class OuiColorPickerElement extends HTMLElement {
 	 * @returns `true` if the color picker is valid, otherwise `false`
 	 */
 	reportValidity(): boolean {
-		return this.#internals.reportValidity();
+		return this[COLOR_PICKER_SYMBOL].form.internals.reportValidity();
 	}
 
 	/**
@@ -349,7 +417,11 @@ export class OuiColorPickerElement extends HTMLElement {
 	 * @param message Validation message
 	 */
 	setCustomValidity(message: string): void {
-		this.#internals.setValidity({customError: message !== ''}, message, this);
+		this[COLOR_PICKER_SYMBOL].form.internals.setValidity(
+			{customError: message !== ''},
+			message,
+			this,
+		);
 	}
 
 	/**
@@ -373,20 +445,10 @@ export class OuiColorPickerElement extends HTMLElement {
 	): void {
 		updateColorPickerLocalizations(
 			colorPickerLocalizations,
-			this.#state.localizations.component,
+			this[COLOR_PICKER_SYMBOL].component.localizations.component,
 			first,
 			second,
 		);
-	}
-
-	#initialize(): void {
-		this.#state = initializeColorPicker(this, this.#internals);
-
-		if (this.#restored != null) {
-			this.value = this.#restored;
-
-			this.#restored = undefined;
-		}
 	}
 }
 
@@ -398,7 +460,7 @@ customElements.define(COLOR_PICKER_TAGNAME, OuiColorPickerElement);
 
 // #region Exports
 
-export {setColorPickerLocalizations} from './misc.color-picker';
-export {OuiColorPickerEvent} from './models.color-picker';
+export {setColorPickerLocalizations} from './color-picker.misc';
+export {OuiColorPickerEvent} from './color-picker.model';
 
 // #endregion

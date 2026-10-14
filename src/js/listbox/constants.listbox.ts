@@ -4,6 +4,8 @@ import type {OuiListboxAttributes} from '../internal/listbox/listbox.model';
 
 export const LISTBOX_TAGNAME = 'oui-listbox';
 
+export const LISTBOX_SYMBOL: unique symbol = Symbol(LISTBOX_TAGNAME);
+
 const attributeContent = `${LISTBOX_TAGNAME}-content`;
 
 const attributeFilter = `${LISTBOX_TAGNAME}-filter`;
@@ -26,15 +28,7 @@ const attributeOption = `${LISTBOX_TAGNAME}-option`;
 
 const attributeOptionActive = `${LISTBOX_TAGNAME}-option-active`;
 
-const messageLabel = `<${LISTBOX_TAGNAME}> must contain a <label> element for the <select> element`;
-
-const messageSelect = `<${LISTBOX_TAGNAME}> must contain a valid <select> element`;
-
-const selectorFilter = `[${attributeFilterInput}]`;
-
-const selectorOption = `[${attributeOption}]`;
-
-export const LISTBOX_ATTRIBUTES: OuiListboxAttributes = {
+export const listboxAttributes: OuiListboxAttributes = {
 	active: attributeOptionActive,
 	content: attributeContent,
 	empty: attributeListEmpty,
@@ -48,12 +42,20 @@ export const LISTBOX_ATTRIBUTES: OuiListboxAttributes = {
 	option: attributeOption,
 };
 
-export const LISTBOX_MESSAGES: Record<string, string> = {
+const messageLabel = `<${LISTBOX_TAGNAME}> must contain a <label> element for the <select> element`;
+
+const messageSelect = `<${LISTBOX_TAGNAME}> must contain a valid <select> element`;
+
+export const listboxMessages: Record<string, string> = {
 	label: messageLabel,
 	select: messageSelect,
 };
 
-export const LISTBOX_SELECTORS: Record<string, string> = {
+const selectorFilter = `[${attributeFilterInput}]`;
+
+const selectorOption = `[${attributeOption}]`;
+
+export const listboxSelectors: Record<string, string> = {
 	filter: selectorFilter,
 	option: selectorOption,
 };

@@ -6,100 +6,95 @@ import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {getStyles, setStyle, setStyles} from '@oscarpalmer/toretto/style';
 import {attributable} from '../internal/attributable';
 import {
-	addDraggable,
-	getDraggableStates,
-	OuiDraggable,
-	removeDraggable,
+	DRAGGABLE_SYMBOL,
 	type CreateOuiDraggableOptions,
 	type OuiDraggableBound,
 	type OuiDraggableGlobals,
 	type OuiDraggableItem,
 	type OuiDraggableState,
 	type OuiDragMovePosition,
-} from '../internal/draggable';
+} from '../internal/draggable/draggable.model';
+import {
+	addDraggable,
+	destroyDraggable,
+	getDraggableElement,
+	getDraggableStates,
+	initializeDraggable,
+	removeDraggable,
+} from '../internal/draggable/index';
+import {
+	MOVABLE_ATTRIBUTE,
+	MOVABLE_ATTRIBUTE_CONTAINER,
+	MOVABLE_ATTRIBUTE_DIRECTION,
+	MOVABLE_ATTRIBUTE_MOVING,
+	MOVABLE_CONTAINERS,
+	MOVABLE_MESSAGE,
+	MOVABLE_MOVED,
+	MOVABLE_SELECTOR_HANDLE,
+	type OuiMovable,
+	type OuiMovableState,
+} from './movable.model';
 
-// #region Types
+// #region Instances
 
-export class OuiMovable extends OuiDraggable<OuiMovableState> {
-	#element: HTMLElement;
+function OuiMovable(
+	this: OuiMovable,
+	element: HTMLElement,
+	options?: CreateOuiDraggableOptions,
+): void {
+	const style = getStyles(element, ['inset', 'position']);
 
-	#style: OuiMovableStyle;
-
-	constructor(element: HTMLElement, options?: CreateOuiDraggableOptions) {
-		const style = getStyles(element, ['inset', 'position']);
-
-		super(
-			'movable',
-			'move',
-			ATTRIBUTE_MOVABLE,
-			element,
-			{
-				container: {
-					attribute: ATTRIBUTE_CONTAINER,
-					map: CONTAINERS,
-					onDestroy: destroyContainer,
-					onInitialize: initializeContainer,
-				},
-				direction: {
-					attribute: ATTRIBUTE_DIRECTION,
-					onAfter: afterDirection,
-				},
-				drag: {
-					onBegin,
-					onCancel,
-					onEnd,
-					onMove,
-				},
-				input: options,
-				position: {
-					getOffset: getOffsetPosition,
-					getOriginal: getOriginalPosition,
-				},
-				getDragged() {
-					return element;
-				},
-				getOrigin() {
-					return element;
-				},
+	this[DRAGGABLE_SYMBOL] = initializeDraggable(
+		this,
+		'movable',
+		'move',
+		MOVABLE_ATTRIBUTE,
+		element,
+		{
+			container: {
+				attribute: MOVABLE_ATTRIBUTE_CONTAINER,
+				map: MOVABLE_CONTAINERS,
+				onDestroy: destroyContainer,
+				onInitialize: initializeContainer,
 			},
-			{
-				style,
-				hasHandles: element.querySelector(SELECTOR_HANDLE) != null,
-				moved: false,
+			direction: {
+				attribute: MOVABLE_ATTRIBUTE_DIRECTION,
+				onAfter: afterDirection,
 			},
-		);
-
-		this.#element = element;
-
-		this.#style = style;
-	}
-
-	/**
-	 * Destroys the _Movable_
-	 */
-	override destroy(): void {
-		MOVED.delete(this);
-
-		setStyles(this.#element, this.#style);
-
-		this.#element = undefined as never;
-		this.#style = undefined as never;
-
-		super.destroy();
-	}
+			drag: {
+				onBegin,
+				onCancel,
+				onEnd,
+				onMove,
+			},
+			input: options,
+			position: {
+				getOffset: getOffsetPosition,
+				getOriginal: getOriginalPosition,
+			},
+			getDragged() {
+				return element;
+			},
+			getOrigin() {
+				return element;
+			},
+		},
+		{
+			style,
+			hasHandles: element.querySelector(MOVABLE_SELECTOR_HANDLE) != null,
+			moved: false,
+		},
+	);
 }
 
-type OuiMovableState = {
-	hasHandles?: boolean;
-	moved: boolean;
-	offset?: Partial<EventPosition>;
-	style: OuiMovableStyle;
-};
+OuiMovable.prototype.destroy = destroyMovable;
 
-type OuiMovableStyle = {
-	inset: string | undefined;
-	position: string | undefined;
-};
+Object.defineProperties(OuiMovable.prototype, {
+	element: {
+		enumerable: true,
+		get: getDraggableElement,
+	},
+});
 
 // #endregion
 
@@ -124,7 +119,7 @@ export function createMovable(
 	options?: CreateOuiDraggableOptions,
 ): OuiMovable {
 	if (!isHTMLOrSVGElement(element)) {
-		throw new TypeError(MESSAGE);
+		throw new TypeError(MOVABLE_MESSAGE);
 	}
 
 	return addMovable(element, options) as OuiMovable;
@@ -134,6 +129,16 @@ function destroyContainer(_: unknown, container: HTMLElement, empty: boolean): v
 	if (empty) {
 		resizer.unobserve(container);
 	}
+}
+
+function destroyMovable(this: OuiMovable): void {
+	const {element, style} = this[DRAGGABLE_SYMBOL];
+
+	MOVABLE_MOVED.delete(this);
+
+	setStyles(element, style);
+
+	destroyDraggable(this);
 }
 
 function getOffsetPosition(
@@ -172,7 +177,7 @@ function onCancel(globals: OuiDraggableGlobals, item: OuiDraggableItem): void {
 		setStyles(element, style);
 	}
 
-	element.removeAttribute(ATTRIBUTE_MOVING);
+	element.removeAttribute(MOVABLE_ATTRIBUTE_MOVING);
 }
 
 function onEnd(
@@ -184,13 +189,13 @@ function onEnd(
 	const movable = item.instance as OuiMovable;
 	const state = item.state as OuiDraggableState & OuiMovableState;
 
-	state.element.removeAttribute(ATTRIBUTE_MOVING);
+	state.element.removeAttribute(MOVABLE_ATTRIBUTE_MOVING);
 
 	if (!state.moved) {
 		state.moved = true;
 
 		if (state.container != null) {
-			MOVED.add(movable);
+			MOVABLE_MOVED.add(movable);
 		}
 	}
 
@@ -220,7 +225,7 @@ function onMove(
 	__: OuiDraggableItem,
 	position: OuiDragMovePosition,
 ): PlainObject | undefined {
-	setAttribute(globals.element?.node as never, ATTRIBUTE_MOVING, '');
+	setAttribute(globals.element?.node as never, MOVABLE_ATTRIBUTE_MOVING, '');
 
 	return {
 		from: {...globals.original},
@@ -233,7 +238,7 @@ function onResize(entries: ResizeObserverEntry[]): void {
 
 	for (let index = 0; index < length; index += 1) {
 		const entry = entries[index];
-		const set = CONTAINERS.get(entry.target as HTMLElement);
+		const set = MOVABLE_CONTAINERS.get(entry.target as HTMLElement);
 
 		if (set == null) {
 			continue;
@@ -246,7 +251,7 @@ function onResize(entries: ResizeObserverEntry[]): void {
 }
 
 function onScroll(): void {
-	for (const moved of MOVED) {
+	for (const moved of MOVABLE_MOVED) {
 		reposition(moved);
 	}
 }
@@ -279,25 +284,8 @@ function setOffset(state: OuiDraggableState & OuiMovableState, container: DOMRec
 
 // #region Variables
 
-export const ATTRIBUTE_MOVABLE = 'oui-movable';
-
-const ATTRIBUTE_CONTAINER = `${ATTRIBUTE_MOVABLE}-container`;
-
-const ATTRIBUTE_DIRECTION = `${ATTRIBUTE_MOVABLE}-direction`;
-
-export const ATTRIBUTE_MOVABLE_HANDLE: string = `${ATTRIBUTE_MOVABLE}-handle`;
-
-const ATTRIBUTE_MOVING = `${ATTRIBUTE_MOVABLE}-moving`;
-
-const CONTAINERS = new Map<HTMLElement, Set<OuiMovable>>();
-
-const MESSAGE = 'The element must be an instance of HTMLElement or SVGElement';
-
-const MOVED = new Set<OuiMovable>();
-
-const SELECTOR_HANDLE = `[${ATTRIBUTE_MOVABLE_HANDLE}]`;
-
 const bound: OuiDraggableBound = {
+	// @ts-expect-error All good, no worries :-)
 	constructor: OuiMovable,
 	property: 'movable',
 };
@@ -314,6 +302,6 @@ const removeMovable = removeDraggable.bind(bound);
 
 on(document, 'scroll', onScroll);
 
-attributable(ATTRIBUTE_MOVABLE, addMovable, removeMovable);
+attributable(MOVABLE_ATTRIBUTE, addMovable, removeMovable);
 
 // #endregion

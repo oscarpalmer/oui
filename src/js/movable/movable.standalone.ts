@@ -1,2 +1,3 @@
-export type {CreateOuiDraggableOptions as CreateOuiMovableOptions} from '../internal/draggable';
-export {createMovable, type OuiMovable} from './movable.embedded';
+export type {CreateOuiDraggableOptions as CreateOuiMovableOptions} from '../internal/draggable/draggable.model';
+export {createMovable} from './movable.embedded';
+export type {OuiMovable} from './movable.model';

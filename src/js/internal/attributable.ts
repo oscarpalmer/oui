@@ -1,3 +1,7 @@
+// #region Functions
+
+import {filter} from '@oscarpalmer/atoms/array/filter';
+
 export function attributable(
 	attribute: string,
 	add: (element: HTMLElement) => void,
@@ -39,7 +43,7 @@ function handleAdded(
 	nodes: Node[] | NodeList,
 	add: (element: HTMLElement) => void,
 ): void {
-	const elements = [...nodes].filter(node => node instanceof Element) as HTMLElement[];
+	const elements = filter([...nodes], node => node instanceof Element) as HTMLElement[];
 
 	const {length} = elements;
 
@@ -57,7 +61,7 @@ function handleAdded(
 }
 
 function handleRemoved(nodes: Node[] | NodeList, remove: (element: HTMLElement) => void): void {
-	const elements = [...nodes].filter(node => node instanceof Element) as HTMLElement[];
+	const elements = filter([...nodes], node => node instanceof Element) as HTMLElement[];
 
 	const {length} = elements;
 
@@ -71,3 +75,5 @@ function handleRemoved(nodes: Node[] | NodeList, remove: (element: HTMLElement) 
 		}
 	}
 }
+
+// #endregion

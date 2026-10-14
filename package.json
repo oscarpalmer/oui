@@ -1,6 +1,6 @@
 {
 	"name": "@oscarpalmer/oui",
-	"version": "0.39.0",
+	"version": "0.40.0",
 	"description": "Styles, components, and utilities for building websites and applications.",
 	"keywords": [
 		"css",
@@ -32,13 +32,17 @@
 			"types": "./dist/js/index.d.mts",
 			"default": "./dist/js/index.mjs"
 		},
+		"./color-picker": {
+			"types": "./dist/js/color-picker/index.d.mts",
+			"default": "./dist/js/color-picker/index.mjs"
+		},
 		"./combobox": {
 			"types": "./dist/js/combobox/index.d.mts",
 			"default": "./dist/js/combobox/index.mjs"
 		},
 		"./dialog": {
-			"types": "./dist/js/dialog.d.mts",
-			"default": "./dist/js/dialog.mjs"
+			"types": "./dist/js/dialog/index.d.mts",
+			"default": "./dist/js/dialog/index.mjs"
 		},
 		"./floatable": {
 			"types": "./dist/js/floatable/floatable.standalone.d.mts",
@@ -48,21 +52,25 @@
 			"types": "./dist/js/focus-trap/focus-trap.standalone.d.mts",
 			"default": "./dist/js/focus-trap/focus-trap.standalone.mjs"
 		},
+		"./l10n": {
+			"types": "./dist/js/l10n/index.d.mts",
+			"default": "./dist/js/l10n/index.mjs"
+		},
 		"./listbox": {
 			"types": "./dist/js/listbox/index.d.mts",
 			"default": "./dist/js/listbox/index.mjs"
+		},
+		"./menu": {
+			"types": "./dist/js/menu/index.d.mts",
+			"default": "./dist/js/menu/index.mjs"
 		},
 		"./movable": {
 			"types": "./dist/js/movable/movable.standalone.d.mts",
 			"default": "./dist/js/movable/movable.standalone.mjs"
 		},
-		"./menu": {
-			"types": "./dist/js/menu.d.mts",
-			"default": "./dist/js/menu.mjs"
-		},
 		"./popover": {
-			"types": "./dist/js/popover.d.mts",
-			"default": "./dist/js/popover.mjs"
+			"types": "./dist/js/popover/index.d.mts",
+			"default": "./dist/js/popover/index.mjs"
 		},
 		"./resizable": {
 			"types": "./dist/js/resizable/resizable.standalone.d.mts",
@@ -73,16 +81,20 @@
 			"default": "./dist/js/sortable/sortable.standalone.mjs"
 		},
 		"./splitter": {
-			"types": "./dist/js/splitter.d.mts",
-			"default": "./dist/js/splitter.mjs"
+			"types": "./dist/js/splitter/index.d.mts",
+			"default": "./dist/js/splitter/index.mjs"
+		},
+		"./tabs": {
+			"types": "./dist/js/tabs/index.d.mts",
+			"default": "./dist/js/tabs/index.mjs"
 		},
 		"./toolbar": {
-			"types": "./dist/js/toolbar.d.mts",
-			"default": "./dist/js/toolbar.mjs"
+			"types": "./dist/js/toolbar/index.d.mts",
+			"default": "./dist/js/toolbar/index.mjs"
 		},
 		"./tooltip": {
-			"types": "./dist/js/tooltip.d.mts",
-			"default": "./dist/js/tooltip.mjs"
+			"types": "./dist/js/tooltip/index.d.mts",
+			"default": "./dist/js/tooltip/index.mjs"
 		}
 	},
 	"scripts": {
@@ -101,7 +113,7 @@
 		"@oscarpalmer/toretto": "^0.56"
 	},
 	"devDependencies": {
-		"@vitest/coverage-istanbul": "5.0.1",
+		"@vitest/coverage-istanbul": "^5",
 		"autoprefixer": "^10.6",
 		"concurrently": "^10",
 		"jsdom": "^30.1",
@@ -113,13 +125,7 @@
 		"stylelint-config-standard-scss": "^17",
 		"tsdown": "^0.23",
 		"typescript": "^7",
-		"vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
-		"vite-plus": "1.0.0",
-		"vitest": "5.0.1"
+		"vite-plus": "^1.1"
 	},
-	"packageManager": "npm@11.12.1",
-	"overrides": {
-		"vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
-		"vitest": "5.0.1"
-	}
+	"packageManager": "npm@11.12.1"
 }

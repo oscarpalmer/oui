@@ -9,29 +9,32 @@ export function processListboxKeydown<State extends OuiListboxState>(
 	event: KeyboardEvent,
 	state: State,
 ): void {
-	const ignore = state.disabled || state.readonly;
-	const isSelect = state.type === 'select';
+	const {component, form} = state;
+	const {callbacks, disabled, readonly, type} = component;
+
+	const ignore = disabled || readonly;
+	const isSelect = type === 'select';
 
 	let preventDefault = ignore;
 
 	switch (true) {
 		case event.key === ' ': {
-			if (!state.disabled) {
-				state.callbacks.keydown.onActivation?.(state);
+			if (!disabled) {
+				callbacks.keydown.onActivation?.(state);
 			}
 
 			break;
 		}
 
 		case event.key === 'Enter': {
-			preventDefault = state.callbacks.keydown.preventActivation?.(state) ?? true;
+			preventDefault = callbacks.keydown.preventActivation?.(state) ?? true;
 
 			if (preventDefault) {
-				state.callbacks.keydown.onEnter?.(state);
-			} else if (!ignore && state.type === 'select') {
-				state.callbacks.keydown.onActivation?.(state);
+				callbacks.keydown.onEnter?.(state);
+			} else if (!ignore && type === 'select') {
+				callbacks.keydown.onActivation?.(state);
 			} else if (!ignore) {
-				state.internals.form?.requestSubmit();
+				form.internals.form?.requestSubmit();
 			}
 
 			break;
@@ -40,21 +43,21 @@ export function processListboxKeydown<State extends OuiListboxState>(
 		case event.key === 'Escape': {
 			preventDefault = false;
 
-			state.callbacks.keydown.onEscape?.(state);
+			callbacks.keydown.onEscape?.(state);
 
 			break;
 		}
 
 		case !isSelect && LISTBOX_KEYS_SELECTION.has(event.key): {
 			if (!ignore) {
-				state.callbacks.keydown.onSelection?.(state);
+				callbacks.keydown.onSelection?.(state);
 			}
 
 			break;
 		}
 
 		case LISTBOX_KEYS_NAVIGATION.has(event.key): {
-			if (!state.disabled) {
+			if (!disabled) {
 				onNavigation(event, state);
 			}
 
@@ -65,7 +68,7 @@ export function processListboxKeydown<State extends OuiListboxState>(
 			preventDefault = false;
 
 			if (event.key === 'Tab') {
-				state.callbacks.keydown.onTab?.(state);
+				callbacks.keydown.onTab?.(state);
 			}
 
 			break;
@@ -79,7 +82,9 @@ export function processListboxKeydown<State extends OuiListboxState>(
 }
 
 function onNavigation<State extends OuiListboxState>(event: KeyboardEvent, state: State): void {
-	const skip = state.callbacks.keydown.skipNavigation?.(state) ?? false;
+	const {active, autocomplete, callbacks, type} = state.component;
+
+	const skip = callbacks.keydown.skipNavigation?.(state) ?? false;
 	const visible = getListboxVisibleOptions(state);
 
 	if (visible.length === 0) {
@@ -88,10 +93,10 @@ function onNavigation<State extends OuiListboxState>(event: KeyboardEvent, state
 
 	let next: HTMLElement | undefined;
 
-	if (skip || state.active == null) {
-		next = state.active ?? visible.at(event.key === 'ArrowDown' ? 0 : -1);
+	if (skip || active == null) {
+		next = active ?? visible.at(event.key === 'ArrowDown' ? 0 : -1);
 	} else {
-		const current = visible.findIndex(option => option.id === state.active?.id);
+		const current = visible.findIndex(option => option.id === active?.id);
 
 		let index: number | undefined;
 
@@ -117,13 +122,13 @@ function onNavigation<State extends OuiListboxState>(event: KeyboardEvent, state
 
 	let preview: OuiListboxPreview;
 
-	if (state.type === 'autocomplete' && (state.autocomplete.both || state.autocomplete.inline)) {
+	if (type === 'autocomplete' && (autocomplete.both || autocomplete.inline)) {
 		preview = 'set';
 	} else {
 		preview = 'none';
 	}
 
-	state.callbacks.keydown.onNavigation(preview, state, next ?? state.active ?? visible[0]);
+	callbacks.keydown.onNavigation(preview, state, next ?? active ?? visible[0]);
 }
 
 // #endregion

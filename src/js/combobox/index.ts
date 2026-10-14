@@ -10,22 +10,22 @@ import {
 } from '../internal/listbox/listbox.misc';
 import type {OuiListboxLocalizations, OuiListboxType} from '../internal/listbox/listbox.model';
 import {attachListbox, detachListbox} from '../internal/listbox/listbox.state';
-import {updateLocalizations} from '../l10n';
-import {COMBOBOX_TAGNAME} from './constants.combobox';
-import type {OuiComboboxState} from './models.combobox';
-import {
-	comboboxStates,
-	createComboboxState,
-	onAttachCombobox,
-	onDetachCombobox,
-} from './state.combobox';
+import {updateLocalizations} from '../l10n/index';
+import {COMBOBOX_SYMBOL, COMBOBOX_TAGNAME} from './combobox.constants';
+import type {OuiComboboxState} from './combobox.model';
+import {comboboxes, initializeCombobox, onAttachCombobox, onDetachCombobox} from './combobox.state';
 
 // #region Types
 
 declare global {
 	interface HTMLElementTagNameMap {
-		[COMBOBOX_TAGNAME]: OuiComboboxElement;
+		[COMBOBOX_TAGNAME]: OuiComboboxElement & {[COMBOBOX_SYMBOL]: OuiComboboxState};
 	}
+}
+
+// oxlint-disable-next-line typescript/no-unsafe-declaration-merging
+export interface OuiComboboxElement {
+	[COMBOBOX_SYMBOL]: OuiComboboxState;
 }
 
 export class OuiComboboxElement extends HTMLElement {
@@ -33,17 +33,11 @@ export class OuiComboboxElement extends HTMLElement {
 
 	static observedAttributes: string[] = ['max', 'min', 'required', 'value'];
 
-	readonly #internals: ElementInternals;
-
-	#restored?: string[];
-
-	#state!: OuiComboboxState;
-
 	/**
 	 * Is the combobox disabled?
 	 */
 	get disabled(): boolean {
-		return this.#state?.disabled ?? false;
+		return this[COMBOBOX_SYMBOL].component?.disabled ?? false;
 	}
 
 	/**
@@ -51,7 +45,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 */
 	set disabled(value: boolean) {
 		if (typeof value === 'boolean' && value !== this.disabled) {
-			setListboxDisabled(this.#state, value);
+			setListboxDisabled(this[COMBOBOX_SYMBOL], value);
 		}
 	}
 
@@ -59,56 +53,56 @@ export class OuiComboboxElement extends HTMLElement {
 	 * Current filter value
 	 */
 	get filter(): string {
-		return this.#state.filter.element.value;
+		return this[COMBOBOX_SYMBOL].component?.filter.element.value ?? '';
 	}
 
 	/**
 	 * Set the filter value
 	 */
 	set filter(value: string) {
-		setListboxFilter(this.#state, value);
+		setListboxFilter(this[COMBOBOX_SYMBOL], value);
 	}
 
 	/**
 	 * Form element associated with the combobox
 	 */
 	get form(): HTMLFormElement | null {
-		return this.#internals.form;
+		return this[COMBOBOX_SYMBOL].form.internals.form;
 	}
 
 	/**
 	 * Label elements associated with the combobox
 	 */
 	get labels(): NodeList {
-		return this.#internals.labels;
+		return this[COMBOBOX_SYMBOL].form.internals.labels;
 	}
 
 	/**
 	 * Maximum number of selected options
 	 */
 	get max(): number | undefined {
-		return this.#state?.max;
+		return this[COMBOBOX_SYMBOL].component?.max;
 	}
 
 	/**
 	 * Set the maximum number of selected options
 	 */
 	set max(value: number) {
-		setListboxLimit('max', this.#state, value);
+		setListboxLimit('max', this[COMBOBOX_SYMBOL], value);
 	}
 
 	/**
 	 * Minimum number of selected options
 	 */
 	get min(): number | undefined {
-		return this.#state?.min;
+		return this[COMBOBOX_SYMBOL].component?.min;
 	}
 
 	/**
 	 * Set the minimum number of selected options
 	 */
 	set min(value: number) {
-		setListboxLimit('min', this.#state, value);
+		setListboxLimit('min', this[COMBOBOX_SYMBOL], value);
 	}
 
 	/**
@@ -129,7 +123,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 * Is the combobox readonly?
 	 */
 	get readonly(): boolean {
-		return this.#state?.readonly ?? false;
+		return this[COMBOBOX_SYMBOL].component?.readonly ?? false;
 	}
 
 	/**
@@ -137,7 +131,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 */
 	set readonly(value: boolean) {
 		if (typeof value === 'boolean' && value !== this.readonly) {
-			setListboxReadonly(this.#state, value);
+			setListboxReadonly(this[COMBOBOX_SYMBOL], value);
 		}
 	}
 
@@ -145,7 +139,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 * Is the combobox required?
 	 */
 	get required(): boolean {
-		return this.#state?.required ?? false;
+		return this[COMBOBOX_SYMBOL].component?.required ?? false;
 	}
 
 	/**
@@ -153,7 +147,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 */
 	set required(value: boolean) {
 		if (typeof value === 'boolean' && value !== this.required) {
-			setListboxRequired(this.#state, value);
+			setListboxRequired(this[COMBOBOX_SYMBOL], value);
 		}
 	}
 
@@ -161,73 +155,80 @@ export class OuiComboboxElement extends HTMLElement {
 	 * Selected options
 	 */
 	get selected(): HTMLElement[] {
-		return this.#state.options.selected.slice();
+		return this[COMBOBOX_SYMBOL].component?.options.selected.slice() ?? [];
 	}
 
 	/**
 	 * Type of combobox
 	 */
 	get type(): OuiListboxType {
-		return this.#state.type;
+		return this[COMBOBOX_SYMBOL].component?.type;
 	}
 
 	/**
 	 * Validation message for the combobox
 	 */
 	get validationMessage(): string {
-		return this.#internals.validationMessage;
+		return this[COMBOBOX_SYMBOL].form.internals.validationMessage;
 	}
 
 	/**
 	 * Validity state for the combobox
 	 */
 	get validity(): ValidityState {
-		return this.#internals.validity;
+		return this[COMBOBOX_SYMBOL].form.internals.validity;
 	}
 
 	/**
 	 * Current value
 	 */
 	get value(): string {
-		return this.#state.values.current[0];
+		return this[COMBOBOX_SYMBOL].component?.values.current[0] ?? '';
 	}
 
 	/**
 	 * Set the value
 	 */
 	set value(value: unknown) {
-		setListboxValue(this.#state, value);
+		setListboxValue(this[COMBOBOX_SYMBOL], value);
 	}
 
 	/**
 	 * Current values
 	 */
 	get values(): string[] {
-		return this.#state.values.current.slice();
+		return this[COMBOBOX_SYMBOL].component?.values.current.slice() ?? [];
 	}
 
 	/**
 	 * Set the values
 	 */
 	set values(values: unknown[]) {
-		setListboxValues(this.#state, values);
+		setListboxValues(this[COMBOBOX_SYMBOL], values);
 	}
 
 	/**
 	 * Can the combobox be validated?
 	 */
 	get willValidate(): boolean {
-		return this.#internals.willValidate;
+		return this[COMBOBOX_SYMBOL].form.internals.willValidate;
 	}
 
 	constructor() {
 		super();
 
-		this.#internals = this.attachInternals();
+		this[COMBOBOX_SYMBOL] = {
+			component: null as never,
+			form: {
+				internals: this.attachInternals(),
+			},
+		};
 	}
 
 	attributeChangedCallback(name: string, _: string | null, value: string | null): void {
-		if (this.#state == null) {
+		const state = this[COMBOBOX_SYMBOL];
+
+		if (state == null) {
 			return;
 		}
 
@@ -238,7 +239,7 @@ export class OuiComboboxElement extends HTMLElement {
 
 			case 'max':
 			case 'min':
-				setListboxLimit(name, this.#state, value);
+				setListboxLimit(name, state, value);
 				break;
 
 			case 'value':
@@ -256,27 +257,31 @@ export class OuiComboboxElement extends HTMLElement {
 	 * @returns `true` if the combobox is valid, otherwise `false`
 	 */
 	checkValidity(): boolean {
-		return this.#internals.checkValidity();
+		return this[COMBOBOX_SYMBOL].form.internals.checkValidity();
 	}
 
 	/**
 	 * Clear all selected options
 	 */
 	clear(): void {
-		setListboxValues(this.#state, []);
+		setListboxValues(this[COMBOBOX_SYMBOL], []);
 	}
 
 	connectedCallback(): void {
-		if (this.#state == null) {
-			this.#initialize();
+		const state = this[COMBOBOX_SYMBOL];
+
+		if (state.component == null) {
+			initializeCombobox(this, state);
 		} else {
-			attachListbox(this.#state, comboboxStates, onAttachCombobox);
+			attachListbox(state, comboboxes, onAttachCombobox);
 		}
 	}
 
 	disconnectedCallback(): void {
-		if (this.#state != null) {
-			detachListbox(this.#state, comboboxStates, onDetachCombobox);
+		const state = this[COMBOBOX_SYMBOL];
+
+		if (state.component != null) {
+			detachListbox(state, comboboxes, onDetachCombobox);
 		}
 	}
 
@@ -285,7 +290,11 @@ export class OuiComboboxElement extends HTMLElement {
 	}
 
 	formResetCallback(): void {
-		setListboxValues(this.#state, this.#state.values.initial);
+		const state = this[COMBOBOX_SYMBOL];
+
+		if (state.component != null) {
+			setListboxValues(state, state.component.values.initial);
+		}
 	}
 
 	formStateRestoreCallback(state: unknown, reason: unknown): void {
@@ -299,10 +308,12 @@ export class OuiComboboxElement extends HTMLElement {
 			return;
 		}
 
-		if (this.#state == null) {
-			this.#restored = parsed;
+		const {component, form} = this[COMBOBOX_SYMBOL];
+
+		if (component == null) {
+			form.restored = parsed;
 		} else {
-			setListboxValues(this.#state, parsed);
+			setListboxValues({component, form}, parsed);
 		}
 	}
 
@@ -312,7 +323,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 * @returns `true` if the combobox is valid, otherwise `false`
 	 */
 	reportValidity(): boolean {
-		return this.#internals.reportValidity();
+		return this[COMBOBOX_SYMBOL].form.internals.reportValidity();
 	}
 
 	/**
@@ -321,7 +332,7 @@ export class OuiComboboxElement extends HTMLElement {
 	 * @param message Validation message
 	 */
 	setCustomValidity(message: string): void {
-		this.#internals.setValidity({customError: message !== ''}, message, this);
+		this[COMBOBOX_SYMBOL].form.internals.setValidity({customError: message !== ''}, message, this);
 	}
 
 	/**
@@ -343,27 +354,17 @@ export class OuiComboboxElement extends HTMLElement {
 		first: string | Record<string, Partial<OuiListboxLocalizations>>,
 		second?: Partial<OuiListboxLocalizations>,
 	): void {
+		const {localizations} = this[COMBOBOX_SYMBOL].component;
+
 		updateLocalizations(
-			this.#state.localizations.global,
+			localizations.global,
 			typeof first === 'string'
 				? {
 						[first]: second!,
 					}
 				: first,
-			this.#state.localizations.component,
+			localizations.component,
 		);
-	}
-
-	#initialize(): void {
-		this.tabIndex = -1;
-
-		this.#state = createComboboxState(this, this.#internals);
-
-		if (this.#restored != null) {
-			setListboxValues(this.#state, this.#restored);
-
-			this.#restored = undefined;
-		}
 	}
 }
 
@@ -377,6 +378,6 @@ customElements.define(COMBOBOX_TAGNAME, OuiComboboxElement);
 
 // #region Exports
 
-export {setComboboxLocalizations} from './misc.combobox';
+export {setComboboxLocalizations} from './combobox.misc';
 
 // #endregion

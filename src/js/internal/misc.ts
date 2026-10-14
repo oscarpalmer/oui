@@ -1,4 +1,5 @@
 import {noop} from '@oscarpalmer/atoms/function';
+import {attempt} from '@oscarpalmer/atoms/result';
 import {getAria} from '@oscarpalmer/toretto/aria';
 import {getAttribute} from '@oscarpalmer/toretto/attribute';
 import type {AnyAriaBooleanAttribute} from '@oscarpalmer/toretto/models';
@@ -6,9 +7,11 @@ import type {AnyAriaBooleanAttribute} from '@oscarpalmer/toretto/models';
 // #region Functions
 
 export function copyValue(value: string, onSuccess?: () => void, onError?: () => void): void {
-	try {
-		navigator.clipboard.writeText(value).then(onSuccess ?? noop, onError ?? noop);
-	} catch {
+	const result = attempt(() =>
+		navigator.clipboard.writeText(value).then(onSuccess ?? noop, onError ?? noop),
+	);
+
+	if (!result.ok) {
 		onError?.();
 	}
 }
@@ -32,5 +35,11 @@ export function getBooleanAriaValue(
 
 	return value === true || value === 'true';
 }
+
+// #endregion
+
+// #region Variables
+
+export const EXPRESSION_WHITESPACE: RegExp = /\s+/;
 
 // #endregion

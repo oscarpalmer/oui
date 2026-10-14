@@ -10,9 +10,9 @@ import {
 } from '../internal/listbox/listbox.misc';
 import type {OuiListboxLocalizations, OuiListboxState} from '../internal/listbox/listbox.model';
 import {attachListbox, detachListbox} from '../internal/listbox/listbox.state';
-import {LISTBOX_TAGNAME} from './constants.listbox';
+import {LISTBOX_SYMBOL, LISTBOX_TAGNAME} from './constants.listbox';
 import {updateListboxLocalizations} from './misc.listbox';
-import {createListboxState, listboxStates, onAttachListbox, onDetachListbox} from './state.listbox';
+import {initializeListbox, listboxes, onAttachListbox, onDetachListbox} from './state.listbox';
 
 // #region Types
 
@@ -22,22 +22,21 @@ declare global {
 	}
 }
 
+// oxlint-disable-next-line typescript/no-unsafe-declaration-merging
+export interface OuiListboxElement {
+	[LISTBOX_SYMBOL]: OuiListboxState;
+}
+
 export class OuiListboxElement extends HTMLElement {
 	static formAssociated = true;
 
 	static observedAttributes: string[] = ['max', 'min', 'required', 'value'];
 
-	readonly #internals: ElementInternals;
-
-	#restored?: string[];
-
-	#state!: OuiListboxState;
-
 	/**
 	 * Is the listbox disabled?
 	 */
 	get disabled(): boolean {
-		return this.#state?.disabled ?? false;
+		return this[LISTBOX_SYMBOL].component?.disabled ?? false;
 	}
 
 	/**
@@ -45,7 +44,7 @@ export class OuiListboxElement extends HTMLElement {
 	 */
 	set disabled(value: boolean) {
 		if (typeof value === 'boolean' && value !== this.disabled) {
-			setListboxDisabled(this.#state, value);
+			setListboxDisabled(this[LISTBOX_SYMBOL], value);
 		}
 	}
 
@@ -53,56 +52,56 @@ export class OuiListboxElement extends HTMLElement {
 	 * Current filter value
 	 */
 	get filter(): string {
-		return this.#state.filter.element.value;
+		return this[LISTBOX_SYMBOL].component?.filter.element.value ?? '';
 	}
 
 	/**
 	 * Set the filter value
 	 */
 	set filter(value: string) {
-		setListboxFilter(this.#state, value);
+		setListboxFilter(this[LISTBOX_SYMBOL], value);
 	}
 
 	/**
 	 * Form element associated with the listbox
 	 */
 	get form(): HTMLFormElement | null {
-		return this.#internals.form;
+		return this[LISTBOX_SYMBOL].form.internals.form;
 	}
 
 	/**
 	 * Label elements associated with the listbox
 	 */
 	get labels(): NodeList {
-		return this.#internals.labels;
+		return this[LISTBOX_SYMBOL].form.internals.labels;
 	}
 
 	/**
 	 * Maximum number of selected options
 	 */
 	get max(): number | undefined {
-		return this.#state?.max;
+		return this[LISTBOX_SYMBOL].component?.max;
 	}
 
 	/**
 	 * Set the maximum number of selected options
 	 */
 	set max(value: number) {
-		setListboxLimit('max', this.#state, value);
+		setListboxLimit('max', this[LISTBOX_SYMBOL], value);
 	}
 
 	/**
 	 * Minimum number of selected options
 	 */
 	get min(): number | undefined {
-		return this.#state?.min;
+		return this[LISTBOX_SYMBOL].component?.min;
 	}
 
 	/**
 	 * Set the minimum number of selected options
 	 */
 	set min(value: number) {
-		setListboxLimit('min', this.#state, value);
+		setListboxLimit('min', this[LISTBOX_SYMBOL], value);
 	}
 
 	/**
@@ -123,7 +122,7 @@ export class OuiListboxElement extends HTMLElement {
 	 * Is the listbox readonly?
 	 */
 	get readonly(): boolean {
-		return this.#state?.readonly ?? false;
+		return this[LISTBOX_SYMBOL].component?.readonly ?? false;
 	}
 
 	/**
@@ -131,7 +130,7 @@ export class OuiListboxElement extends HTMLElement {
 	 */
 	set readonly(value: boolean) {
 		if (typeof value === 'boolean' && value !== this.readonly) {
-			setListboxReadonly(this.#state, value);
+			setListboxReadonly(this[LISTBOX_SYMBOL], value);
 		}
 	}
 
@@ -139,7 +138,7 @@ export class OuiListboxElement extends HTMLElement {
 	 * Is the listbox required?
 	 */
 	get required(): boolean {
-		return this.#state?.required ?? false;
+		return this[LISTBOX_SYMBOL].component?.required ?? false;
 	}
 
 	/**
@@ -147,7 +146,7 @@ export class OuiListboxElement extends HTMLElement {
 	 */
 	set required(value: boolean) {
 		if (typeof value === 'boolean' && value !== this.required) {
-			setListboxRequired(this.#state, value);
+			setListboxRequired(this[LISTBOX_SYMBOL], value);
 		}
 	}
 
@@ -155,66 +154,73 @@ export class OuiListboxElement extends HTMLElement {
 	 * Selected options
 	 */
 	get selected(): HTMLElement[] {
-		return this.#state.options.selected.slice();
+		return this[LISTBOX_SYMBOL].component?.options.selected.slice() ?? [];
 	}
 
 	/**
 	 * Validation message for the listbox
 	 */
 	get validationMessage(): string {
-		return this.#internals.validationMessage;
+		return this[LISTBOX_SYMBOL].form.internals.validationMessage;
 	}
 
 	/**
 	 * Validity state for the listbox
 	 */
 	get validity(): ValidityState {
-		return this.#internals.validity;
+		return this[LISTBOX_SYMBOL].form.internals.validity;
 	}
 
 	/**
 	 * Current value
 	 */
 	get value(): string {
-		return this.#state.values.current[0];
+		return this[LISTBOX_SYMBOL].component?.values.current[0] ?? '';
 	}
 
 	/**
 	 * Set the value
 	 */
 	set value(value: unknown) {
-		setListboxValue(this.#state, value);
+		setListboxValue(this[LISTBOX_SYMBOL], value);
 	}
 
 	/**
 	 * Current values
 	 */
 	get values(): string[] {
-		return this.#state.values.current.slice();
+		return this[LISTBOX_SYMBOL].component?.values.current.slice() ?? [];
 	}
 
 	/**
 	 * Set the values
 	 */
 	set values(values: unknown[]) {
-		setListboxValues(this.#state, values);
+		setListboxValues(this[LISTBOX_SYMBOL], values);
 	}
 
 	/**
 	 * Can the listbox be validated?
 	 */
 	get willValidate(): boolean {
-		return this.#internals.willValidate;
+		return this[LISTBOX_SYMBOL].form.internals.willValidate;
 	}
 
 	constructor() {
 		super();
 
-		this.#internals = this.attachInternals();
+		this[LISTBOX_SYMBOL] = {
+			component: null as never,
+			form: {
+				internals: this.attachInternals(),
+			},
+		};
 	}
 
 	attributeChangedCallback(name: string, _: string | null, value: string | null): void {
-		if (this.#state == null) {
+		const state = this[LISTBOX_SYMBOL];
+
+		if (state.component == null) {
 			return;
 		}
 
@@ -225,7 +231,7 @@ export class OuiListboxElement extends HTMLElement {
 
 			case 'max':
 			case 'min':
-				setListboxLimit(name, this.#state, value);
+				setListboxLimit(name, state, value);
 				break;
 
 			case 'value':
@@ -243,27 +249,31 @@ export class OuiListboxElement extends HTMLElement {
 	 * @returns `true` if the listbox is valid, otherwise `false`
 	 */
 	checkValidity(): boolean {
-		return this.#internals.checkValidity();
+		return this[LISTBOX_SYMBOL].form.internals.checkValidity();
 	}
 
 	/**
 	 * Clear all selected options
 	 */
 	clear(): void {
-		setListboxValues(this.#state, []);
+		setListboxValues(this[LISTBOX_SYMBOL], []);
 	}
 
 	connectedCallback(): void {
-		if (this.#state == null) {
-			this.#initialize();
+		const state = this[LISTBOX_SYMBOL];
+
+		if (state.component == null) {
+			initializeListbox(this, state);
 		} else {
-			attachListbox(this.#state, listboxStates, onAttachListbox);
+			attachListbox(state, listboxes, onAttachListbox);
 		}
 	}
 
 	disconnectedCallback(): void {
-		if (this.#state != null) {
-			detachListbox(this.#state, listboxStates, onDetachListbox);
+		const state = this[LISTBOX_SYMBOL];
+
+		if (state.component != null) {
+			detachListbox(state, listboxes, onDetachListbox);
 		}
 	}
 
@@ -272,7 +282,9 @@ export class OuiListboxElement extends HTMLElement {
 	}
 
 	formResetCallback(): void {
-		setListboxValues(this.#state, this.#state.values.initial);
+		const state = this[LISTBOX_SYMBOL];
+
+		setListboxValues(state, state.component.values.initial);
 	}
 
 	formStateRestoreCallback(state: string | File | FormData, reason: unknown): void {
@@ -286,10 +298,12 @@ export class OuiListboxElement extends HTMLElement {
 			return;
 		}
 
-		if (this.#state == null) {
-			this.#restored = parsed;
+		const component = this[LISTBOX_SYMBOL]?.component;
+
+		if (component == null) {
+			this[LISTBOX_SYMBOL].form.restored = parsed;
 		} else {
-			setListboxValues(this.#state, parsed);
+			setListboxValues(this[LISTBOX_SYMBOL], parsed);
 		}
 	}
 
@@ -299,7 +313,7 @@ export class OuiListboxElement extends HTMLElement {
 	 * @returns `true` if the listbox is valid, otherwise `false`
 	 */
 	reportValidity(): boolean {
-		return this.#internals.reportValidity();
+		return this[LISTBOX_SYMBOL].form.internals.reportValidity();
 	}
 
 	/**
@@ -308,7 +322,7 @@ export class OuiListboxElement extends HTMLElement {
 	 * @param message Validation message
 	 */
 	setCustomValidity(message: string): void {
-		this.#internals.setValidity({customError: message !== ''}, message, this);
+		this[LISTBOX_SYMBOL].form.internals.setValidity({customError: message !== ''}, message, this);
 	}
 
 	/**
@@ -330,22 +344,9 @@ export class OuiListboxElement extends HTMLElement {
 		first: string | Record<string, Partial<OuiListboxLocalizations>>,
 		second?: Partial<OuiListboxLocalizations>,
 	): void {
-		updateListboxLocalizations(
-			this.#state.localizations.global,
-			this.#state.localizations.component,
-			first,
-			second,
-		);
-	}
+		const {localizations} = this[LISTBOX_SYMBOL].component;
 
-	#initialize(): void {
-		this.#state = createListboxState(this, this.#internals);
-
-		if (this.#restored != null) {
-			setListboxValues(this.#state, this.#restored);
-
-			this.#restored = undefined;
-		}
+		updateListboxLocalizations(localizations.global, localizations.component, first, second);
 	}
 }
 

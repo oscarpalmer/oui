@@ -1,5 +1,6 @@
+import type {PlainObject} from '@oscarpalmer/atoms/models';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
-import type {OuiLocalizations, OuiLocalizationsValues} from '../../l10n';
+import type {OuiLocalizations, OuiLocalizationsValues} from '../../l10n/l10n.model';
 
 // #region Types
 
@@ -121,7 +122,12 @@ export type OuiListboxOptions = {
 
 export type OuiListboxPreview = 'none' | 'set' | 'typed';
 
-export type OuiListboxState = {
+export type OuiListboxState<State extends PlainObject = PlainObject> = {
+	component: OuiListboxStateComponent<State>;
+	form: OuiListboxStateForm;
+};
+
+export type OuiListboxStateComponent<State extends PlainObject> = {
 	active?: HTMLElement;
 	attributes: OuiListboxAttributes;
 	autocomplete: OuiListboxAutoComplete;
@@ -134,7 +140,6 @@ export type OuiListboxState = {
 	groups?: OuiListboxGroup[];
 	host: HTMLElement;
 	id: string;
-	internals: ElementInternals;
 	label: OuiListboxLabel;
 	list: HTMLUListElement;
 	listbox: boolean;
@@ -151,11 +156,11 @@ export type OuiListboxState = {
 	select: HTMLSelectElement;
 	type: OuiListboxType;
 	values: OuiListboxValues;
-};
+} & State;
 
-export type OuiListboxStates<State extends OuiListboxState = OuiListboxState> = {
-	map: WeakMap<HTMLElement, State>;
-	set: Set<State>;
+export type OuiListboxStateForm = {
+	internals: ElementInternals;
+	restored?: unknown[];
 };
 
 export type OuiListboxType = 'autocomplete' | 'select';

@@ -1,5 +1,5 @@
 import {dispatch} from '@oscarpalmer/toretto/event';
-import {getLocalization, localize} from '../../l10n';
+import {getLocalization, localize} from '../../l10n/index';
 import type {OuiListboxState} from './listbox.model';
 
 // #region Functions
@@ -9,39 +9,42 @@ export function updateListboxForm<State extends OuiListboxState>(
 	values: string[],
 	emit?: boolean,
 ): void {
+	const {component, form} = state;
+	const {callbacks, host, multiple, name} = component;
+
 	let value: string | FormData;
 
-	if (state.multiple) {
+	if (multiple) {
 		const {length} = values;
 
 		value = new FormData();
 
 		for (let index = 0; index < length; index += 1) {
-			(value as FormData).append(state.name, values[index]);
+			(value as FormData).append(name, values[index]);
 		}
 	} else {
 		value = values[0];
 	}
 
-	state.values.current = values;
+	component.values.current = values;
 
-	state.internals.setFormValue(value, JSON.stringify(values));
+	form.internals.setFormValue(value, JSON.stringify(values));
 
-	state.callbacks.data.onForm(state);
+	callbacks.data.onForm(state);
 
 	updateListboxValidity(state);
 
 	if (emit ?? true) {
-		dispatch(state.host, 'oui:change');
+		dispatch(host, 'oui:change');
 	}
 }
 
 export function updateListboxValidity(state: OuiListboxState): void {
+	const {component, form} = state;
 	const {
 		autocomplete,
 		filter,
 		host,
-		internals,
 		listbox,
 		localizations,
 		max,
@@ -49,7 +52,7 @@ export function updateListboxValidity(state: OuiListboxState): void {
 		multiple,
 		options,
 		required,
-	} = state;
+	} = component;
 
 	if (autocomplete.none && !listbox) {
 		const valueMissing = required && filter.element.value.length === 0;
@@ -61,9 +64,9 @@ export function updateListboxValidity(state: OuiListboxState): void {
 			localizations.component,
 		);
 
-		internals.setValidity({valueMissing}, localize(localization, {}, []));
+		form.internals.setValidity({valueMissing}, localize(localization, {}, []));
 
-		internals.checkValidity();
+		form.internals.checkValidity();
 
 		return;
 	}
@@ -110,7 +113,7 @@ export function updateListboxValidity(state: OuiListboxState): void {
 
 	const message = localization == null ? undefined : localize(localization, data, parameters);
 
-	internals.setValidity(
+	form.internals.setValidity(
 		error == null
 			? {}
 			: {
@@ -119,7 +122,7 @@ export function updateListboxValidity(state: OuiListboxState): void {
 		message,
 	);
 
-	internals.checkValidity();
+	form.internals.checkValidity();
 }
 
 // #endregion

@@ -8,8 +8,7 @@ import {
 import {updateListboxPreview} from '../internal/listbox/listbox.dom';
 import {processListboxKeydown} from '../internal/listbox/listbox.event';
 import type {OuiListboxPreview, OuiListboxState} from '../internal/listbox/listbox.model';
-import {LISTBOX_SELECTORS, LISTBOX_TAGNAME} from './constants.listbox';
-import {listboxStates} from './state.listbox';
+import {LISTBOX_SYMBOL, LISTBOX_TAGNAME, listboxSelectors} from './constants.listbox';
 
 // #region Types
 
@@ -17,21 +16,23 @@ import {listboxStates} from './state.listbox';
 
 function onListboxClick(event: Event): void {
 	const listbox = findAncestor(event, LISTBOX_TAGNAME);
-	const state = listboxStates.map.get(listbox!);
+	const state = listbox?.[LISTBOX_SYMBOL];
 
 	if (listbox == null || state == null) {
 		return;
 	}
 
-	const option = findAncestor(event, LISTBOX_SELECTORS.option) as HTMLElement | null;
+	const option = findAncestor(event, listboxSelectors.option) as HTMLElement | null;
 
 	if (option == null) {
 		return;
 	}
 
-	if (state.disabled) {
-		state.filter.element.focus();
-	} else if (state.readonly) {
+	const {disabled, filter, readonly} = state.component;
+
+	if (disabled) {
+		filter.element.focus();
+	} else if (readonly) {
 		updateListboxPreview('none', state, option, false);
 	} else {
 		toggleListboxOption(state, option);
@@ -39,8 +40,8 @@ function onListboxClick(event: Event): void {
 }
 
 export function onListboxEnter(state: OuiListboxState): void {
-	if (!state.disabled && !state.readonly) {
-		toggleListboxOption(state, state.active);
+	if (!state.component.disabled && !state.component.readonly) {
+		toggleListboxOption(state, state.component.active);
 	}
 }
 
@@ -55,18 +56,18 @@ export function onListboxFilter(
 
 function onListboxInput(event: InputEvent): void {
 	const listbox = findAncestor(event, LISTBOX_TAGNAME);
-	const state = listboxStates.map.get(listbox!);
+	const state = listbox?.[LISTBOX_SYMBOL];
 
-	if (state?.filter.element === event.target) {
+	if (state?.component.filter.element === event.target) {
 		filterListbox(event.inputType, state);
 	}
 }
 
 function onListboxKeydown(event: KeyboardEvent): void {
 	const listbox = findAncestor(event, LISTBOX_TAGNAME);
-	const state = listboxStates.map.get(listbox!);
+	const state = listbox?.[LISTBOX_SYMBOL];
 
-	if (state?.filter.element === event.target) {
+	if (state?.component.filter.element === event.target) {
 		processListboxKeydown(event, state);
 	}
 }
@@ -76,7 +77,7 @@ export function onListboxNavigation(
 	state: OuiListboxState,
 	active?: HTMLElement,
 ): void {
-	if (state.multiple || state.readonly) {
+	if (state.component.multiple || state.component.readonly) {
 		updateListboxPreview(preview, state, active);
 	} else {
 		applyListboxSelection({
@@ -89,7 +90,7 @@ export function onListboxNavigation(
 }
 
 export function onListboxToggle(state: OuiListboxState): void {
-	state.filter.element.focus();
+	state.component.filter.element.focus();
 }
 
 // #endregion

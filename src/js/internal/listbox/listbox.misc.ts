@@ -1,3 +1,4 @@
+import {filter} from '@oscarpalmer/atoms/array/filter';
 import {setAria} from '@oscarpalmer/toretto/aria';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {filterListbox} from './listbox.data';
@@ -11,7 +12,7 @@ export function generateListboxIds(prefix: string, select: HTMLSelectElement): v
 		child instanceof HTMLOptGroupElement
 			? [
 					child,
-					...[...child.children].filter(groupChild => groupChild instanceof HTMLOptionElement),
+					...filter([...child.children], groupChild => groupChild instanceof HTMLOptionElement),
 				]
 			: child instanceof HTMLOptionElement
 				? [child]
@@ -30,14 +31,14 @@ export function generateListboxIds(prefix: string, select: HTMLSelectElement): v
 }
 
 export function getListboxVisibleOptions(state: OuiListboxState): HTMLElement[] {
-	return state.options.all.filter(option => !option.hidden);
+	return state.component.options.all.filter(option => !option.hidden);
 }
 
 export function setListboxDisabled<State extends OuiListboxState>(
 	state: State,
 	value: boolean,
 ): void {
-	state.filter.element.readOnly = state.readonly || value;
+	state.component.filter.element.readOnly = state.component.readonly || value;
 
 	setProperties('disabled', state, value);
 }
@@ -50,10 +51,12 @@ export function setListboxFilter<State extends OuiListboxState>(
 		return;
 	}
 
-	const type: InputEvent['inputType'] =
-		value.length < state.filter.element.value.length ? 'deleteContentBackward' : 'insertText';
+	const {filter} = state.component;
 
-	state.filter.element.value = value;
+	const type: InputEvent['inputType'] =
+		value.length < filter.element.value.length ? 'deleteContentBackward' : 'insertText';
+
+	filter.element.value = value;
 
 	filterListbox(type, state);
 }
@@ -63,6 +66,8 @@ export function setListboxLimit<State extends OuiListboxState>(
 	state: State,
 	value?: unknown,
 ): void {
+	const {component} = state;
+
 	let actual = value;
 
 	if (typeof actual === 'string') {
@@ -71,13 +76,13 @@ export function setListboxLimit<State extends OuiListboxState>(
 
 	const updateLimit =
 		typeof actual === 'number' && !Number.isNaN(actual) && actual >= 0
-			? actual !== state[type]
+			? actual !== component[type]
 			: actual == null;
 
 	if (updateLimit) {
-		state[type] = actual as number | undefined;
+		component[type] = actual as number | undefined;
 
-		setAttribute(state.host, type, actual);
+		setAttribute(component.host, type, actual);
 
 		updateListboxValidity(state);
 	}
@@ -96,12 +101,15 @@ function setProperties<State extends OuiListboxState>(
 	state: State,
 	value: boolean,
 ): void {
-	state[key] = value;
+	const {component} = state;
+	const {elements} = component;
 
-	const {length} = state.elements;
+	component[key] = value;
+
+	const {length} = elements;
 
 	for (let index = 0; index < length; index += 1) {
-		const element = state.elements[index];
+		const element = elements[index];
 
 		if (element == null) {
 			continue;
@@ -119,7 +127,9 @@ export function setListboxReadonly<State extends OuiListboxState>(
 	state: State,
 	value: boolean,
 ): void {
-	state.filter.element.readOnly = state.disabled || value;
+	const {disabled, filter} = state.component;
+
+	filter.element.readOnly = disabled || value;
 
 	setProperties('readonly', state, value);
 }

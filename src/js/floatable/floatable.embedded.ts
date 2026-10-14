@@ -5,136 +5,41 @@ import {on} from '@oscarpalmer/toretto/event';
 import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import {setStyle, setStyles} from '@oscarpalmer/toretto/style';
+import {
+	FLOATABLE_AREAS,
+	FLOATABLE_ATTRIBUTE,
+	FLOATABLE_ATTRIBUTE_POSITION,
+	FLOATABLE_MESSAGE,
+	FLOATABLE_POSITIONS,
+	FLOATABLE_SYMBOL,
+	floatables,
+	type CreateOuiFloatableOptions,
+	type OuiFloatable,
+	type OuiFloatableOptions,
+	type OuiFloatablePosition,
+	type OuiFloatableState,
+} from './floatable.model';
 
-// #region Types
+// #region Instances
 
-export type CreateOuiFloatableOptions = {
-	/**
-	 * Open the floatable when created? _(defaults to `true`)_
-	 */
-	open?: boolean;
-	/**
-	 * Position of the floatable _(defaults to `below`)_
-	 */
-	position?: OuiFloatablePosition;
-};
+function OuiFloatable(this: OuiFloatable, state: OuiFloatableState, standalone: boolean): void {
+	this[FLOATABLE_SYMBOL] = state;
 
-export class OuiFloatable {
-	#destroyed = false;
-
-	readonly #state: OuiFloatableState;
-
-	/**
-	 * Is the floatable open?
-	 */
-	get open(): boolean {
-		return this.#state.content.checkVisibility();
-	}
-
-	/**
-	 * Open or close the floatable
-	 */
-	set open(value: boolean) {
-		if (value === true) {
-			this.show();
-		} else if (value === false) {
-			this.hide();
-		}
-	}
-
-	constructor(state: OuiFloatableState, standalone: boolean) {
-		this.#state = state;
-
-		this.#initialize(state, standalone);
-	}
-
-	/**
-	 * Destroy the floatable, removing it from the DOM and cleaning up references
-	 */
-	destroy(): void {
-		if (this.#destroyed) {
-			return;
-		}
-
-		this.#destroyed = true;
-
-		removeFloatable(this.#state.content);
-
-		this.#state.anchor = null as never;
-		this.#state.content = null as never;
-	}
-
-	/**
-	 * Closes the floatable
-	 */
-	hide(): void {
-		if (!this.#destroyed && this.open) {
-			this.#state.content.hidePopover();
-		}
-	}
-
-	/**
-	 * Opens the floatable
-	 */
-	show(): void {
-		if (!this.#destroyed && !this.open) {
-			this.#state.content.showPopover();
-		}
-	}
-
-	/**
-	 * Update the position of the floatable, with an optional new position
-	 *
-	 * @param position Optional new position
-	 */
-	update(position?: OuiFloatablePosition): void {
-		if (!this.#destroyed) {
-			setPosition(this.#state, position);
-		}
-	}
-
-	#initialize(state: OuiFloatableState, standalone: boolean): void {
-		const {anchor, content} = state;
-
-		if (standalone) {
-			setAttribute(content, ATTRIBUTE_FLOATABLE, '');
-
-			content.popover = 'manual';
-		} else {
-			content.popover ??= 'auto';
-		}
-
-		setStyle(anchor, 'anchorName', state.name);
-		setStyle(content, 'positionAnchor', state.name);
-	}
+	initialize(state, standalone);
 }
 
-export type OuiFloatableOptions = {
-	attribute?: string;
-	position: OuiFloatablePosition;
-	reusable: boolean;
-};
+OuiFloatable.prototype.destroy = destroyFloatable;
+OuiFloatable.prototype.hide = hideFloatable;
+OuiFloatable.prototype.show = showFloatable;
+OuiFloatable.prototype.update = updateFloatable;
 
-export type OuiFloatablePosition =
-	| 'above'
-	| 'above-end'
-	| 'above-start'
-	| 'below'
-	| 'below-end'
-	| 'below-start'
-	| 'end'
-	| 'end-bottom'
-	| 'end-top'
-	| 'start'
-	| 'start-bottom'
-	| 'start-top';
-
-type OuiFloatableState = {
-	anchor: HTMLElement;
-	content: HTMLElement;
-	name: string;
-	options: OuiFloatableOptions;
-};
+Object.defineProperties(OuiFloatable.prototype, {
+	open: {
+		enumerable: true,
+		get: getOpen,
+		set: setOpen,
+	},
+});
 
 // #endregion
 
@@ -201,20 +106,36 @@ function createInstance(
 	standalone: boolean,
 ): OuiFloatable {
 	if (!isHTMLOrSVGElement(anchor) || !isHTMLOrSVGElement(content)) {
-		throw new TypeError(MESSAGE);
+		throw new TypeError(FLOATABLE_MESSAGE);
 	}
 
-	let floatable = options.reusable ? undefined : instances.get(content);
+	let floatable = options.reusable ? undefined : floatables.get(content);
 
 	if (floatable == null) {
-		floatable = new OuiFloatable(getState(anchor, content, options), standalone);
+		// @ts-expect-error All good, no worries :-)
+		floatable = new OuiFloatable(getState(anchor, content, options), standalone) as OuiFloatable;
 
 		if (!options.reusable) {
-			instances.set(content, floatable);
+			floatables.set(content, floatable);
 		}
 	}
 
 	return floatable;
+}
+
+function destroyFloatable(this: OuiFloatable): void {
+	const state = this[FLOATABLE_SYMBOL];
+
+	if (state.destroyed) {
+		return;
+	}
+
+	state.destroyed = true;
+
+	removeFloatable(state.content);
+
+	state.anchor = null as never;
+	state.content = null as never;
 }
 
 export function getOnBeforeToggleListener(element: HTMLElement): RemovableEventListener {
@@ -234,12 +155,17 @@ export function getOnBeforeToggleListener(element: HTMLElement): RemovableEventL
 	);
 }
 
+function getOpen(this: OuiFloatable): boolean {
+	return this[FLOATABLE_SYMBOL].content.checkVisibility();
+}
+
 function getOptions(input?: CreateOuiFloatableOptions): Required<CreateOuiFloatableOptions> {
 	const object = isPlainObject(input) ? input : {};
 
 	return {
 		open: typeof object.open === 'boolean' ? object.open : true,
-		position: object.position != null && object.position in AREAS ? object.position : 'below',
+		position:
+			object.position != null && object.position in FLOATABLE_AREAS ? object.position : 'below',
 	};
 }
 
@@ -247,7 +173,7 @@ function getPosition(
 	state: OuiFloatableState,
 	override?: OuiFloatablePosition,
 ): OuiFloatablePosition {
-	if (override != null && override in AREAS) {
+	if (override != null && override in FLOATABLE_AREAS) {
 		return override;
 	}
 
@@ -259,7 +185,7 @@ function getPosition(
 
 	const attribute = getAttribute(anchor, options.attribute);
 
-	return attribute != null && attribute in AREAS
+	return attribute != null && attribute in FLOATABLE_AREAS
 		? (attribute as OuiFloatablePosition)
 		: options.position;
 }
@@ -276,23 +202,55 @@ function getState(
 		content,
 		name,
 		options,
+		destroyed: false,
 	};
 
 	return state;
 }
 
-export function removeFloatable(content: HTMLElement): void {
-	instances.get(content)?.destroy();
+function hideFloatable(this: OuiFloatable): void {
+	const {content, destroyed} = this[FLOATABLE_SYMBOL];
 
-	instances.delete(content);
+	if (!destroyed && this.open) {
+		content.hidePopover();
+	}
+}
+
+function initialize(state: OuiFloatableState, standalone: boolean): void {
+	const {anchor, content} = state;
+
+	if (standalone) {
+		setAttribute(content, FLOATABLE_ATTRIBUTE, '');
+
+		content.popover = 'manual';
+	} else {
+		content.popover ??= 'auto';
+	}
+
+	setStyle(anchor, 'anchorName', state.name);
+	setStyle(content, 'positionAnchor', state.name);
+}
+
+export function removeFloatable(content: HTMLElement): void {
+	floatables.get(content)?.destroy();
+
+	floatables.delete(content);
+}
+
+function setOpen(this: OuiFloatable, value: unknown): void {
+	if (value === true) {
+		this.show();
+	} else if (value === false) {
+		this.hide();
+	}
 }
 
 function setPosition(state: OuiFloatableState, override?: OuiFloatablePosition): void {
 	const position = getPosition(state, override);
 
-	const area = AREAS[position];
+	const area = FLOATABLE_AREAS[position];
 
-	setAttribute(state.content, ATTRIBUTE_POSITION, POSITIONS[area]);
+	setAttribute(state.content, FLOATABLE_ATTRIBUTE_POSITION, FLOATABLE_POSITIONS[area]);
 
 	setStyles(state.content, {
 		positionAnchor: state.name,
@@ -300,36 +258,25 @@ function setPosition(state: OuiFloatableState, override?: OuiFloatablePosition):
 	});
 }
 
+function showFloatable(this: OuiFloatable): void {
+	const {content, destroyed} = this[FLOATABLE_SYMBOL];
+
+	if (!destroyed && !this.open) {
+		content.showPopover();
+	}
+}
+
+function updateFloatable(this: OuiFloatable, position?: OuiFloatablePosition): void {
+	const state = this[FLOATABLE_SYMBOL];
+
+	if (!state.destroyed) {
+		setPosition(state, position);
+	}
+}
+
 // #endregion
 
 // #region Variables
-
-const AREAS: Record<OuiFloatablePosition, string> = {
-	above: 'block-start',
-	'above-end': 'start span-start',
-	'above-start': 'start span-end',
-	below: 'block-end',
-	'below-end': 'end span-start',
-	'below-start': 'end span-end',
-	end: 'center end',
-	'end-bottom': 'span-start end',
-	'end-top': 'span-end end',
-	start: 'center start',
-	'start-bottom': 'span-start start',
-	'start-top': 'span-end start',
-};
-
-export const ATTRIBUTE_FLOATABLE = 'oui-floatable';
-
-const ATTRIBUTE_POSITION = 'oui-position';
-
-const MESSAGE = 'Anchor and content must be an HTMLElement or SVGElement';
-
-const POSITIONS = Object.fromEntries(
-	Object.entries(AREAS).map(([position, area]) => [area, position]),
-) as Record<string, OuiFloatablePosition>;
-
-const instances = new WeakMap<HTMLElement, OuiFloatable>();
 
 let index = 0;
 

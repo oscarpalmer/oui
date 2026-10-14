@@ -1,1 +1,2 @@
-export {createFocusTrap, type OuiFocusTrap, type OuiFocusTrapOptions} from './focus-trap.embedded';
+export {createFocusTrap} from './focus-trap.embedded';
+export type {OuiFocusTrap, OuiFocusTrapOptions} from './focus-trap.model';

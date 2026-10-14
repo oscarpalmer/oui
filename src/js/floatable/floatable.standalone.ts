@@ -1,6 +1,6 @@
-export {
-	createFloatable,
-	type CreateOuiFloatableOptions,
-	type OuiFloatable,
-	type OuiFloatablePosition,
-} from './floatable.embedded';
+export {createFloatable} from './floatable.embedded';
+export type {
+	CreateOuiFloatableOptions,
+	OuiFloatable,
+	OuiFloatablePosition,
+} from './floatable.model';

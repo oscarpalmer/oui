@@ -1,5 +1,7 @@
-import {createElement, setAria, setAttribute} from '@oscarpalmer/toretto';
-import {getLocalization, localize} from '../../l10n';
+import {setAria} from '@oscarpalmer/toretto/aria';
+import {setAttribute} from '@oscarpalmer/toretto/attribute';
+import {createElement} from '@oscarpalmer/toretto/create';
+import {getLocalization, localize} from '../../l10n/index';
 import {listboxScrollOptions} from './listbox.constants';
 import {getListboxVisibleOptions} from './listbox.misc';
 import type {
@@ -362,7 +364,7 @@ export function createListboxValueLabel(id: string): HTMLSpanElement {
 }
 
 export function updateListboxMessage(state: OuiListboxState): void {
-	const {attributes, host, localizations, message} = state;
+	const {attributes, host, localizations, message} = state.component;
 
 	const visible = getListboxVisibleOptions(state).length;
 
@@ -394,53 +396,53 @@ export function updateListboxPreview<State extends OuiListboxState>(
 	active?: HTMLElement,
 	scroll?: boolean,
 ): void {
-	const {length} = state.options.all;
+	const {attributes, callbacks, content, filter, options} = state.component;
+	const {length} = options.all;
 
 	for (let index = 0; index < length; index += 1) {
-		const option = state.options.all[index];
+		const option = options.all[index];
 
-		setAttribute(option, state.attributes.active, option === active ? '' : undefined);
+		setAttribute(option, attributes.active, option === active ? '' : undefined);
 	}
 
-	state.active = active;
+	state.component.active = active;
 
-	setAria(
-		state.filter.element,
-		'activedescendant',
-		state.content.checkVisibility() ? active?.id : undefined,
-	);
+	setAria(filter.element, 'activedescendant', content.checkVisibility() ? active?.id : undefined);
 
 	if (scroll ?? true) {
 		active?.scrollIntoView(listboxScrollOptions);
 	}
 
 	if (preview !== 'none') {
-		state.callbacks.data.onPreview(preview, state, active);
+		callbacks.data.onPreview(preview, state, active);
 	}
 }
 
 export function updateListboxValueLabel<State extends OuiListboxState>(state: State): void {
+	const {autocomplete, filter, listbox, localizations, host, options, multiple, values} =
+		state.component;
+
 	let label: string;
 
-	if (state.multiple) {
+	if (multiple) {
 		const localization = getLocalization(
-			state.localizations.global,
-			state.host,
+			localizations.global,
+			host,
 			'selected',
-			state.localizations.component,
+			localizations.component,
 		);
 
-		const {length} = state.options.selected;
+		const {length} = options.selected;
 
 		label = localize(localization, {amount: length}, [length]);
 	} else {
 		label =
-			state.autocomplete.none && !state.listbox
-				? state.filter.element.value
-				: (state.options.selected[0]?.textContent ?? '');
+			autocomplete.none && !listbox
+				? filter.element.value
+				: (options.selected[0]?.textContent ?? '');
 	}
 
-	state.values.label.textContent = label;
+	values.label.textContent = label;
 }
 
 // #endregion

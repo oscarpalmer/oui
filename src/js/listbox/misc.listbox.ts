@@ -1,7 +1,8 @@
 import {updateListboxMessage, updateListboxValueLabel} from '../internal/listbox/listbox.dom';
 import type {OuiListboxLocalizations} from '../internal/listbox/listbox.model';
-import {OuiLocalizations, updateLocalizations} from '../l10n';
-import {listboxLocalizations, listboxStates} from './state.listbox';
+import {updateLocalizations} from '../l10n/index';
+import type {OuiLocalizations} from '../l10n/l10n.model';
+import {listboxLocalizations, listboxes} from './state.listbox';
 
 // #region Functions
 
@@ -53,7 +54,7 @@ export function updateListboxLocalizations(
 			: first,
 		destination,
 		() => {
-			for (const state of listboxStates.set) {
+			for (const state of listboxes) {
 				updateListboxMessage(state);
 				updateListboxValueLabel(state);
 			}

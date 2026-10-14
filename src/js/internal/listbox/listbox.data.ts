@@ -28,36 +28,37 @@ export function applyListboxSelection<State extends OuiListboxState>(
 	parameters: ApplySelectionParameters<State>,
 ): void {
 	const {added, emit, option, scroll, selected, state} = parameters;
-	const {length} = state.options.all;
+	const {component} = state;
+	const {autocomplete, callbacks, filter, listbox, options, type} = component;
+	const {length} = options.all;
 
 	for (let index = 0; index < length; index += 1) {
-		const option = state.options.all[index];
+		const option = options.all[index];
 
 		setAria(
 			option,
 			'selected',
-			(state.type === 'select' || !state.autocomplete.none) &&
-				(selected ?? state.options.selected).includes(option),
+			(type === 'select' || !autocomplete.none) && (selected ?? options.selected).includes(option),
 		);
 	}
 
 	const values =
 		parameters.values ??
-		(state.autocomplete.none && !state.listbox
-			? [state.filter.element.value]
-			: (selected ?? state.options.selected).map(option => getData(option, 'value', false) ?? ''));
+		(autocomplete.none && !listbox
+			? [filter.element.value]
+			: (selected ?? options.selected).map(option => getData(option, 'value', false) ?? ''));
 
 	if (values.length === 0) {
 		values.push('');
 	}
 
 	if (selected != null) {
-		state.options.selected = selected;
+		options.selected = selected;
 	}
 
 	const update =
-		values.length === state.values.current.length
-			? values.some(value => !state.values.current.includes(value))
+		values.length === component.values.current.length
+			? values.some(value => !component.values.current.includes(value))
 			: true;
 
 	if (!update) {
@@ -69,15 +70,17 @@ export function applyListboxSelection<State extends OuiListboxState>(
 	updateListboxPreview('set', state, option, scroll);
 	updateListboxValueLabel(state);
 
-	state.callbacks.data.onApply(state, option, values, added, selected, emit);
+	callbacks.data.onApply(state, option, values, added, selected, emit);
 }
 
 export function filterListbox(type: InputEvent['inputType'], state: OuiListboxState): void {
-	if (state.disabled || state.readonly) {
+	const {callbacks, disabled, filter, host, readonly} = state.component;
+
+	if (disabled || readonly) {
 		return;
 	}
 
-	const update = state.filter.element.value !== state.filter.value;
+	const update = filter.element.value !== filter.value;
 
 	const option = filterListboxOptions(state);
 
@@ -90,13 +93,13 @@ export function filterListbox(type: InputEvent['inputType'], state: OuiListboxSt
 	}
 
 	if (preview != null) {
-		state.callbacks.data.onFilter(preview, state, update, option);
+		callbacks.data.onFilter(preview, state, update, option);
 	}
 
 	if (update) {
-		state.filter.value = state.filter.element.value;
+		filter.value = filter.element.value;
 
-		dispatch(state.host, 'input');
+		dispatch(host, 'input');
 	}
 }
 
@@ -105,18 +108,20 @@ export function filterListboxOption(
 	value: unknown,
 	textContent?: boolean,
 ): HTMLElement | undefined {
+	const {options} = state.component;
+
 	const filterTextContent = textContent ?? false;
 
 	const filter = getString(value).toLocaleLowerCase();
 
 	filterListboxOptions(state);
 
-	const {length} = state.options.all;
+	const {length} = options.all;
 
 	let match: HTMLElement | undefined;
 
 	for (let index = 0; index < length; index += 1) {
-		const option = state.options.all[index];
+		const option = options.all[index];
 
 		const value = (
 			filterTextContent ? option.textContent : (getData(option, 'value', false) ?? '')
@@ -133,7 +138,7 @@ export function filterListboxOption(
 }
 
 export function filterListboxOptions(state: OuiListboxState): HTMLElement | undefined {
-	function filter(options: HTMLElement[]): boolean {
+	function filterOptions(options: HTMLElement[]): boolean {
 		const {length} = options;
 
 		let count = 0;
@@ -142,7 +147,7 @@ export function filterListboxOptions(state: OuiListboxState): HTMLElement | unde
 			const option = options[index];
 
 			option.hidden =
-				(state.type === 'select' || !state.autocomplete.none) &&
+				(type === 'select' || !autocomplete.none) &&
 				!option.textContent.toLocaleLowerCase().includes(value);
 
 			if (!option.hidden) {
@@ -155,27 +160,29 @@ export function filterListboxOptions(state: OuiListboxState): HTMLElement | unde
 		return count === 0;
 	}
 
-	const value = state.filter.element.value.toLocaleLowerCase();
+	const {active, attributes, autocomplete, filter, groups, list, options, type} = state.component;
+
+	const value = filter.element.value.toLocaleLowerCase();
 
 	const visible: HTMLElement[] = [];
 
-	if (state.groups == null) {
-		filter(state.options.all);
+	if (groups == null) {
+		filterOptions(options.all);
 	} else {
-		const groupsLength = state.groups.length;
+		const groupsLength = groups.length;
 
 		for (let groupIndex = 0; groupIndex < groupsLength; groupIndex += 1) {
-			const {element, options} = state.groups[groupIndex];
+			const {element, options} = groups[groupIndex];
 
-			element.hidden = filter(options);
+			element.hidden = filterOptions(options);
 		}
 	}
 
-	setAttribute(state.list, state.attributes.empty, visible.length === 0 ? '' : undefined);
+	setAttribute(list, attributes.empty, visible.length === 0 ? '' : undefined);
 
 	updateListboxMessage(state);
 
-	return state.active != null && visible.includes(state.active) ? state.active : visible[0];
+	return active != null && visible.includes(active) ? active : visible[0];
 }
 
 export function setListboxValue<State extends OuiListboxState>(
@@ -183,7 +190,9 @@ export function setListboxValue<State extends OuiListboxState>(
 	value: unknown,
 	emit?: boolean,
 ): void {
-	if (state.autocomplete.none && !state.listbox) {
+	const {autocomplete, listbox} = state.component;
+
+	if (autocomplete.none && !listbox) {
 		setListboxFilter(state, getString(value));
 
 		return;
@@ -205,7 +214,9 @@ export function setListboxValues<State extends OuiListboxState>(
 		return;
 	}
 
-	const values = (state.multiple ? value : value.slice(0, 1)).map(value =>
+	const {autocomplete, listbox, multiple, options} = state.component;
+
+	const values = (multiple ? value : value.slice(0, 1)).map(value =>
 		getString(value).toLocaleLowerCase(),
 	);
 
@@ -213,18 +224,18 @@ export function setListboxValues<State extends OuiListboxState>(
 		values.push('');
 	}
 
-	if (state.autocomplete.none && !state.listbox) {
+	if (autocomplete.none && !listbox) {
 		setListboxValue(state, values[0], emit);
 
 		return;
 	}
 
-	const {length} = state.options.all;
+	const {length} = options.all;
 
 	const selected: HTMLElement[] = [];
 
 	for (let index = 0; index < length; index += 1) {
-		const option = state.options.all[index];
+		const option = options.all[index];
 
 		if (values.includes(getData(option, 'value', false)?.toLocaleLowerCase() ?? '')) {
 			selected.push(option);
@@ -236,8 +247,8 @@ export function setListboxValues<State extends OuiListboxState>(
 		selected,
 		state,
 		added: true,
-		option: selected[0] ?? state.options.all[0],
-		values: state.autocomplete.none && !state.listbox ? values : undefined,
+		option: selected[0] ?? options.all[0],
+		values: autocomplete.none && !listbox ? values : undefined,
 	});
 }
 
@@ -245,17 +256,19 @@ export function toggleListboxOption<State extends OuiListboxState>(
 	state: State,
 	option?: HTMLElement,
 ): void {
-	if (option == null || (!state.multiple && state.options.selected.includes(option))) {
-		state.callbacks.data.onToggle(state);
+	const {autocomplete, callbacks, listbox, multiple, options} = state.component;
+
+	if (option == null || (!multiple && options.selected.includes(option))) {
+		callbacks.data.onToggle(state);
 
 		return;
 	}
 
-	const selected = state.options.selected.slice();
+	const selected = options.selected.slice();
 
 	let added = true;
 
-	if (state.multiple) {
+	if (multiple) {
 		const index = selected.indexOf(option);
 
 		if (index === -1) {
@@ -269,19 +282,18 @@ export function toggleListboxOption<State extends OuiListboxState>(
 		selected.splice(0, selected.length, option);
 	}
 
+	const values = autocomplete.none && !listbox && option != null ? [option.textContent] : undefined;
+
 	applyListboxSelection({
 		added,
 		option,
 		selected,
 		state,
+		values,
 		scroll: false,
-		values:
-			state.autocomplete.none && !state.listbox && option != null
-				? [option.textContent]
-				: undefined,
 	});
 
-	state.callbacks.data.onToggle(state);
+	callbacks.data.onToggle(state);
 }
 
 // #endregion

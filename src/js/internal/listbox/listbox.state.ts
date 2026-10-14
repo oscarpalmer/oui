@@ -9,34 +9,33 @@ import {
 	setListboxReadonly,
 	setListboxRequired,
 } from './listbox.misc';
-import type {OuiListboxState, OuiListboxStates} from './listbox.model';
+import type {OuiListboxState} from './listbox.model';
 
 // #region Functions
 
 export function attachListbox<State extends OuiListboxState>(
 	state: State,
-	states: OuiListboxStates<State>,
+	set: Set<State>,
 	onAttach: (state: State) => void,
 ): void {
-	const {filter, host, id, label} = state;
+	const {filter, id, label} = state.component;
 
 	label.element.htmlFor = filter.element.id;
 	label.element.id = `${id}_label`;
 
 	onAttach(state);
 
-	states.map.set(host, state);
-	states.set.add(state);
+	set.add(state);
 }
 
 export function detachListbox<State extends OuiListboxState>(
 	state: State,
-	states: OuiListboxStates<State>,
+	set: Set<State>,
 	onDetach: (state: State) => void,
 ): void {
-	const {host, label, select} = state;
+	const {label, select} = state.component;
 
-	const listeners = state.listeners.splice(0);
+	const listeners = state.component.listeners.splice(0);
 	const {length} = listeners;
 
 	for (let index = 0; index < length; index += 1) {
@@ -48,32 +47,33 @@ export function detachListbox<State extends OuiListboxState>(
 
 	onDetach(state);
 
-	states.map.delete(host);
-	states.set.delete(state);
+	set.delete(state);
 }
 
 export function initializeListboxState<State extends OuiListboxState>(
 	state: State,
-	states: OuiListboxStates<State>,
+	set: Set<State>,
 	onAttach: (state: State) => void,
 ): State {
-	attachListbox(state, states, onAttach);
+	const {component} = state;
 
-	setListboxDisabled(state, state.disabled);
-	setListboxLimit('max', state, getAttribute(state.host, 'max'));
-	setListboxLimit('min', state, getAttribute(state.host, 'min'));
-	setListboxMultiple(state.host, state.multiple);
-	setListboxReadonly(state, state.readonly);
-	setListboxRequired(state, state.required);
+	attachListbox(state, set, onAttach);
+
+	setListboxDisabled(state, component.disabled);
+	setListboxLimit('max', state, getAttribute(component.host, 'max'));
+	setListboxLimit('min', state, getAttribute(component.host, 'min'));
+	setListboxMultiple(component.host, component.multiple);
+	setListboxReadonly(state, component.readonly);
+	setListboxRequired(state, component.required);
 
 	filterListboxOptions(state);
 
-	updateListboxForm(state, state.values.current, false);
+	updateListboxForm(state, component.values.current, false);
 	updateListboxMessage(state);
 	updateListboxValueLabel(state);
 
-	if (state.options.selected.length > 0) {
-		updateListboxPreview('none', state, state.options.selected[0], false);
+	if (component.options.selected.length > 0) {
+		updateListboxPreview('none', state, component.options.selected[0], false);
 	}
 
 	return state;
