@@ -1,5 +1,4 @@
 import {dispatch} from '@oscarpalmer/toretto/event';
-import {getLocalization, localize} from '../l10n/index';
 import {type OuiColorPickerState, OuiColorPickerEvent} from './color-picker.model';
 
 // #region Functions
@@ -27,14 +26,9 @@ export function updateColorPickerValidity(state: OuiColorPickerState, valid: boo
 		return;
 	}
 
-	const localization = getLocalization(
-		localizations.global,
-		host,
-		'invalid',
-		localizations.component,
-	);
-
-	const message = localization == null ? undefined : localize(localization, {}, []);
+	const message = localizations.localize('invalid', {
+		element: host,
+	});
 
 	internals.setValidity(
 		{

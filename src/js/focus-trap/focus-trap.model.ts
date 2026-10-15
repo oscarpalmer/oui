@@ -98,6 +98,6 @@ export const FOCUSTRAP_SYMBOL: unique symbol = Symbol(FOCUSTRAP_ATTRIBUTE);
 
 export const disabledFocusTraps: Set<OuiFocusTrap> = new Set();
 
-export const focusTraps: WeakMap<HTMLElement, OuiFocusTrap> = new WeakMap();
+export const focusTraps: WeakMap<Element, OuiFocusTrap> = new WeakMap();
 
 // #endregion

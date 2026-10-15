@@ -1,40 +1,45 @@
 import {noop} from '@oscarpalmer/atoms/function';
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {getData} from '@oscarpalmer/toretto/data';
-import {setListboxValues} from '../internal/listbox/listbox.data';
-import {createListboxContent} from '../internal/listbox/listbox.dom';
-import {generateListboxIds} from '../internal/listbox/listbox.misc';
-import type {
-	OuiListboxAutoCompleteType,
-	OuiListboxCallbacks,
-	OuiListboxLocalizations,
-	OuiListboxState,
-} from '../internal/listbox/listbox.model';
-import {initializeListboxState} from '../internal/listbox/listbox.state';
+import {createDefaultLocalizations, createLocalizations} from '../internal/l10n/index';
+import type {OuiDefaultLocalizations} from '../internal/l10n/l10n.model';
 import {getBooleanAriaValue} from '../internal/misc';
-import {createLocalizations} from '../l10n/index';
-import type {OuiLocalizations} from '../l10n/l10n.model';
-import {listboxAttributes, listboxMessages} from './constants.listbox';
+import {setOptionListValues} from '../internal/option-list/option-list.data';
+import {createOptionListContent} from '../internal/option-list/option-list.dom';
+import {generateOptionListIds} from '../internal/option-list/option-list.misc';
+import type {
+	OptionListAutoCompleteType,
+	OptionListCallbacks,
+} from '../internal/option-list/option-list.model';
+import {initializeOptionListState} from '../internal/option-list/option-list.state';
+import {listboxAttributes, listboxMessages} from './listbox.constants';
+import {createListboxFooter} from './listbox.dom';
 import {
+	onListboxApply,
 	onListboxEnter,
 	onListboxFilter,
 	onListboxNavigation,
 	onListboxToggle,
-} from './event.listbox';
-import {getListboxId} from './misc.listbox';
+} from './listbox.event';
+import {getListboxId} from './listbox.misc';
+import type {
+	OuiListboxLocalizations,
+	OuiListboxState,
+	OuiListboxStateExtras,
+} from './listbox.model';
 
 // #region Functions
 
-function createComponentState(element: HTMLElement, state: OuiListboxState): OuiListboxState {
+function createComponentState(element: Element, state: OuiListboxState): OuiListboxState {
 	const select = element.querySelector('select');
 
-	if (select == null) {
+	if (!(select instanceof HTMLSelectElement)) {
 		throw new Error(listboxMessages.select);
 	}
 
-	const label = element.querySelector(`label[for="${select.id}"]`) as HTMLLabelElement;
+	const label = element.querySelector(`label[for="${select.id}"]`);
 
-	if (label == null) {
+	if (!(label instanceof HTMLLabelElement)) {
 		throw new Error(listboxMessages.label);
 	}
 
@@ -57,11 +62,11 @@ function createComponentState(element: HTMLElement, state: OuiListboxState): Oui
 	label.htmlFor = id;
 	label.id = `${id}_label`;
 
-	generateListboxIds(id, select);
+	generateOptionListIds(id, select);
 
 	const type = 'select';
 
-	const content = createListboxContent({
+	const content = createOptionListContent({
 		element,
 		id,
 		label,
@@ -73,6 +78,10 @@ function createComponentState(element: HTMLElement, state: OuiListboxState): Oui
 		listbox: true,
 	});
 
+	const footer = createListboxFooter();
+
+	content.element.append(footer.container);
+
 	const {selected} = content.list.options;
 
 	const values =
@@ -80,6 +89,7 @@ function createComponentState(element: HTMLElement, state: OuiListboxState): Oui
 
 	state.component = {
 		disabled,
+		footer,
 		id,
 		multiple,
 		readonly,
@@ -104,10 +114,7 @@ function createComponentState(element: HTMLElement, state: OuiListboxState): Oui
 		list: content.list.element,
 		listeners: [],
 		listbox: true,
-		localizations: {
-			component: {},
-			global: listboxLocalizations,
-		},
+		localizations: createLocalizations(listboxLocalizations),
 		message: content.message,
 		name: (element as HTMLSelectElement).name,
 		options: content.list.options,
@@ -118,14 +125,14 @@ function createComponentState(element: HTMLElement, state: OuiListboxState): Oui
 		},
 	};
 
-	return initializeListboxState(state, listboxes, onAttachListbox);
+	return initializeOptionListState(state, listboxes, onAttachListbox) as OuiListboxState;
 }
 
-export function initializeListbox(element: HTMLElement, state: OuiListboxState): void {
+export function initializeListbox(element: Element, state: OuiListboxState): void {
 	createComponentState(element, state);
 
 	if (state.form.restored != null) {
-		setListboxValues(state, state.form.restored);
+		setOptionListValues(state, state.form.restored);
 
 		state.form.restored = undefined;
 	}
@@ -155,16 +162,16 @@ export function onDetachListbox(state: OuiListboxState): void {
 
 // #region Variables
 
-const listboxAutoComplete: Record<OuiListboxAutoCompleteType, boolean> = {
+const listboxAutoComplete: Record<OptionListAutoCompleteType, boolean> = {
 	both: false,
 	inline: false,
 	list: false,
 	none: true,
 };
 
-const listboxCallbacks: OuiListboxCallbacks = {
+const listboxCallbacks: OptionListCallbacks<OuiListboxStateExtras, OuiListboxLocalizations> = {
 	data: {
-		onApply: noop,
+		onApply: onListboxApply,
 		onFilter: onListboxFilter,
 		onForm: noop,
 		onPreview: noop,
@@ -177,8 +184,9 @@ const listboxCallbacks: OuiListboxCallbacks = {
 	},
 };
 
-export const listboxLocalizations: OuiLocalizations<OuiListboxLocalizations> =
-	createLocalizations<OuiListboxLocalizations>({
+export const listboxLocalizations: OuiDefaultLocalizations<OuiListboxLocalizations> =
+	createDefaultLocalizations<OuiListboxLocalizations>({
+		clearSelection: 'Clear',
 		empty: 'No results found',
 		input: '',
 		invalid: 'Please select an option from the list',
@@ -186,6 +194,7 @@ export const listboxLocalizations: OuiLocalizations<OuiListboxLocalizations> =
 		min: min => `Please select more options (minimum is ${min})`,
 		remove: '',
 		results: amount => `${amount} results available`,
+		selectAll: 'Select all',
 		selected: amount => `${amount} selected`,
 	});
 

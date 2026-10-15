@@ -35,7 +35,7 @@ export type OuiNavigableOrientation = 'horizontal' | 'vertical';
 
 export type OuiNavigableState = {
 	active: OuiNavigableActive;
-	element: HTMLElement;
+	element: Element;
 	listeners: RemovableEventListener[];
 	options: OuiNavigableOptions;
 	orientation: OuiNavigableOrientation;

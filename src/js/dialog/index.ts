@@ -43,7 +43,7 @@ Object.defineProperties(OuiDialog.prototype, {
 
 // #region Functions
 
-function addDialog(element: HTMLElement): void {
+function addDialog(element: Element): void {
 	if (!(element instanceof HTMLDialogElement)) {
 		throw new TypeError(DIALOG_MESSAGE);
 	}
@@ -178,7 +178,7 @@ function hideDialog(this: OuiDialog, first?: unknown, second?: unknown): void {
 	}
 }
 
-function removeDialog(element: HTMLElement): void {
+function removeDialog(element: Element): void {
 	const state = dialogs.get(element);
 
 	if (state == null) {

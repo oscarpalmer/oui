@@ -58,8 +58,8 @@ function getAnchorName(anchor: HTMLElement): string {
 }
 
 export function createEmbeddedFloatable(
-	anchor: HTMLElement,
-	content: HTMLElement,
+	anchor: Element,
+	content: Element,
 	options: OuiFloatableOptions,
 ): OuiFloatable {
 	return createInstance(anchor, content, options, false);
@@ -74,8 +74,8 @@ export function createEmbeddedFloatable(
  * @returns _OuiFloatable_ instance
  */
 export function createFloatable(
-	anchor: HTMLElement,
-	content: HTMLElement,
+	anchor: Element,
+	content: Element,
 	options?: CreateOuiFloatableOptions,
 ): OuiFloatable {
 	const {open, position} = getOptions(options);
@@ -100,8 +100,8 @@ export function createFloatable(
 }
 
 function createInstance(
-	anchor: HTMLElement,
-	content: HTMLElement,
+	anchor: Element,
+	content: Element,
 	options: OuiFloatableOptions,
 	standalone: boolean,
 ): OuiFloatable {
@@ -134,11 +134,11 @@ function destroyFloatable(this: OuiFloatable): void {
 
 	removeFloatable(state.content);
 
-	state.anchor = null as never;
-	state.content = null as never;
+	state.anchor = undefined as never;
+	state.content = undefined as never;
 }
 
-export function getOnBeforeToggleListener(element: HTMLElement): RemovableEventListener {
+export function getOnBeforeToggleListener(element: Element): RemovableEventListener {
 	return on(
 		element,
 		'beforetoggle',
@@ -186,7 +186,7 @@ function getPosition(
 	const attribute = getAttribute(anchor, options.attribute);
 
 	return attribute != null && attribute in FLOATABLE_AREAS
-		? (attribute as OuiFloatablePosition)
+		? (attribute as never)
 		: options.position;
 }
 

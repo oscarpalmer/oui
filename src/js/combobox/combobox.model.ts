@@ -1,10 +1,14 @@
 import type {OuiFloatable} from '../floatable/floatable.model';
-import type {OuiListboxState, OuiListboxType} from '../internal/listbox/listbox.model';
+import type {
+	OptionListLocalizationValues,
+	OptionListState,
+	OptionListType,
+} from '../internal/option-list/option-list.model';
 
 // #region Types
 
 export type OuiComboboxAnchor = {
-	container?: HTMLElement;
+	container?: Element;
 	element: HTMLElement;
 };
 
@@ -14,9 +18,9 @@ export type OuiComboboxFilter = {
 };
 
 export type OuiComboboxGroup = {
-	element: HTMLElement;
-	header: HTMLElement;
-	options: HTMLElement[];
+	element: Element;
+	header: Element;
+	options: Element[];
 };
 
 export type OuiComboboxLabel = {
@@ -24,27 +28,31 @@ export type OuiComboboxLabel = {
 	id: string;
 };
 
+export type OuiComboboxLocalizations = OptionListLocalizationValues;
+
 export type OuiComboboxOptions = {
-	all: HTMLElement[];
-	selected: HTMLElement[];
+	all: Element[];
+	selected: Element[];
 };
 
 export type OuiComboboxSelection = {
-	container: HTMLElement;
+	container: Element;
 	items: OuiComboboxSelectionItem[];
 };
 
 export type OuiComboboxSelectionItem = {
 	button: HTMLButtonElement;
-	element: HTMLElement;
+	element: Element;
 };
 
-export type OuiComboboxState = OuiListboxState<{
+export type OuiComboboxState = OptionListState<OuiComboboxStateExtras, OuiComboboxLocalizations>;
+
+export type OuiComboboxStateExtras = {
 	anchor: OuiComboboxAnchor;
 	floatable: OuiFloatable;
 	selection?: OuiComboboxSelection;
-	type: OuiListboxType;
-}>;
+	type: OptionListType;
+};
 
 export type OuiComboboxValues = {
 	current: string[];

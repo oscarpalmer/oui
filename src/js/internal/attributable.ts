@@ -1,11 +1,11 @@
-// #region Functions
-
 import {filter} from '@oscarpalmer/atoms/array/filter';
+
+// #region Functions
 
 export function attributable(
 	attribute: string,
-	add: (element: HTMLElement) => void,
-	remove: (element: HTMLElement) => void,
+	add: (element: Element) => void,
+	remove: (element: Element) => void,
 ): void {
 	const observer = new MutationObserver(entries => {
 		const {length} = entries;
@@ -41,9 +41,9 @@ export function attributable(
 function handleAdded(
 	attribute: string,
 	nodes: Node[] | NodeList,
-	add: (element: HTMLElement) => void,
+	add: (element: Element) => void,
 ): void {
-	const elements = filter([...nodes], node => node instanceof Element) as HTMLElement[];
+	const elements = filter([...nodes], node => node instanceof Element) as Element[];
 
 	const {length} = elements;
 
@@ -60,8 +60,8 @@ function handleAdded(
 	}
 }
 
-function handleRemoved(nodes: Node[] | NodeList, remove: (element: HTMLElement) => void): void {
-	const elements = filter([...nodes], node => node instanceof Element) as HTMLElement[];
+function handleRemoved(nodes: Node[] | NodeList, remove: (element: Element) => void): void {
+	const elements = filter([...nodes], node => node instanceof Element) as Element[];
 
 	const {length} = elements;
 

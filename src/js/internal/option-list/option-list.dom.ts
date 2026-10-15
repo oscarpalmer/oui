@@ -1,95 +1,39 @@
+import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {setAria} from '@oscarpalmer/toretto/aria';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {createElement} from '@oscarpalmer/toretto/create';
-import {getLocalization, localize} from '../../l10n/index';
-import {listboxScrollOptions} from './listbox.constants';
-import {getListboxVisibleOptions} from './listbox.misc';
+import type {OuiLocalizationsValues} from '../l10n/l10n.model';
+import {optionListScrollOptions} from './option-list.constants';
+import {getOptionListVisibleOptions} from './option-list.misc';
 import type {
-	OuiListboxAttributes,
-	OuiListboxAutoComplete,
-	OuiListboxGroup,
-	OuiListboxLocalizations,
-	OuiListboxOptions,
-	OuiListboxPreview,
-	OuiListboxState,
-	OuiListboxType,
-} from './listbox.model';
-
-// #region Types
-
-export type CreateListboxContent = {
-	element: HTMLDivElement;
-	filter?: CreateListboxFilter;
-	list: CreateListboxList;
-	message: HTMLDivElement;
-	value: HTMLSpanElement;
-};
-
-export type CreateListboxContentParameters = {
-	attributes: OuiListboxAttributes;
-	autocomplete: OuiListboxAutoComplete;
-	element: HTMLElement;
-	id: string;
-	label: HTMLLabelElement;
-	listbox: boolean;
-	multiple: boolean;
-	select: HTMLSelectElement;
-	type: OuiListboxType;
-};
-
-export type CreateListboxFilter = {
-	container: HTMLElement;
-	element: HTMLInputElement;
-};
-
-type CreateListboxGroupParameters = {
-	group: HTMLOptGroupElement;
-	groupOptions: HTMLOptionElement[];
-	original: CreateListboxContentParameters;
-	selected: HTMLElement[];
-	type: OuiListboxType;
-};
-
-export type CreateListboxList = {
-	element: HTMLUListElement;
-	groups?: OuiListboxGroup[];
-	options: OuiListboxOptions;
-};
-
-type CreateListboxOptionParameters = {
-	group?: string;
-	index: number;
-	option: HTMLOptionElement;
-	original: CreateListboxContentParameters;
-	type: OuiListboxType;
-};
-
-type CreateListboxOptionsParameters = {
-	group?: string;
-	list: HTMLElement;
-	options: HTMLOptionElement[];
-	original: CreateListboxContentParameters;
-	selected: HTMLElement[];
-	type: OuiListboxType;
-};
-
-// #endregion
+	CreateOptionListContent,
+	CreateOptionListContentParameters,
+	CreateOptionListFilter,
+	CreateOptionListGroupParameters,
+	CreateOptionListList,
+	CreateOptionListOptionParameters,
+	CreateOptionListOptionsParameters,
+	OptionListGroup,
+	OptionListLocalizationValues,
+	OptionListPreview,
+	OptionListState,
+} from './option-list.model';
 
 // #region Functions
 
-export function createListboxContent(
-	parameters: CreateListboxContentParameters,
-): CreateListboxContent {
+export function createOptionListContent(
+	parameters: CreateOptionListContentParameters,
+): CreateOptionListContent {
 	const element = createElement('div', {
 		attribute: {
 			[parameters.attributes.content]: '',
 		},
 	});
 
-	const filter = createListboxFilter(parameters);
-	const list = createListboxList(parameters);
-	const message = createListboxMessage(parameters.attributes.message);
-	const value = createListboxValueLabel(parameters.id);
+	const filter = createOptionListFilter(parameters);
+	const list = createOptionListList(parameters);
+	const message = createOptionListMessage(parameters.attributes.message);
+	const value = createOptionListValueLabel(parameters.id);
 
 	if (filter != null) {
 		element.append(filter.container);
@@ -106,9 +50,9 @@ export function createListboxContent(
 	};
 }
 
-export function createListboxFilter(
-	parameters: CreateListboxContentParameters,
-): CreateListboxFilter | undefined {
+export function createOptionListFilter(
+	parameters: CreateOptionListContentParameters,
+): CreateOptionListFilter | undefined {
 	if (parameters.type === 'autocomplete') {
 		return;
 	}
@@ -119,7 +63,7 @@ export function createListboxFilter(
 		},
 	});
 
-	const element = createListboxInput(parameters, '');
+	const element = createOptionListInput(parameters, '');
 
 	setAttribute(element, parameters.attributes.input, '');
 
@@ -128,7 +72,9 @@ export function createListboxFilter(
 	return {container, element};
 }
 
-export function createListboxGroup(parameters: CreateListboxGroupParameters): OuiListboxGroup {
+export function createOptionListGroup(
+	parameters: CreateOptionListGroupParameters,
+): OptionListGroup {
 	const {group, groupOptions, selected, type} = parameters;
 
 	const element = createElement('li', {
@@ -146,14 +92,14 @@ export function createListboxGroup(parameters: CreateListboxGroupParameters): Ou
 		},
 	});
 
-	const header = createListboxHeader(parameters, group);
+	const header = createOptionListHeader(parameters, group);
 
 	element.append(header, list);
 
 	return {
 		element,
 		header,
-		options: createListboxOptions({
+		options: createOptionListOptions({
 			list,
 			selected,
 			type,
@@ -164,8 +110,8 @@ export function createListboxGroup(parameters: CreateListboxGroupParameters): Ou
 	};
 }
 
-export function createListboxHeader(
-	parameters: CreateListboxGroupParameters,
+export function createOptionListHeader(
+	parameters: CreateOptionListGroupParameters,
 	group: HTMLOptGroupElement,
 ): HTMLElement {
 	return createElement('div', {
@@ -182,8 +128,8 @@ export function createListboxHeader(
 	});
 }
 
-export function createListboxInput(
-	parameters: CreateListboxContentParameters,
+export function createOptionListInput(
+	parameters: CreateOptionListContentParameters,
 	value: string,
 ): HTMLInputElement {
 	const {autocomplete, id, label, listbox, type} = parameters;
@@ -219,7 +165,9 @@ export function createListboxInput(
 	return input;
 }
 
-export function createListboxList(parameters: CreateListboxContentParameters): CreateListboxList {
+export function createOptionListList(
+	parameters: CreateOptionListContentParameters,
+): CreateOptionListList {
 	const {attributes, id, label, multiple, select, type} = parameters;
 
 	const element = createElement('ul', {
@@ -243,13 +191,13 @@ export function createListboxList(parameters: CreateListboxContentParameters): C
 	const options: HTMLElement[] = [];
 	const selected: HTMLElement[] = [];
 
-	let groups: OuiListboxGroup[] | undefined;
+	let groups: OptionListGroup[] | undefined;
 
 	for (let childIndex = 0; childIndex < childrenLength; childIndex += 1) {
 		const child = children[childIndex];
 
 		if (child instanceof HTMLOptionElement) {
-			const option = createListboxOption({
+			const option = createOptionListOption({
 				type,
 				option: child,
 				original: parameters,
@@ -270,7 +218,7 @@ export function createListboxList(parameters: CreateListboxContentParameters): C
 			continue;
 		}
 
-		const group = createListboxGroup({
+		const group = createOptionListGroup({
 			selected,
 			type,
 			group: child,
@@ -295,7 +243,7 @@ export function createListboxList(parameters: CreateListboxContentParameters): C
 	};
 }
 
-export function createListboxMessage(attribute: string): HTMLDivElement {
+export function createOptionListMessage(attribute: string): HTMLDivElement {
 	return createElement('div', {
 		aria: {
 			live: 'polite',
@@ -310,7 +258,7 @@ export function createListboxMessage(attribute: string): HTMLDivElement {
 	});
 }
 
-export function createListboxOption(parameters: CreateListboxOptionParameters): HTMLElement {
+export function createOptionListOption(parameters: CreateOptionListOptionParameters): HTMLElement {
 	const {group, option, original} = parameters;
 
 	return createElement('li', {
@@ -332,7 +280,9 @@ export function createListboxOption(parameters: CreateListboxOptionParameters): 
 	});
 }
 
-export function createListboxOptions(parameters: CreateListboxOptionsParameters): HTMLElement[] {
+export function createOptionListOptions(
+	parameters: CreateOptionListOptionsParameters,
+): HTMLElement[] {
 	const {group, list, options, original, selected, type} = parameters;
 
 	const items: HTMLElement[] = [];
@@ -340,7 +290,7 @@ export function createListboxOptions(parameters: CreateListboxOptionsParameters)
 	for (let index = 0; index < options.length; index += 1) {
 		const option = options[index];
 
-		const item = createListboxOption({group, index, option, original, type});
+		const item = createOptionListOption({group, index, option, original, type});
 
 		items.push(item);
 
@@ -354,7 +304,7 @@ export function createListboxOptions(parameters: CreateListboxOptionsParameters)
 	return items;
 }
 
-export function createListboxValueLabel(id: string): HTMLSpanElement {
+export function createOptionListValueLabel(id: string): HTMLSpanElement {
 	return createElement('span', {
 		property: {
 			hidden: true,
@@ -363,36 +313,41 @@ export function createListboxValueLabel(id: string): HTMLSpanElement {
 	});
 }
 
-export function updateListboxMessage(state: OuiListboxState): void {
+export function updateOptionListMessage<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(state: OptionListState<State, Localizations>): void {
 	const {attributes, host, localizations, message} = state.component;
 
-	const visible = getListboxVisibleOptions(state).length;
+	const visible = getOptionListVisibleOptions(state).length;
 
 	setAttribute(message, attributes.hidden, visible > 0 ? '' : undefined);
 
-	let data: Record<string, unknown> = {};
 	let parameters: unknown[] = [];
 
-	let key: keyof OuiListboxLocalizations | undefined;
+	let key: keyof OptionListLocalizationValues | undefined;
 
 	if (visible === 0) {
 		key = 'empty';
 	} else {
-		data = {amount: visible};
 		key = 'results';
 		parameters = [visible];
 	}
 
-	const localization = getLocalization(localizations.global, host, key, localizations.component);
-
-	message.textContent = localize(localization, data, parameters);
+	message.textContent = localizations.localize(key, {
+		arguments: parameters,
+		element: host,
+	} as never);
 
 	message.hidden = false;
 }
 
-export function updateListboxPreview<State extends OuiListboxState>(
-	preview: OuiListboxPreview,
-	state: State,
+export function updateOptionListPreview<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(
+	preview: OptionListPreview,
+	state: OptionListState<State, Localizations>,
 	active?: HTMLElement,
 	scroll?: boolean,
 ): void {
@@ -410,7 +365,7 @@ export function updateListboxPreview<State extends OuiListboxState>(
 	setAria(filter.element, 'activedescendant', content.checkVisibility() ? active?.id : undefined);
 
 	if (scroll ?? true) {
-		active?.scrollIntoView(listboxScrollOptions);
+		active?.scrollIntoView(optionListScrollOptions);
 	}
 
 	if (preview !== 'none') {
@@ -418,23 +373,20 @@ export function updateListboxPreview<State extends OuiListboxState>(
 	}
 }
 
-export function updateListboxValueLabel<State extends OuiListboxState>(state: State): void {
+export function updateOptionListValueLabel<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(state: OptionListState<State, Localizations>): void {
 	const {autocomplete, filter, listbox, localizations, host, options, multiple, values} =
 		state.component;
 
 	let label: string;
 
 	if (multiple) {
-		const localization = getLocalization(
-			localizations.global,
-			host,
-			'selected',
-			localizations.component,
-		);
-
-		const {length} = options.selected;
-
-		label = localize(localization, {amount: length}, [length]);
+		label = localizations.localize('selected', {
+			arguments: [options.selected.length],
+			element: host,
+		} as never);
 	} else {
 		label =
 			autocomplete.none && !listbox

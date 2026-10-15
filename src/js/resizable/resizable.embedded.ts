@@ -44,7 +44,7 @@ OuiResizable.prototype.set = setResizable;
 // #region Functions
 
 function addResizable(
-	element: HTMLElement,
+	element: Element,
 	options?: CreateOuiResizableOptions,
 ): OuiResizable | undefined {
 	let item = resizableItems.get(element);
@@ -94,7 +94,7 @@ function cancelResize(item?: OuiResizableItem): void {
  * @returns _OuiResizable_ instance
  */
 export function createResizable(
-	element: HTMLElement,
+	element: Element,
 	options?: CreateOuiResizableOptions,
 ): OuiResizable {
 	if (!isHTMLOrSVGElement(element)) {
@@ -118,7 +118,7 @@ function destroyResizable(this: OuiResizable): void {
 }
 
 function getAndSetDimensions(
-	element: HTMLElement,
+	element: Element,
 	options: Required<CreateOuiResizableOptions>,
 	input?: Pick<DOMRect, 'height' | 'width'>,
 ): [number, number] {
@@ -147,7 +147,7 @@ function getAndSetDimensions(
 }
 
 function getProperties(
-	element: HTMLElement,
+	element: Element,
 	widthProperty: 'maxWidth' | 'minWidth',
 	heightProperty: 'maxHeight' | 'minHeight',
 ): [string, string] {
@@ -187,8 +187,8 @@ function getRestrictions(
 }
 
 function getState(
-	element: HTMLElement,
-	handle: HTMLElement,
+	element: Element,
+	handle: Element,
 	input?: CreateOuiResizableOptions,
 ): OuiResizableState {
 	setAttribute(element, RESIZABLE_ATTRIBUTE, '');
@@ -208,7 +208,7 @@ function getState(
 }
 
 function getValidOptions(
-	element: HTMLElement,
+	element: Element,
 	input?: CreateOuiResizableOptions,
 ): Required<CreateOuiResizableOptions> {
 	const original = isPlainObject(input) ? input : {};
@@ -265,7 +265,7 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 
 	const handle = findAncestor(event, RESIZABLE_SELECTOR_HANDLE);
 	const element = handle && findAncestor(handle, RESIZABLE_SELECTOR);
-	const stored = element && resizableItems.get(element as HTMLElement);
+	const stored = element && resizableItems.get(element);
 	const position = getEventPosition(event);
 
 	if (stored == null || position == null) {
@@ -330,7 +330,7 @@ function onPointerup(): void {
 	resetResizableStyles();
 }
 
-function removeResizable(element: HTMLElement): void {
+function removeResizable(element: Element): void {
 	resizableItems.get(element)?.instance.destroy();
 
 	resizableItems.delete(element);

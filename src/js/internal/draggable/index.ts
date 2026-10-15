@@ -25,7 +25,6 @@ import {
 	type CreateOuiDraggableOptions,
 	type OuiDraggable,
 	type OuiDraggableBound,
-	type OuiDraggableDirection,
 	type OuiDraggableInstances,
 	type OuiDraggableItem,
 	type OuiDraggableOptions,
@@ -40,7 +39,7 @@ export function addDraggable<
 	Instance extends OuiDraggableInstances[Property],
 >(
 	this: OuiDraggableBound<Property, Instance>,
-	element: HTMLElement,
+	element: Element,
 	options?: CreateOuiDraggableOptions,
 ): Instance {
 	let instances = draggableGlobals.instances.get(element);
@@ -56,12 +55,12 @@ export function addDraggable<
 	return instances[this.property] as Instance;
 }
 
-function cancelDrag(item?: OuiDraggableItem): void {
+function cancelDrag(item?: OuiDraggableItem<{}>): void {
 	if (item == null) {
 		return;
 	}
 
-	item.state.options.drag.onCancel?.(draggableGlobals, item);
+	item.state.options.drag.onCancel?.(item);
 
 	dispatch(item.state.element, `oui:${item.state.name}:cancel`, {
 		detail: {
@@ -72,7 +71,9 @@ function cancelDrag(item?: OuiDraggableItem): void {
 	reset();
 }
 
-export function destroyDraggable(draggable: OuiDraggable): void {
+export function destroyDraggable<ExtraState extends PlainObject>(
+	draggable: OuiDraggable<ExtraState>,
+): void {
 	const state = draggable[DRAGGABLE_SYMBOL];
 
 	if (state.destroyed) {
@@ -84,7 +85,10 @@ export function destroyDraggable(draggable: OuiDraggable): void {
 	destroyInstance(draggable, state);
 }
 
-function destroyInstance(instance: OuiDraggable, state: OuiDraggableState): void {
+function destroyInstance<ExtraState extends PlainObject>(
+	instance: OuiDraggable<ExtraState>,
+	state: OuiDraggableState<ExtraState>,
+): void {
 	unsetContainer({
 		instance,
 		state,
@@ -99,22 +103,24 @@ function destroyInstance(instance: OuiDraggable, state: OuiDraggableState): void
 	state.styling = undefined as never;
 }
 
-export function getDraggableStates(element: HTMLElement): OuiDraggableStates | undefined {
+export function getDraggableStates(element: Element): OuiDraggableStates | undefined {
 	return draggableGlobals.states.get(element);
 }
 
-export function getDraggableElement(this: OuiDraggable): HTMLElement {
+export function getDraggableElement<ExtraState extends PlainObject>(
+	this: OuiDraggable<ExtraState>,
+): Element {
 	return this[DRAGGABLE_SYMBOL].element;
 }
 
-function getHandle(event: Event, isMovable: boolean): HTMLElement | null {
+function getHandle(event: Event, isMovable: boolean): Element | null {
 	return findAncestor(
 		event,
 		isMovable ? DRAGGABLE_SELECTOR_MOVABLE_HANDLE : DRAGGABLE_SELECTOR_SORTABLE_HANDLE,
-	) as HTMLElement;
+	);
 }
 
-function getNextPosition(item: OuiDraggableItem, position: EventPosition): EventPosition {
+function getNextPosition(item: OuiDraggableItem<{}>, position: EventPosition): EventPosition {
 	let x = draggableGlobals.original?.x ?? 0;
 	let y = draggableGlobals.original?.y ?? 0;
 
@@ -145,15 +151,15 @@ function getNextPosition(item: OuiDraggableItem, position: EventPosition): Event
 	return {x, y};
 }
 
-export function initializeDraggable<ExtraState extends PlainObject = PlainObject>(
-	draggable: OuiDraggable,
+export function initializeDraggable<ExtraState extends PlainObject>(
+	draggable: OuiDraggable<ExtraState>,
 	name: keyof OuiDraggableStates,
 	event: string,
 	attribute: string,
-	element: HTMLElement,
+	element: Element,
 	options: OuiDraggableOptions<ExtraState>,
 	extras: ExtraState,
-): OuiDraggableState & ExtraState {
+): OuiDraggableState<ExtraState> {
 	const state = {
 		...extras,
 		attribute,
@@ -161,11 +167,11 @@ export function initializeDraggable<ExtraState extends PlainObject = PlainObject
 		event,
 		name,
 		options,
-		horizontal: true,
-		vertical: true,
 		destroyed: false,
+		horizontal: true,
 		styling: toggleStyles(element, draggableStyles),
-	} as OuiDraggableState & ExtraState;
+		vertical: true,
+	} satisfies OuiDraggableState<ExtraState>;
 
 	const item = {
 		state,
@@ -181,7 +187,7 @@ export function initializeDraggable<ExtraState extends PlainObject = PlainObject
 
 	states ??= {};
 
-	states[state.name] = state;
+	states[state.name] = state as never;
 
 	draggableGlobals.states.set(element, states);
 
@@ -207,9 +213,13 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		return;
 	}
 
-	const container = findAncestor(event, DRAGGABLE_SELECTOR)! as HTMLElement;
+	const container = findAncestor(event, DRAGGABLE_SELECTOR);
 
-	const instances = draggableGlobals.instances.get(container!);
+	if (container == null) {
+		return;
+	}
+
+	const instances = draggableGlobals.instances.get(container);
 	const states = draggableGlobals.states.get(container);
 
 	if (instances == null || states == null) {
@@ -218,10 +228,10 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 
 	const isMovable = container.hasAttribute(MOVABLE_ATTRIBUTE);
 
-	const item: OuiDraggableItem = {
-		instance: (isMovable ? instances.movable : instances.sortable) as OuiDraggable,
-		state: (isMovable ? states.movable : states.sortable) as OuiDraggableState,
-	};
+	const item = {
+		instance: isMovable ? instances.movable : instances.sortable,
+		state: isMovable ? states.movable : states.sortable,
+	} as unknown as OuiDraggableItem<{}>;
 
 	if (item.instance == null || item.state == null) {
 		return;
@@ -231,17 +241,17 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		event.preventDefault();
 	}
 
-	let element: HTMLElement | null = container;
+	let element: Element | null = container;
 
 	if (!isMovable) {
-		element = findAncestor(event, DRAGGABLE_SELECTOR_SORTABLE_ITEM) as HTMLElement;
+		element = findAncestor(event, DRAGGABLE_SELECTOR_SORTABLE_ITEM);
 
 		if (element == null || element.parentElement !== container) {
 			return;
 		}
 	}
 
-	let handle: HTMLElement | null = element;
+	let handle: Element | null = element;
 
 	item.state.hasHandles ??= element.querySelector(DRAGGABLE_SELECTOR_SORTABLE_HANDLE) != null;
 
@@ -267,17 +277,8 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		node: dragged,
 	};
 
-	draggableGlobals.offset = item.state.options.position.getOffset(
-		draggableGlobals,
-		item,
-		element,
-		position,
-	);
-	draggableGlobals.original = item.state.options.position.getOriginal(
-		draggableGlobals,
-		item,
-		position,
-	);
+	draggableGlobals.offset = item.state.options.position.getOffset(item, element, position);
+	draggableGlobals.original = item.state.options.position.getOriginal(item, position);
 
 	if (
 		dispatch(item.state.element, `oui:${item.state.name}:begin`, {
@@ -287,7 +288,7 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 			},
 		}).defaultPrevented
 	) {
-		item.state.options.drag.onCancel?.(draggableGlobals, item);
+		item.state.options.drag.onCancel?.(item);
 
 		reset();
 
@@ -302,7 +303,7 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		transform: 'translate3d(0, 0, 0)',
 	});
 
-	item.state.options.drag.onBegin?.(event, draggableGlobals, item, element, handle, next);
+	item.state.options.drag.onBegin?.(event, item, element, handle, next);
 
 	item.state.styling.set();
 	draggableStyleToggler.set();
@@ -325,7 +326,7 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 		setStyle(draggableGlobals.element.node, 'inset', `${next.y}px auto auto ${next.x}px`);
 	}
 
-	const detail = current.state.options.drag.onMove(event, draggableGlobals, current, {
+	const detail = current.state.options.drag.onMove(event, current, {
 		calculated: next,
 		original: position,
 	});
@@ -340,7 +341,7 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 }
 
 function onPointerup(event: MouseEvent | TouchEvent): void {
-	current?.state.options.drag.onEnd?.(event, draggableGlobals, current, reset);
+	current?.state.options.drag.onEnd?.(event, current, reset);
 }
 
 export function removeDraggable<
@@ -348,35 +349,54 @@ export function removeDraggable<
 	Instance extends OuiDraggableInstances[Property],
 >(
 	this: {
-		constructor: new (element: HTMLElement) => Instance;
+		constructor: new (element: Element) => Instance;
 		property: Property;
 	},
-	element: HTMLElement,
+	element: Element,
 ): void {
 	const {property} = this;
 
 	removeInstance(draggableGlobals.instances, property, element);
-	removeInstance(draggableGlobals.states, property, element);
+	removeState(draggableGlobals.states, property, element);
 }
 
 function removeInstance(
-	map: WeakMap<HTMLElement, OuiDraggableInstances | OuiDraggableStates>,
-	name: keyof OuiDraggableInstances | keyof OuiDraggableStates,
-	element: HTMLElement,
+	instances: WeakMap<Element, OuiDraggableInstances>,
+	name: keyof OuiDraggableInstances,
+	element: Element,
 ): void {
-	const instances = map.get(element);
+	removeStored(instances, name, element);
+}
 
-	if (instances == null || instances[name] == null) {
+function removeState(
+	map: WeakMap<Element, OuiDraggableStates>,
+	name: keyof OuiDraggableStates,
+	element: Element,
+): void {
+	removeStored(map, name, element);
+}
+
+function removeStored(
+	map: WeakMap<Element, OuiDraggableInstances> | WeakMap<Element, OuiDraggableStates>,
+	name: keyof OuiDraggableInstances | keyof OuiDraggableStates,
+	element: Element,
+): void {
+	const stored = map.get(element);
+	const item = stored?.[name];
+
+	if (stored == null || item == null) {
 		return;
 	}
 
-	if (typeof (instances[name] as OuiDraggable).destroy === 'function') {
-		(instances[name] as OuiDraggable).destroy();
+	const itemAsPlainObject = item as PlainObject;
+
+	if (typeof itemAsPlainObject.destroy === 'function') {
+		itemAsPlainObject.destroy();
 	}
 
-	instances[name] = undefined;
+	stored[name] = undefined;
 
-	if (instances[draggableProperties[name]] == null) {
+	if (stored[draggableProperties[name]] == null) {
 		map.delete(element);
 	}
 }
@@ -393,7 +413,7 @@ function reset(): void {
 	draggableGlobals.original = undefined;
 }
 
-function setContainer(item: OuiDraggableItem): void {
+function setContainer<ExtraState extends PlainObject>(item: OuiDraggableItem<ExtraState>): void {
 	const {container} = item.state.options.input ?? {};
 
 	if (isHTMLOrSVGElement(container)) {
@@ -418,7 +438,10 @@ function setContainer(item: OuiDraggableItem): void {
 	}
 }
 
-function setContainerElement(item: OuiDraggableItem, element: HTMLElement): void {
+function setContainerElement<ExtraState extends PlainObject>(
+	item: OuiDraggableItem<ExtraState>,
+	element: Element,
+): void {
 	item.state.container = element;
 
 	const set = item.state.options.container.map.get(element);
@@ -432,19 +455,19 @@ function setContainerElement(item: OuiDraggableItem, element: HTMLElement): void
 	item.state.options.container.onInitialize?.(item);
 }
 
-function setDirection(item: OuiDraggableItem): void {
+function setDirection<ExtraState extends PlainObject>(item: OuiDraggableItem<ExtraState>): void {
 	const direction = getAttribute(item.state.element, item.state.options.direction.attribute);
 
-	if (draggableHorizontals.has(direction as OuiDraggableDirection)) {
+	if (draggableHorizontals.has(direction as never)) {
 		item.state.vertical = false;
-	} else if (draggableVerticals.has(direction as OuiDraggableDirection)) {
+	} else if (draggableVerticals.has(direction as never)) {
 		item.state.horizontal = false;
 	}
 
 	item.state.options.direction.onAfter?.(item);
 }
 
-function unsetContainer(item: OuiDraggableItem): void {
+function unsetContainer<ExtraState extends PlainObject>(item: OuiDraggableItem<ExtraState>): void {
 	const {container} = item.state;
 
 	if (container == null) {
@@ -472,7 +495,7 @@ function unsetContainer(item: OuiDraggableItem): void {
 
 // #region Variables
 
-let current: OuiDraggableItem | undefined;
+let current: OuiDraggableItem<{}> | undefined;
 
 // #endregion
 

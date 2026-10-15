@@ -17,20 +17,17 @@ export function copyValue(value: string, onSuccess?: () => void, onError?: () =>
 }
 
 export function getAttributeValue<Value>(
-	element: HTMLElement,
+	element: Element,
 	attribute: string,
 	possible: Set<Value>,
 	defaultValue: Value,
 ): Value {
 	const value = getAttribute(element, attribute);
 
-	return possible.has(value as Value) ? (value as Value) : defaultValue;
+	return possible.has(value as never) ? (value as never) : defaultValue;
 }
 
-export function getBooleanAriaValue(
-	element: HTMLElement,
-	attribute: AnyAriaBooleanAttribute,
-): boolean {
+export function getBooleanAriaValue(element: Element, attribute: AnyAriaBooleanAttribute): boolean {
 	const value = getAria(element, attribute);
 
 	return value === true || value === 'true';

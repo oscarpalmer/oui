@@ -8,17 +8,17 @@ export type OuiSortable = {
 
 export type OuiSortablePlaceholder = {
 	drag: OuiSortablePlaceholderDrag;
-	position: HTMLElement | undefined;
+	position: Element | undefined;
 };
 
 export type OuiSortablePlaceholderDrag = {
-	custom: HTMLElement | undefined;
-	default: HTMLElement | undefined;
+	custom: Element | SVGElement | undefined;
+	default: Element | undefined;
 };
 
 export type OuiSortableState = {
 	connections: string | null | undefined;
-	origin?: HTMLElement;
+	origin?: Element;
 };
 
 // #endregion

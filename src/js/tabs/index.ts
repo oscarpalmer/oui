@@ -35,19 +35,19 @@ export class OuiTabsElement extends HTMLElement {
 		setActive(this[TABS_SYMBOL], value);
 	}
 
-	get panel(): HTMLElement {
+	get panel(): Element {
 		return this[TABS_SYMBOL].component?.panels.elements[this.active];
 	}
 
 	get tab(): HTMLButtonElement {
-		return this[TABS_SYMBOL].component?.tabList.tabs[this.active] as HTMLButtonElement;
+		return this[TABS_SYMBOL].component?.tabList.tabs[this.active];
 	}
 
 	constructor() {
 		super();
 
 		this[TABS_SYMBOL] = {
-			component: null as never,
+			component: undefined as never,
 		};
 	}
 
@@ -161,7 +161,7 @@ function createContent(prefix: string, panels: HTMLElement[], active: number): O
 function createTab(
 	prefix: string,
 	index: number,
-	panel: HTMLElement,
+	panel: Element,
 	label: string,
 	selected: boolean,
 ): HTMLButtonElement {
@@ -185,7 +185,7 @@ function createTab(
 
 function createTabList(
 	prefix: string,
-	panels: HTMLElement[],
+	panels: Element[],
 	labels: string[],
 	active: number,
 ): OuiTabsTabList {
@@ -257,7 +257,7 @@ function getId(): string {
 	return `oui_tabs_${index}`;
 }
 
-function getLabels(panels: HTMLElement[]): string[] | undefined {
+function getLabels(panels: Element[]): string[] | undefined {
 	const labels: string[] = [];
 
 	const {length} = panels;

@@ -119,11 +119,11 @@ oui-color-picker {
 	}
 }
 
-:where([oui-color-picker-hue], [oui-color-picker-opacity]) {
+:where([oui-color-picker-hue], [oui-color-picker-opacity-slider]) {
 	position: relative;
 }
 
-:where([oui-color-picker-hue-input], [oui-color-picker-opacity-input]) {
+:where([oui-color-picker-hue-input], [oui-color-picker-opacity-range]) {
 	opacity: 0;
 	position: absolute;
 	inset: -0.25em -0.75em;
@@ -214,7 +214,7 @@ oui-color-picker {
 }
 
 [oui-color-picker-hue-input]:focus-visible + [oui-color-picker-hue-track],
-[oui-color-picker-opacity-input]:focus-visible + [oui-color-picker-opacity-track] {
+[oui-color-picker-opacity-range]:focus-visible + [oui-color-picker-opacity-track] {
 	:where(&, & [oui-color-picker-hue-knob], & [oui-color-picker-opacity-knob]) {
 		--oui-outline-percentage: 75%;
 	}
@@ -243,6 +243,26 @@ oui-color-picker {
 	:where(&:is([disabled], [aria-disabled='true' i])) {
 		--oui-background-percentage: 50%;
 	}
+}
+
+:where([oui-color-picker-opacity-input], [oui-color-picker-output-input]) {
+	@include inputMixins.input;
+
+	width: 4em;
+	background-color: var(--oui-absolute);
+	border-radius: 0.25em;
+	font-family: monospace, monospace;
+}
+
+:where([oui-color-picker-opacity]) {
+	display: flex;
+	flex-flow: row nowrap;
+	align-items: center;
+	gap: 1em;
+}
+
+:where([oui-color-picker-opacity-slider]) {
+	flex: 1;
 }
 
 :where([oui-color-picker-opacity-knob]) {
@@ -323,15 +343,6 @@ oui-color-picker {
 	background-color: var(--oui-absolute);
 	background-position: right 0.5em center;
 	border-radius: 0.25em;
-}
-
-:where([oui-color-picker-output-input]) {
-	@include inputMixins.input;
-
-	width: 4em;
-	background-color: var(--oui-absolute);
-	border-radius: 0.25em;
-	font-family: monospace, monospace;
 }
 
 [oui-color-picker-output-item] {

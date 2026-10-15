@@ -10,17 +10,17 @@ export type OuiBasicMenu = {
 export type OuiBasicMenuOptions = Pick<OuiNavigableOptions, 'role' | 'selector' | 'vertical'>;
 
 export type OuiMenu = {
-	content: HTMLElement;
-	element: HTMLElement;
+	content: Element;
+	element: Element;
 	floatable: OuiFloatable;
 	navigable: OuiNavigable;
-	toggle: HTMLElement;
+	toggle: Element;
 	get open(): boolean;
 	destroy(): void;
 };
 
 export type OuiMenubar = {
-	element: HTMLElement;
+	element: Element;
 	navigable: OuiNavigable;
 	destroy(): void;
 };
@@ -47,8 +47,8 @@ export const MENUBAR_SELECTOR_ITEM: string = `:scope > [${MENUBAR_ATTRIBUTE}-ite
 
 export const MENU_MENUBAR_SELECTORS: string = `${MENUBAR_SELECTOR}, ${MENU_SELECTOR_CONTENT}`;
 
-export const menubars: WeakMap<HTMLElement, OuiMenubar> = new WeakMap();
+export const menubars: WeakMap<Element, OuiMenubar> = new WeakMap();
 
-export const menus: WeakMap<HTMLElement, OuiMenu> = new WeakMap();
+export const menus: WeakMap<Element, OuiMenu> = new WeakMap();
 
 // #endregion

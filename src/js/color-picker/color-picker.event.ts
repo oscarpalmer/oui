@@ -166,15 +166,8 @@ export function onColorPickerInput(state: OuiColorPickerState): void {
 	dispatch(host, new OuiColorPickerEvent('oui:input', color.value, valid));
 }
 
-export function onColorPickerOpacity(state: OuiColorPickerState): void {
-	const {component} = state;
-	const opacity = component.content.opacity?.input.valueAsNumber;
-
-	if (opacity == null) {
-		return;
-	}
-
-	component.color.value.alpha = opacity;
+export function onColorPickerOpacity(state: OuiColorPickerState, input: HTMLInputElement): void {
+	state.component.color.value.alpha = input.valueAsNumber;
 
 	setColorPickerValues(state, false);
 }

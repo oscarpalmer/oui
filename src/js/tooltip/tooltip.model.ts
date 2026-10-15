@@ -27,8 +27,8 @@ export type OuiTooltip = {
 };
 
 export type OuiTooltipState = {
-	anchor: HTMLElement;
-	elements: HTMLElement[];
+	anchor: Element;
+	elements: Element[];
 	floatable: OuiFloatable;
 	timer?: number;
 };
@@ -55,6 +55,6 @@ export const tooltipFloatableOptions: OuiFloatableOptions = {
 	reusable: true,
 };
 
-export const tooltips: WeakMap<HTMLElement, OuiTooltip> = new WeakMap();
+export const tooltips: WeakMap<Element, OuiTooltip> = new WeakMap();
 
 // #endregion

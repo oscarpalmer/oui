@@ -3,16 +3,17 @@ import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {createElement} from '@oscarpalmer/toretto/create';
 import {getData} from '@oscarpalmer/toretto/data';
 import {
-	createListboxFilter,
-	createListboxInput,
-	createListboxList,
-	createListboxMessage,
-	createListboxValueLabel,
-	type CreateListboxContent,
-	type CreateListboxContentParameters,
-} from '../internal/listbox/listbox.dom';
-import type {OuiListboxPreview} from '../internal/listbox/listbox.model';
-import {getLocalization, localize} from '../l10n/index';
+	createOptionListFilter,
+	createOptionListInput,
+	createOptionListList,
+	createOptionListMessage,
+	createOptionListValueLabel,
+} from '../internal/option-list/option-list.dom';
+import type {
+	CreateOptionListContent,
+	CreateOptionListContentParameters,
+	OptionListPreview,
+} from '../internal/option-list/option-list.model';
 import {
 	COMBOBOX_ATTRIBUTE_ANCHOR,
 	COMBOBOX_ATTRIBUTE_SELECTION,
@@ -27,15 +28,15 @@ import type {
 // #region Types
 
 type CreateAnchor = {
-	container?: HTMLElement;
+	container?: Element;
 	element: HTMLElement;
 	selection?: OuiComboboxSelection;
 };
 
 type CreateSelectionItemsParameters = {
-	container: HTMLElement;
+	container: Element;
 	items: OuiComboboxSelectionItem[];
-	options: HTMLElement[];
+	options: Element[];
 	state?: OuiComboboxState;
 };
 
@@ -43,15 +44,15 @@ type CreateSelectionItemsParameters = {
 
 // #region Functions
 
-export function createComboboxAnchor(parameters: CreateListboxContentParameters): CreateAnchor {
+export function createComboboxAnchor(parameters: CreateOptionListContentParameters): CreateAnchor {
 	const {select} = parameters;
 
-	let container: HTMLElement | undefined;
+	let container: Element | undefined;
 	let element: HTMLElement;
 	let selection: OuiComboboxSelection | undefined;
 
 	if (parameters.type === 'autocomplete') {
-		element = createListboxInput(parameters, select.selectedOptions[0]?.textContent ?? '');
+		element = createOptionListInput(parameters, select.selectedOptions[0]?.textContent ?? '');
 	} else {
 		({container, element, selection} = createComboboxButton(parameters));
 	}
@@ -61,7 +62,7 @@ export function createComboboxAnchor(parameters: CreateListboxContentParameters)
 	return {container, element, selection};
 }
 
-export function createComboboxButton(parameters: CreateListboxContentParameters): CreateAnchor {
+export function createComboboxButton(parameters: CreateOptionListContentParameters): CreateAnchor {
 	const {id, label, multiple, select} = parameters;
 
 	const element = createElement('button', {
@@ -90,8 +91,8 @@ export function createComboboxButton(parameters: CreateListboxContentParameters)
 }
 
 export function createComboboxContent(
-	parameters: CreateListboxContentParameters,
-): CreateListboxContent {
+	parameters: CreateOptionListContentParameters,
+): CreateOptionListContent {
 	const {id, label} = parameters;
 
 	const element = createElement('div', {
@@ -108,10 +109,10 @@ export function createComboboxContent(
 		},
 	});
 
-	const filter = createListboxFilter(parameters);
-	const list = createListboxList(parameters);
-	const message = createListboxMessage(parameters.attributes.message);
-	const value = createListboxValueLabel(parameters.id);
+	const filter = createOptionListFilter(parameters);
+	const list = createOptionListList(parameters);
+	const message = createOptionListMessage(parameters.attributes.message);
+	const value = createOptionListValueLabel(parameters.id);
 
 	if (filter != null) {
 		element.append(filter.container);
@@ -154,7 +155,7 @@ export function createComboboxSelection(
 }
 
 export function createComboboxSelectionItem(
-	option: HTMLElement,
+	option: Element,
 	state?: OuiComboboxState,
 ): OuiComboboxSelectionItem {
 	const optionLabel = option.textContent;
@@ -165,23 +166,14 @@ export function createComboboxSelectionItem(
 	const localization =
 		state == null
 			? option.textContent
-			: getLocalization(
-					state.component.localizations.global,
-					state.component.host,
-					'remove',
-					state.component.localizations.component,
-				);
+			: state.component.localizations.localize('remove', {
+					arguments: [optionLabel, optionValue],
+					element: state.component.host,
+				});
 
 	const button = createElement('button', {
 		aria: {
-			label: localize(
-				localization,
-				{
-					label: optionLabel,
-					value: optionValue,
-				},
-				[optionLabel, optionValue],
-			),
+			label: localization,
 		},
 		attribute: {
 			[COMBOBOX_ATTRIBUTE_SELECTION_ITEM]: '',
@@ -235,7 +227,7 @@ export function createComboboxSelectionItems(parameters: CreateSelectionItemsPar
 	}
 }
 
-export function updateComboboxTabindices(state: OuiComboboxState, active?: HTMLElement): void {
+export function updateComboboxTabindices(state: OuiComboboxState, active?: Element): void {
 	const {selection} = state.component;
 
 	if (active == null || selection == null) {
@@ -260,9 +252,9 @@ export function updateComboboxTabindices(state: OuiComboboxState, active?: HTMLE
 }
 
 export function updateComboboxAutocomplete(
-	preview: OuiListboxPreview,
+	preview: OptionListPreview,
 	state: OuiComboboxState,
-	active?: HTMLElement,
+	active?: Element,
 ): void {
 	const {anchor, filter, multiple} = state.component;
 
@@ -298,9 +290,9 @@ export function updateComboboxAutocomplete(
 
 export function updateComboboxSelection(
 	state: OuiComboboxState,
-	active: HTMLElement | undefined,
+	active: Element | undefined,
 	added: boolean,
-	selected?: HTMLElement[],
+	selected?: Element[],
 ): void {
 	const {anchor, selection} = state.component;
 
@@ -377,13 +369,6 @@ export function updateComboboxSelectionItems(state: OuiComboboxState): void {
 		return;
 	}
 
-	const localization = getLocalization(
-		localizations.global,
-		host,
-		'remove',
-		localizations.component,
-	);
-
 	const {length} = selection.items;
 
 	for (let index = 0; index < length; index += 1) {
@@ -403,14 +388,10 @@ export function updateComboboxSelectionItems(state: OuiComboboxState): void {
 		setAria(
 			item.button,
 			'label',
-			localize(
-				localization,
-				{
-					label: optionLabel,
-					value: optionValue,
-				},
-				[optionLabel, optionValue],
-			),
+			localizations.localize('remove', {
+				arguments: [optionLabel, optionValue],
+				element: host,
+			}),
 		);
 	}
 }

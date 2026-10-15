@@ -60,6 +60,6 @@ export const DIALOG_SELECTOR_RESIZER: string = `[${DIALOG_ATTRIBUTE}-resizer]`;
 
 export const DIALOG_SYMBOL: unique symbol = Symbol(DIALOG_ATTRIBUTE);
 
-export const dialogs: WeakMap<HTMLElement, OuiDialogState> = new WeakMap();
+export const dialogs: WeakMap<Element, OuiDialogState> = new WeakMap();
 
 // #endregion

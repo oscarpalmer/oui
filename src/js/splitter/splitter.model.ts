@@ -8,8 +8,8 @@ export type GenericOuiSplitterElement = {
 
 export type OuiSplitter = {
 	element: GenericOuiSplitterElement;
-	handle: HTMLSpanElement;
-	panels: HTMLElement[];
+	handle: Element;
+	panels: Element[];
 	rectangle: DOMRect;
 	separator: HTMLDivElement;
 	types: OuiSplitterTypes;

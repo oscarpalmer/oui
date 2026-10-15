@@ -4,14 +4,14 @@ import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {getData} from '@oscarpalmer/toretto/data';
 import {on} from '@oscarpalmer/toretto/event';
 import {createEmbeddedFloatable} from '../floatable/floatable.embedded';
-import {LISTBOX_TYPES} from '../internal/listbox/listbox.constants';
-import {setListboxValues} from '../internal/listbox/listbox.data';
-import {generateListboxIds} from '../internal/listbox/listbox.misc';
-import type {OuiListboxCallbacks, OuiListboxLocalizations} from '../internal/listbox/listbox.model';
-import {initializeListboxState} from '../internal/listbox/listbox.state';
+import {createDefaultLocalizations, createLocalizations} from '../internal/l10n/index';
+import type {OuiDefaultLocalizations} from '../internal/l10n/l10n.model';
 import {getAttributeValue, getBooleanAriaValue} from '../internal/misc';
-import {createLocalizations} from '../l10n/index';
-import type {OuiLocalizations} from '../l10n/l10n.model';
+import {OPTION_LIST_TYPES} from '../internal/option-list/option-list.constants';
+import {setOptionListValues} from '../internal/option-list/option-list.data';
+import {generateOptionListIds} from '../internal/option-list/option-list.misc';
+import type {OptionListCallbacks} from '../internal/option-list/option-list.model';
+import {initializeOptionListState} from '../internal/option-list/option-list.state';
 import {comboboxAttributes, comboboxMessages} from './combobox.constants';
 import {createComboboxAnchor, createComboboxContent} from './combobox.dom';
 import {
@@ -29,20 +29,24 @@ import {
 	skipComboboxNavigation,
 } from './combobox.event';
 import {getComboboxAutoComplete, getComboboxId} from './combobox.misc';
-import type {OuiComboboxState} from './combobox.model';
+import type {
+	OuiComboboxLocalizations,
+	OuiComboboxState,
+	OuiComboboxStateExtras,
+} from './combobox.model';
 
 // #region Functions
 
-function createComponentState(element: HTMLElement, state: OuiComboboxState): OuiComboboxState {
+function createComponentState(element: Element, state: OuiComboboxState): OuiComboboxState {
 	const select = element.querySelector('select');
 
-	if (select == null || select.id === '') {
+	if (!(select instanceof HTMLSelectElement) || select.id === '') {
 		throw new Error(comboboxMessages.select);
 	}
 
-	const label = element.querySelector(`label[for="${select.id}"]`) as HTMLLabelElement;
+	const label = element.querySelector(`label[for="${select.id}"]`);
 
-	if (label == null) {
+	if (!(label instanceof HTMLLabelElement)) {
 		throw new Error(comboboxMessages.label);
 	}
 
@@ -54,7 +58,9 @@ function createComponentState(element: HTMLElement, state: OuiComboboxState): Ou
 	const required = getBooleanAriaValue(element, 'required') || select.required;
 
 	const id = getComboboxId();
-	const type = multiple ? 'select' : getAttributeValue(element, 'type', LISTBOX_TYPES, 'select');
+	const type = multiple
+		? 'select'
+		: getAttributeValue(element, 'type', OPTION_LIST_TYPES, 'select');
 
 	const autocomplete = getComboboxAutoComplete(element, type === 'select');
 
@@ -68,7 +74,7 @@ function createComponentState(element: HTMLElement, state: OuiComboboxState): Ou
 	label.htmlFor = id;
 	label.id = `${id}_label`;
 
-	generateListboxIds(id, select);
+	generateOptionListIds(id, select);
 
 	const parameters = {
 		autocomplete,
@@ -122,10 +128,7 @@ function createComponentState(element: HTMLElement, state: OuiComboboxState): Ou
 		list: content.list.element,
 		listbox: false,
 		listeners: [],
-		localizations: {
-			component: {},
-			global: comboboxLocalizations,
-		},
+		localizations: createLocalizations(comboboxLocalizations),
 		message: content.message,
 		name: (element as HTMLSelectElement).name,
 		options: {
@@ -140,7 +143,7 @@ function createComponentState(element: HTMLElement, state: OuiComboboxState): Ou
 		},
 	};
 
-	return initializeListboxState(state, comboboxes, onAttachCombobox);
+	return initializeOptionListState(state, comboboxes, onAttachCombobox);
 }
 
 export function initializeCombobox(element: HTMLElement, state: OuiComboboxState): void {
@@ -149,7 +152,7 @@ export function initializeCombobox(element: HTMLElement, state: OuiComboboxState
 	createComponentState(element, state);
 
 	if (state.form.restored != null) {
-		setListboxValues(state, state.form.restored);
+		setOptionListValues(state, state.form.restored);
 
 		state.form.restored = undefined;
 	}
@@ -214,7 +217,7 @@ export function onDetachCombobox(state: OuiComboboxState): void {
 
 // #region Variables
 
-const comboboxCallbacks: OuiListboxCallbacks<OuiComboboxState> = {
+const comboboxCallbacks: OptionListCallbacks<OuiComboboxStateExtras, OuiComboboxLocalizations> = {
 	data: {
 		onApply: onComboboxApply,
 		onFilter: onComboboxFilter,
@@ -235,8 +238,8 @@ const comboboxCallbacks: OuiListboxCallbacks<OuiComboboxState> = {
 	},
 };
 
-export const comboboxLocalizations: OuiLocalizations<OuiListboxLocalizations> =
-	createLocalizations<OuiListboxLocalizations>({
+export const comboboxLocalizations: OuiDefaultLocalizations<OuiComboboxLocalizations> =
+	createDefaultLocalizations<OuiComboboxLocalizations>({
 		empty: 'No results found',
 		input: 'Please enter a value',
 		invalid: 'Please select an option from the list',

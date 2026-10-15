@@ -15,7 +15,7 @@ include_once(__DIR__ . '/../../app/partials/prefix.php');
 ?>
 <form class="stack" id="color-pickers">
 	<?php foreach ($inlines as $inline) : ?>
-	<?php $alpha = $inline === '' ? 'alpha' : ''; ?>
+	<?php $alpha = $inline === '' ? '' : 'alpha'; ?>
 	<?php $copy = $inline === '' ? 'copy' : 'copy'; ?>
 	<?php $input = $inline === '' ? 'color' : 'text'; ?>
 	<?php $type = $inline === '' ? 'popover' : $inline; ?>

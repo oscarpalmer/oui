@@ -2,17 +2,17 @@ import {clamp} from '@oscarpalmer/atoms/number';
 import {getData} from '@oscarpalmer/toretto/data';
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
-import {LISTBOX_KEYS_ACTIVATION} from '../internal/listbox/listbox.constants';
+import {OPTION_LIST_KEYS_ACTIVATION} from '../internal/option-list/option-list.constants';
 import {
-	applyListboxSelection,
-	filterListbox,
-	filterListboxOption,
-	filterListboxOptions,
-	toggleListboxOption,
-} from '../internal/listbox/listbox.data';
-import {updateListboxPreview} from '../internal/listbox/listbox.dom';
-import {processListboxKeydown} from '../internal/listbox/listbox.event';
-import type {OuiListboxPreview} from '../internal/listbox/listbox.model';
+	applyOptionListSelection,
+	filterOptionList,
+	filterOptionListOption,
+	filterOptionListOptions,
+	toggleOptionListOption,
+} from '../internal/option-list/option-list.data';
+import {updateOptionListPreview} from '../internal/option-list/option-list.dom';
+import {processOptionListKeydown} from '../internal/option-list/option-list.event';
+import type {OptionListPreview} from '../internal/option-list/option-list.model';
 import {
 	COMBOBOX_ATTRIBUTE_SELECTION_ITEM,
 	COMBOBOX_SYMBOL,
@@ -35,10 +35,10 @@ export function onComboboxActivation(state: OuiComboboxState): void {
 
 export function onComboboxApply(
 	state: OuiComboboxState,
-	option: HTMLElement | undefined,
+	option: Element | undefined,
 	_: string[],
 	added: boolean,
-	selected?: HTMLElement[],
+	selected?: Element[],
 ): void {
 	updateComboboxSelection(state, option, added, selected);
 }
@@ -61,7 +61,7 @@ export function onComboboxClickContent(event: PointerEvent, state: OuiComboboxSt
 	} else if (readonly) {
 		onComboboxPreview('set', state, option);
 	} else {
-		toggleListboxOption(state, option);
+		toggleOptionListOption(state, option);
 	}
 }
 
@@ -107,7 +107,7 @@ function onComboboxClickDocument(event: PointerEvent): void {
 		} else if (readonly) {
 			updateComboboxTabindices(state, option);
 		} else {
-			toggleListboxOption(state, option);
+			toggleOptionListOption(state, option);
 		}
 
 		return;
@@ -132,7 +132,7 @@ export function onComboboxEnter(state: OuiComboboxState): void {
 	if (hasTextSelection(anchor.element)) {
 		onComboboxSelection(state, true);
 	} else {
-		toggleListboxOption(state, active);
+		toggleOptionListOption(state, active);
 	}
 }
 
@@ -141,20 +141,20 @@ export function onComboboxEscape(state: OuiComboboxState): void {
 }
 
 export function onComboboxFilter(
-	preview: OuiListboxPreview,
+	preview: OptionListPreview,
 	state: OuiComboboxState,
 	update: boolean,
-	active?: HTMLElement,
+	active?: Element,
 	emit?: boolean,
 ): void {
 	if (state.component.autocomplete.none) {
-		applyListboxSelection({
+		applyOptionListSelection({
 			state,
 			added: false,
 			emit: (emit ?? true) && update,
 		});
 	} else {
-		updateListboxPreview(preview, state, active);
+		updateOptionListPreview(preview, state, active);
 	}
 }
 
@@ -177,9 +177,9 @@ export function onComboboxFocusout(event: FocusEvent): void {
 			return;
 		}
 
-		const option = filterListboxOption(state, component.filter.element.value, true);
+		const option = filterOptionListOption(state, component.filter.element.value, true);
 
-		applyListboxSelection({
+		applyOptionListSelection({
 			option,
 			state,
 			added: false,
@@ -193,7 +193,7 @@ export function onComboboxInput(event: InputEvent): void {
 	const state = combobox?.[COMBOBOX_SYMBOL];
 
 	if (combobox != null && state != null && event.target === state.component.filter.element) {
-		filterListbox(event.inputType, state);
+		filterOptionList(event.inputType, state);
 	}
 }
 
@@ -210,16 +210,16 @@ export function onComboboxKeydown(event: KeyboardEvent): void {
 	if (item instanceof HTMLElement) {
 		onComboboxKeydownSelection(event, state, item);
 	} else {
-		processListboxKeydown(event, state);
+		processOptionListKeydown(event, state);
 	}
 }
 
 export function onComboboxKeydownSelection(
 	event: KeyboardEvent,
 	state: OuiComboboxState,
-	item: HTMLElement,
+	item: Element,
 ): void {
-	if (LISTBOX_KEYS_ACTIVATION.has(event.key)) {
+	if (OPTION_LIST_KEYS_ACTIVATION.has(event.key)) {
 		event.preventDefault();
 
 		onComboboxRemoveSelection(state, item);
@@ -281,14 +281,14 @@ export function onComboboxKeydownSelection(
 }
 
 export function onComboboxPreview(
-	preview: OuiListboxPreview,
+	preview: OptionListPreview,
 	state: OuiComboboxState,
-	active?: HTMLElement,
+	active?: Element,
 ): void {
 	updateComboboxAutocomplete(preview, state, active);
 }
 
-export function onComboboxRemoveSelection(state: OuiComboboxState, item: HTMLElement): void {
+export function onComboboxRemoveSelection(state: OuiComboboxState, item: Element): void {
 	const {disabled, options, readonly} = state.component;
 
 	if (disabled || readonly) {
@@ -298,16 +298,16 @@ export function onComboboxRemoveSelection(state: OuiComboboxState, item: HTMLEle
 	const option = options.selected.find(option => option.id === getData(item, 'option', false));
 
 	if (option != null) {
-		toggleListboxOption(state, option);
+		toggleOptionListOption(state, option);
 	}
 }
 
 export function onComboboxNavigation(
-	preview: OuiListboxPreview,
+	preview: OptionListPreview,
 	state: OuiComboboxState,
-	active?: HTMLElement,
+	active?: Element,
 ): void {
-	updateListboxPreview(preview, state, active);
+	updateOptionListPreview(preview, state, active);
 }
 
 export function onComboboxSelection(state: OuiComboboxState, hasSelection?: boolean): void {
@@ -319,7 +319,7 @@ export function onComboboxSelection(state: OuiComboboxState, hasSelection?: bool
 
 	filter.value = anchor.element === filter.element ? filter.element.value : '';
 
-	toggleListboxOption(state, filterListboxOptions(state) ?? active);
+	toggleOptionListOption(state, filterOptionListOptions(state) ?? active);
 }
 
 export function onComboboxTab(state: OuiComboboxState): void {

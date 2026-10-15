@@ -1,22 +1,31 @@
+import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {getString} from '@oscarpalmer/atoms/string';
 import {setAria} from '@oscarpalmer/toretto/aria';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {getData} from '@oscarpalmer/toretto/data';
 import {dispatch} from '@oscarpalmer/toretto/event';
-import {updateListboxMessage, updateListboxPreview, updateListboxValueLabel} from './listbox.dom';
-import {updateListboxForm} from './listbox.form';
-import {setListboxFilter} from './listbox.misc';
-import type {OuiListboxPreview, OuiListboxState} from './listbox.model';
+import type {OuiLocalizationsValues} from '../l10n/l10n.model';
+import {
+	updateOptionListMessage,
+	updateOptionListPreview,
+	updateOptionListValueLabel,
+} from './option-list.dom';
+import {updateOptionListForm} from './option-list.form';
+import {setOptionListFilter} from './option-list.misc';
+import type {OptionListPreview, OptionListState} from './option-list.model';
 
 // #region Types
 
-type ApplySelectionParameters<State extends OuiListboxState = OuiListboxState> = {
+type ApplySelectionParameters<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+> = {
 	added: boolean;
 	emit?: boolean;
 	option?: HTMLElement;
 	scroll?: boolean;
 	selected?: HTMLElement[];
-	state: State;
+	state: OptionListState<State, Localizations>;
 	values?: string[];
 };
 
@@ -24,9 +33,10 @@ type ApplySelectionParameters<State extends OuiListboxState = OuiListboxState> =
 
 // #region Functions
 
-export function applyListboxSelection<State extends OuiListboxState>(
-	parameters: ApplySelectionParameters<State>,
-): void {
+export function applyOptionListSelection<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(parameters: ApplySelectionParameters<State, Localizations>): void {
 	const {added, emit, option, scroll, selected, state} = parameters;
 	const {component} = state;
 	const {autocomplete, callbacks, filter, listbox, options, type} = component;
@@ -65,15 +75,18 @@ export function applyListboxSelection<State extends OuiListboxState>(
 		return;
 	}
 
-	updateListboxForm(state, values, emit);
-	updateListboxMessage(state);
-	updateListboxPreview('set', state, option, scroll);
-	updateListboxValueLabel(state);
+	updateOptionListForm(state, values, emit);
+	updateOptionListMessage(state);
+	updateOptionListPreview('set', state, option, scroll);
+	updateOptionListValueLabel(state);
 
 	callbacks.data.onApply(state, option, values, added, selected, emit);
 }
 
-export function filterListbox(type: InputEvent['inputType'], state: OuiListboxState): void {
+export function filterOptionList<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(type: InputEvent['inputType'], state: OptionListState<State, Localizations>): void {
 	const {callbacks, disabled, filter, host, readonly} = state.component;
 
 	if (disabled || readonly) {
@@ -82,9 +95,9 @@ export function filterListbox(type: InputEvent['inputType'], state: OuiListboxSt
 
 	const update = filter.element.value !== filter.value;
 
-	const option = filterListboxOptions(state);
+	const option = filterOptionListOptions(state);
 
-	let preview: OuiListboxPreview | undefined;
+	let preview: OptionListPreview | undefined;
 
 	if (type.includes('delete')) {
 		preview = 'none';
@@ -103,8 +116,11 @@ export function filterListbox(type: InputEvent['inputType'], state: OuiListboxSt
 	}
 }
 
-export function filterListboxOption(
-	state: OuiListboxState,
+export function filterOptionListOption<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(
+	state: OptionListState<State, Localizations>,
 	value: unknown,
 	textContent?: boolean,
 ): HTMLElement | undefined {
@@ -114,7 +130,7 @@ export function filterListboxOption(
 
 	const filter = getString(value).toLocaleLowerCase();
 
-	filterListboxOptions(state);
+	filterOptionListOptions(state);
 
 	const {length} = options.all;
 
@@ -137,7 +153,10 @@ export function filterListboxOption(
 	return match;
 }
 
-export function filterListboxOptions(state: OuiListboxState): HTMLElement | undefined {
+export function filterOptionListOptions<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(state: OptionListState<State, Localizations>): HTMLElement | undefined {
 	function filterOptions(options: HTMLElement[]): boolean {
 		const {length} = options;
 
@@ -180,36 +199,34 @@ export function filterListboxOptions(state: OuiListboxState): HTMLElement | unde
 
 	setAttribute(list, attributes.empty, visible.length === 0 ? '' : undefined);
 
-	updateListboxMessage(state);
+	updateOptionListMessage(state);
 
 	return active != null && visible.includes(active) ? active : visible[0];
 }
 
-export function setListboxValue<State extends OuiListboxState>(
-	state: State,
-	value: unknown,
-	emit?: boolean,
-): void {
+export function setOptionListValue<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(state: OptionListState<State, Localizations>, value: unknown, emit?: boolean): void {
 	const {autocomplete, listbox} = state.component;
 
 	if (autocomplete.none && !listbox) {
-		setListboxFilter(state, getString(value));
+		setOptionListFilter(state, getString(value));
 
 		return;
 	}
 
-	const option = filterListboxOption(state, value);
+	const option = filterOptionListOption(state, value);
 
 	if (option != null) {
-		setListboxValues(state, [value], emit);
+		setOptionListValues(state, [value], emit);
 	}
 }
 
-export function setListboxValues<State extends OuiListboxState>(
-	state: State,
-	value: unknown[],
-	emit?: boolean,
-): void {
+export function setOptionListValues<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(state: OptionListState<State, Localizations>, value: unknown[], emit?: boolean): void {
 	if (!Array.isArray(value)) {
 		return;
 	}
@@ -225,7 +242,7 @@ export function setListboxValues<State extends OuiListboxState>(
 	}
 
 	if (autocomplete.none && !listbox) {
-		setListboxValue(state, values[0], emit);
+		setOptionListValue(state, values[0], emit);
 
 		return;
 	}
@@ -242,7 +259,7 @@ export function setListboxValues<State extends OuiListboxState>(
 		}
 	}
 
-	applyListboxSelection({
+	applyOptionListSelection({
 		emit,
 		selected,
 		state,
@@ -252,10 +269,10 @@ export function setListboxValues<State extends OuiListboxState>(
 	});
 }
 
-export function toggleListboxOption<State extends OuiListboxState>(
-	state: State,
-	option?: HTMLElement,
-): void {
+export function toggleOptionListOption<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(state: OptionListState<State, Localizations>, option?: HTMLElement): void {
 	const {autocomplete, callbacks, listbox, multiple, options} = state.component;
 
 	if (option == null || (!multiple && options.selected.includes(option))) {
@@ -284,7 +301,7 @@ export function toggleListboxOption<State extends OuiListboxState>(
 
 	const values = autocomplete.none && !listbox && option != null ? [option.textContent] : undefined;
 
-	applyListboxSelection({
+	applyOptionListSelection({
 		added,
 		option,
 		selected,

@@ -30,7 +30,7 @@ import {
 
 // #region Instances
 
-function OuiMenu(this: OuiMenu, element: HTMLElement, navigable: OuiNavigable): void {
+function OuiMenu(this: OuiMenu, element: Element, navigable: OuiNavigable): void {
 	const state = navigable[NAVIGABLE_SYMBOL];
 
 	this.content = state.element;
@@ -59,13 +59,17 @@ function OuiMenu(this: OuiMenu, element: HTMLElement, navigable: OuiNavigable): 
 				return;
 			}
 
-			const elements = document.querySelectorAll(MENU_SELECTOR_CONTENT);
+			const elements = document.querySelectorAll(MENU_SELECTOR_CONTENT) as NodeListOf<HTMLElement>;
+
+			let firstElement: Element | undefined;
 
 			for (const element of elements) {
-				menus.get(element as HTMLElement)?.floatable.hide();
+				firstElement ??= element;
+
+				menus.get(element)?.floatable.hide();
 			}
 
-			const menu = menus.get(elements[0] as HTMLElement);
+			const menu = firstElement == null ? undefined : menus.get(firstElement!);
 
 			if (menu != null && event.pointerId === -1) {
 				updateNavigableFocus(menu.navigable, true);
@@ -101,7 +105,7 @@ Object.defineProperties(OuiMenu.prototype, {
 	},
 });
 
-function OuiMenubar(this: OuiMenubar, element: HTMLElement, navigable: OuiNavigable): void {
+function OuiMenubar(this: OuiMenubar, element: Element, navigable: OuiNavigable): void {
 	this.element = element;
 	this.navigable = navigable;
 
@@ -115,10 +119,10 @@ OuiMenubar.prototype.destroy = destroyMenubar;
 // #region Functions
 
 function addInstance<Instance>(
-	instances: WeakMap<HTMLElement, Instance>,
-	ctor: new (element: HTMLElement, navigable: OuiNavigable) => Instance,
-	element: HTMLElement,
-	content: HTMLElement,
+	instances: WeakMap<Element, Instance>,
+	ctor: new (element: Element, navigable: OuiNavigable) => Instance,
+	element: Element,
+	content: Element,
 	options: OuiBasicMenuOptions,
 ): void {
 	if (!instances.has(content)) {
@@ -138,7 +142,7 @@ function addInstance<Instance>(
 	}
 }
 
-function addMenu(element: HTMLElement): void {
+function addMenu(element: Element): void {
 	const content = element.querySelector(MENU_SELECTOR_CONTENT);
 	const toggle = element.querySelector(MENU_SELECTOR_TOGGLE);
 
@@ -151,7 +155,7 @@ function addMenu(element: HTMLElement): void {
 	}
 }
 
-function addMenubar(element: HTMLElement): void {
+function addMenubar(element: Element): void {
 	// @ts-expect-error All good, no worries :-)
 	addInstance(menubars, OuiMenubar, element, element, {
 		role: 'menubar',
@@ -178,7 +182,7 @@ function destroyMenubar(this: OuiMenubar): void {
 	this.navigable = undefined as never;
 }
 
-function getId(element: HTMLElement, value?: string): string {
+function getId(element: Element, value?: string): string {
 	let {id} = element;
 
 	if (id == null || id.trim().length === 0) {
@@ -222,10 +226,10 @@ function onDeactivate(_: KeyboardEvent, navigable: OuiNavigable): void {
 
 	menu.floatable.hide();
 
-	const element = findAncestor(
-		menu.element.parentElement!,
-		MENU_MENUBAR_SELECTORS,
-	) as HTMLElement | null;
+	const element =
+		menu.element.parentElement == null
+			? undefined
+			: findAncestor(menu.element.parentElement, MENU_MENUBAR_SELECTORS);
 
 	if (element == null) {
 		return;
@@ -316,19 +320,19 @@ function onShouldDeactivate(event: KeyboardEvent, navigable: OuiNavigable): bool
 }
 
 function removeInstance<Instance extends OuiBasicMenu>(
-	instances: WeakMap<HTMLElement, Instance>,
-	element: HTMLElement,
+	instances: WeakMap<Element, Instance>,
+	element: Element,
 ): void {
 	instances.get(element)?.destroy();
 
 	instances.delete(element);
 }
 
-function removeMenu(element: HTMLElement): void {
+function removeMenu(element: Element): void {
 	removeInstance(menus, element);
 }
 
-function removeMenubar(element: HTMLElement): void {
+function removeMenubar(element: Element): void {
 	removeInstance(menubars, element);
 }
 

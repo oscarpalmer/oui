@@ -1,7 +1,7 @@
 import type {
-	OuiListboxAttributes,
-	OuiListboxAutoCompleteType,
-} from '../internal/listbox/listbox.model';
+	OptionListAttributes,
+	OptionListAutoCompleteType,
+} from '../internal/option-list/option-list.model';
 
 // #region Variables
 
@@ -13,7 +13,7 @@ export const COMBOBOX_ATTRIBUTE_SELECTION: string = `${COMBOBOX_TAGNAME}-selecti
 
 export const COMBOBOX_ATTRIBUTE_SELECTION_ITEM: string = `${COMBOBOX_TAGNAME}-selection-item`;
 
-export const COMBOBOX_AUTOCOMPLETES: Set<OuiListboxAutoCompleteType> = new Set([
+export const COMBOBOX_AUTOCOMPLETES: Set<OptionListAutoCompleteType> = new Set([
 	'both',
 	'inline',
 	'list',
@@ -44,7 +44,7 @@ const attributeOption = `${COMBOBOX_TAGNAME}-option`;
 
 const attributeOptionActive = `${COMBOBOX_TAGNAME}-option-active`;
 
-export const comboboxAttributes: OuiListboxAttributes = {
+export const comboboxAttributes: OptionListAttributes = {
 	active: attributeOptionActive,
 	content: attributeContent,
 	empty: attributeListEmpty,

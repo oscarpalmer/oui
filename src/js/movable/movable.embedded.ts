@@ -1,3 +1,4 @@
+import {noop} from '@oscarpalmer/atoms/function';
 import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {dispatch, getEventPosition, on} from '@oscarpalmer/toretto/event';
@@ -7,9 +8,9 @@ import {getStyles, setStyle, setStyles} from '@oscarpalmer/toretto/style';
 import {attributable} from '../internal/attributable';
 import {
 	DRAGGABLE_SYMBOL,
+	draggableGlobals,
 	type CreateOuiDraggableOptions,
 	type OuiDraggableBound,
-	type OuiDraggableGlobals,
 	type OuiDraggableItem,
 	type OuiDraggableState,
 	type OuiDragMovePosition,
@@ -37,11 +38,7 @@ import {
 
 // #region Instances
 
-function OuiMovable(
-	this: OuiMovable,
-	element: HTMLElement,
-	options?: CreateOuiDraggableOptions,
-): void {
+function OuiMovable(this: OuiMovable, element: Element, options?: CreateOuiDraggableOptions): void {
 	const style = getStyles(element, ['inset', 'position']);
 
 	this[DRAGGABLE_SYMBOL] = initializeDraggable(
@@ -62,10 +59,10 @@ function OuiMovable(
 				onAfter: afterDirection,
 			},
 			drag: {
-				onBegin,
 				onCancel,
 				onEnd,
 				onMove,
+				onBegin: noop,
 			},
 			input: options,
 			position: {
@@ -100,11 +97,11 @@ Object.defineProperties(OuiMovable.prototype, {
 
 // #region Functions
 
-function afterDirection(item: OuiDraggableItem): void {
+function afterDirection(item: OuiDraggableItem<OuiMovableState>): void {
 	const container = item.state.container?.getBoundingClientRect();
 
 	if (container != null) {
-		setOffset(item.state as OuiDraggableState & OuiMovableState, container);
+		setOffset(item.state, container);
 	}
 }
 
@@ -114,10 +111,7 @@ function afterDirection(item: OuiDraggableItem): void {
  * @param element Element to make movable
  * @returns _OuiMovable_ instance
  */
-export function createMovable(
-	element: HTMLElement,
-	options?: CreateOuiDraggableOptions,
-): OuiMovable {
+export function createMovable(element: Element, options?: CreateOuiDraggableOptions): OuiMovable {
 	if (!isHTMLOrSVGElement(element)) {
 		throw new TypeError(MOVABLE_MESSAGE);
 	}
@@ -125,7 +119,11 @@ export function createMovable(
 	return addMovable(element, options) as OuiMovable;
 }
 
-function destroyContainer(_: unknown, container: HTMLElement, empty: boolean): void {
+function destroyContainer(
+	_: OuiDraggableItem<OuiMovableState>,
+	container: Element,
+	empty: boolean,
+): void {
 	if (empty) {
 		resizer.unobserve(container);
 	}
@@ -142,34 +140,35 @@ function destroyMovable(this: OuiMovable): void {
 }
 
 function getOffsetPosition(
-	globals: OuiDraggableGlobals,
-	_: OuiDraggableItem,
-	__: HTMLElement,
+	_: OuiDraggableItem<OuiMovableState>,
+	__: Element,
 	position: EventPosition,
 ): EventPosition {
+	const {element} = draggableGlobals;
+
 	return {
-		x: position.x - (globals.element?.rectangle.left ?? 0),
-		y: position.y - (globals.element?.rectangle.top ?? 0),
+		x: position.x - (element?.rectangle.left ?? 0),
+		y: position.y - (element?.rectangle.top ?? 0),
 	};
 }
 
-function getOriginalPosition(globals: OuiDraggableGlobals): EventPosition {
+function getOriginalPosition(): EventPosition {
+	const {element} = draggableGlobals;
+
 	return {
-		x: globals.element?.rectangle.left ?? 0,
-		y: globals.element?.rectangle.top ?? 0,
+		x: element?.rectangle.left ?? 0,
+		y: element?.rectangle.top ?? 0,
 	};
 }
 
-function initializeContainer(item: OuiDraggableItem): void {
+function initializeContainer(item: OuiDraggableItem<OuiMovableState>): void {
 	resizer.observe(item.state.container!);
 }
 
-function onBegin(): void {}
+function onCancel(item: OuiDraggableItem<OuiMovableState>): void {
+	const {element, moved, style} = item.state;
 
-function onCancel(globals: OuiDraggableGlobals, item: OuiDraggableItem): void {
-	const {element, moved, style} = item.state as OuiDraggableState & OuiMovableState;
-
-	const {x, y} = globals.original ?? {x: 0, y: 0};
+	const {x, y} = draggableGlobals.original ?? {x: 0, y: 0};
 
 	if (moved) {
 		setStyle(element, 'inset', `${y}px auto auto ${x}px`);
@@ -182,12 +181,11 @@ function onCancel(globals: OuiDraggableGlobals, item: OuiDraggableItem): void {
 
 function onEnd(
 	event: MouseEvent | TouchEvent,
-	globals: OuiDraggableGlobals,
-	item: OuiDraggableItem,
+	item: OuiDraggableItem<OuiMovableState>,
 	reset: () => void,
 ): void {
-	const movable = item.instance as OuiMovable;
-	const state = item.state as OuiDraggableState & OuiMovableState;
+	const movable = item.instance;
+	const state = item.state;
 
 	state.element.removeAttribute(MOVABLE_ATTRIBUTE_MOVING);
 
@@ -208,12 +206,12 @@ function onEnd(
 	if (
 		dispatch(state.element, 'oui:movable:end', {
 			detail: {
-				from: {...globals.original},
+				from: {...draggableGlobals.original},
 				to: getEventPosition(event),
 			},
 		}).defaultPrevented
 	) {
-		onCancel(globals, item);
+		onCancel(item);
 	}
 
 	reset();
@@ -221,14 +219,15 @@ function onEnd(
 
 function onMove(
 	_: MouseEvent | TouchEvent,
-	globals: OuiDraggableGlobals,
-	__: OuiDraggableItem,
+	__: OuiDraggableItem<OuiMovableState>,
 	position: OuiDragMovePosition,
 ): PlainObject | undefined {
-	setAttribute(globals.element?.node as never, MOVABLE_ATTRIBUTE_MOVING, '');
+	const {element, original} = draggableGlobals;
+
+	setAttribute(element?.node as never, MOVABLE_ATTRIBUTE_MOVING, '');
 
 	return {
-		from: {...globals.original},
+		from: {...original},
 		to: {...position.calculated},
 	};
 }
@@ -238,7 +237,7 @@ function onResize(entries: ResizeObserverEntry[]): void {
 
 	for (let index = 0; index < length; index += 1) {
 		const entry = entries[index];
-		const set = MOVABLE_CONTAINERS.get(entry.target as HTMLElement);
+		const set = MOVABLE_CONTAINERS.get(entry.target);
 
 		if (set == null) {
 			continue;
@@ -257,7 +256,8 @@ function onScroll(): void {
 }
 
 function reposition(movable: OuiMovable): void {
-	const state = getDraggableStates(movable.element)?.movable as OuiDraggableState & OuiMovableState;
+	const state = getDraggableStates(movable.element)
+		?.movable as unknown as OuiDraggableState<OuiMovableState>;
 
 	if (state == null || !state.moved || state.container == null) {
 		return;
@@ -271,7 +271,7 @@ function reposition(movable: OuiMovable): void {
 	setStyle(state.element, 'inset', `${y}px auto auto ${x}px`);
 }
 
-function setOffset(state: OuiDraggableState & OuiMovableState, container: DOMRect): void {
+function setOffset(state: OuiDraggableState<OuiMovableState>, container: DOMRect): void {
 	state.offset = {};
 
 	const element = state.element.getBoundingClientRect();

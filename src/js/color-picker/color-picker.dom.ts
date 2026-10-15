@@ -1,6 +1,7 @@
 import {createElement} from '@oscarpalmer/toretto/create';
 import {
 	COLOR_PICKER_ATTRIBUTE_COPY,
+	COLOR_PICKER_ATTRIBUTE_OPACITY,
 	COLOR_PICKER_ATTRIBUTE_WELL,
 	COLOR_PICKER_ATTRIBUTE_WELL_KNOB,
 	COLOR_PICKER_TAGNAME,
@@ -147,13 +148,13 @@ function createColorPickerCopy(
 				[COLOR_PICKER_ATTRIBUTE_COPY]: '',
 			},
 			aria: {
-				label: colorPickerLocalizations.defaults.copy,
+				label: colorPickerLocalizations.values.defaults.copy,
 			},
 			data: {
 				color,
 			},
 			property: {
-				textContent: colorPickerLocalizations.defaults.copy,
+				textContent: colorPickerLocalizations.values.defaults.copy,
 				type: 'button',
 			},
 		}),
@@ -241,32 +242,38 @@ export function createColorPickerOpacity(
 
 	const container = createElement('div', {
 		attribute: {
-			[`${COLOR_PICKER_TAGNAME}-opacity`]: '',
+			[COLOR_PICKER_ATTRIBUTE_OPACITY]: '',
 		},
 	});
 
 	const label = createElement('label', {
 		attribute: {
-			[`${COLOR_PICKER_TAGNAME}-opacity-label`]: '',
+			[`${COLOR_PICKER_ATTRIBUTE_OPACITY}-label`]: '',
 		},
 		property: {
-			htmlFor: `${id}_opacity`,
+			htmlFor: `${id}_opacity_range`,
 			id: `${id}_opacity_label`,
 		},
 	});
 
-	const input = createElement('input', {
+	const slider = createElement('div', {
+		attribute: {
+			[`${COLOR_PICKER_ATTRIBUTE_OPACITY}-slider`]: '',
+		},
+	});
+
+	const range = createElement('input', {
 		aria: {
-			labelledby: `${id}_label ${label.id}`,
+			labelledby: label.id,
 		},
 		attribute: {
-			[`${COLOR_PICKER_TAGNAME}-opacity-input`]: '',
+			[`${COLOR_PICKER_ATTRIBUTE_OPACITY}-range`]: '',
 			form: '',
 			max: 100,
 			min: 0,
 		},
 		property: {
-			id: `${id}_opacity`,
+			id: `${id}_opacity_range`,
 			type: 'range',
 			value: color.alpha.toString(),
 		},
@@ -277,7 +284,7 @@ export function createColorPickerOpacity(
 			hidden: true,
 		},
 		attribute: {
-			[`${COLOR_PICKER_TAGNAME}-opacity-knob`]: '',
+			[`${COLOR_PICKER_ATTRIBUTE_OPACITY}-knob`]: '',
 		},
 	});
 
@@ -286,18 +293,36 @@ export function createColorPickerOpacity(
 			hidden: true,
 		},
 		attribute: {
-			[`${COLOR_PICKER_TAGNAME}-opacity-track`]: '',
+			[`${COLOR_PICKER_ATTRIBUTE_OPACITY}-track`]: '',
+		},
+	});
+
+	const input = createElement('input', {
+		aria: {
+			labelledby: label.id,
+		},
+		attribute: {
+			[`${COLOR_PICKER_ATTRIBUTE_OPACITY}-input`]: '',
+			form: '',
+			max: 100,
+			min: 0,
+		},
+		property: {
+			id: `${id}_opacity_input`,
+			type: 'number',
+			value: color.alpha.toString(),
 		},
 	});
 
 	track.append(knob);
-
-	container.append(label, input, track);
+	slider.append(range, track);
+	container.append(label, slider, input);
 
 	return {
 		container,
 		input,
 		label,
+		range,
 	};
 }
 

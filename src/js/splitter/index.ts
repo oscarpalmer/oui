@@ -45,7 +45,7 @@ import {
 function OuiSplitter(
 	this: OuiSplitter,
 	element: GenericOuiSplitterElement,
-	panels: HTMLElement[],
+	panels: Element[],
 ): void {
 	this.element = element;
 	this.panels = panels;
@@ -270,7 +270,7 @@ function getTypes(splitter: OuiSplitter, width?: number, height?: number): OuiSp
 	};
 }
 
-function getValue(element: HTMLElement, name: string, defaultValue: number): number {
+function getValue(element: Element, name: string, defaultValue: number): number {
 	const value = getAttribute(element, name);
 
 	if (isNullableOrWhitespace(value)) {

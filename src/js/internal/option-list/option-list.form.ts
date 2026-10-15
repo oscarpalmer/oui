@@ -1,14 +1,14 @@
+import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {dispatch} from '@oscarpalmer/toretto/event';
-import {getLocalization, localize} from '../../l10n/index';
-import type {OuiListboxState} from './listbox.model';
+import type {OuiLocalizationsValues} from '../l10n/l10n.model';
+import type {OptionListState} from './option-list.model';
 
 // #region Functions
 
-export function updateListboxForm<State extends OuiListboxState>(
-	state: State,
-	values: string[],
-	emit?: boolean,
-): void {
+export function updateOptionListForm<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(state: OptionListState<State, Localizations>, values: string[], emit?: boolean): void {
 	const {component, form} = state;
 	const {callbacks, host, multiple, name} = component;
 
@@ -32,14 +32,17 @@ export function updateListboxForm<State extends OuiListboxState>(
 
 	callbacks.data.onForm(state);
 
-	updateListboxValidity(state);
+	updateOptionListValidity(state);
 
 	if (emit ?? true) {
 		dispatch(host, 'oui:change');
 	}
 }
 
-export function updateListboxValidity(state: OuiListboxState): void {
+export function updateOptionListValidity<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(state: OptionListState<State, Localizations>): void {
 	const {component, form} = state;
 	const {
 		autocomplete,
@@ -57,21 +60,18 @@ export function updateListboxValidity(state: OuiListboxState): void {
 	if (autocomplete.none && !listbox) {
 		const valueMissing = required && filter.element.value.length === 0;
 
-		const localization = getLocalization(
-			localizations.global,
-			host,
-			'invalid',
-			localizations.component,
+		form.internals.setValidity(
+			{valueMissing},
+			localizations.localize('invalid', {
+				element: host,
+			} as never),
 		);
-
-		form.internals.setValidity({valueMissing}, localize(localization, {}, []));
 
 		form.internals.checkValidity();
 
 		return;
 	}
 
-	let data: Record<string, unknown> = {};
 	let error: 'badInput' | 'rangeOverflow' | 'rangeUnderflow' | undefined;
 	let key: 'input' | 'max' | 'min' | undefined;
 	let parameters: unknown[] = [];
@@ -85,7 +85,6 @@ export function updateListboxValidity(state: OuiListboxState): void {
 		}
 
 		case multiple && typeof max === 'number' && options.selected.length > max: {
-			data = {amount: max};
 			error = 'rangeOverflow';
 			key = 'max';
 			parameters = [max];
@@ -94,7 +93,6 @@ export function updateListboxValidity(state: OuiListboxState): void {
 		}
 
 		case multiple && typeof min === 'number' && options.selected.length < min: {
-			data = {amount: min};
 			error = 'rangeUnderflow';
 			key = 'min';
 			parameters = [min];
@@ -106,12 +104,13 @@ export function updateListboxValidity(state: OuiListboxState): void {
 			break;
 	}
 
-	const localization =
+	const message =
 		key == null
 			? undefined
-			: getLocalization(localizations.global, host, key, localizations.component);
-
-	const message = localization == null ? undefined : localize(localization, data, parameters);
+			: localizations.localize(key, {
+					arguments: parameters,
+					element: host,
+				} as never);
 
 	form.internals.setValidity(
 		error == null

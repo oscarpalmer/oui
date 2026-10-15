@@ -18,6 +18,6 @@ export const TOOLBAR_SYMBOL: unique symbol = Symbol(TOOLBAR_ATTRIBUTE);
 
 export const TOOLBAR_SELECTOR: string = `[${TOOLBAR_ATTRIBUTE}-item]`;
 
-export const toolbars: WeakMap<HTMLElement, OuiToolbar> = new WeakMap();
+export const toolbars: WeakMap<Element, OuiToolbar> = new WeakMap();
 
 // #endregion

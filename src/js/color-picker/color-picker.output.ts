@@ -1,7 +1,6 @@
 import {round} from '@oscarpalmer/atoms/math';
 import {setAria} from '@oscarpalmer/toretto/aria';
 import {createElement} from '@oscarpalmer/toretto/create';
-import {getLocalization, localize} from '../l10n/index';
 import {
 	COLOR_PICKER_ATTRIBUTE_OUTPUT_INPUT,
 	COLOR_PICKER_TAGNAME,
@@ -81,7 +80,7 @@ function createOutputFormat(
 		},
 		property: {
 			htmlFor: id,
-			textContent: colorPickerLocalizations.defaults.output,
+			textContent: colorPickerLocalizations.values.defaults.output,
 		},
 	});
 
@@ -99,7 +98,7 @@ function createOutputFormat(
 		...colors.map(color =>
 			createElement('option', {
 				property: {
-					textContent: colorPickerLocalizations.defaults[color],
+					textContent: colorPickerLocalizations.values.defaults[color],
 					value: color,
 				},
 			}),
@@ -136,7 +135,7 @@ function createOutputInput(
 		},
 		property: {
 			htmlFor: id,
-			textContent: colorPickerLocalizations.defaults[property],
+			textContent: colorPickerLocalizations.values.defaults[property],
 		},
 	});
 
@@ -177,7 +176,7 @@ function createOutputItem(
 ): [HTMLDivElement, HTMLInputElement[]] {
 	const item = createElement('div', {
 		aria: {
-			label: colorPickerLocalizations.defaults[color],
+			label: colorPickerLocalizations.values.defaults[color],
 		},
 		data: {
 			label: color,
@@ -259,11 +258,9 @@ export function updateColorPickerOutputCopyLabel(
 ): void {
 	const {host, localizations} = state.component;
 
-	const prefix = localize(
-		getLocalization(localizations.global, host, 'copy', localizations.component),
-		{},
-		[],
-	);
+	const prefix = localizations.localize('copy', {
+		element: host,
+	});
 
 	const color = getColorPickerOutputFormat(state);
 
@@ -272,11 +269,9 @@ export function updateColorPickerOutputCopyLabel(
 	if (color == null) {
 		content = prefix;
 	} else {
-		const suffix = localize(
-			getLocalization(localizations.global, host, color, localizations.component),
-			{},
-			[],
-		);
+		const suffix = localizations.localize(color, {
+			element: host,
+		});
 
 		content = `${prefix} ${suffix}`;
 	}
@@ -333,11 +328,9 @@ export function updateColorPickerOutputLabels(state: OuiColorPickerState): void 
 			return;
 		}
 
-		const textContent = localize(
-			getLocalization(localizations.global, host, label, localizations.component),
-			{},
-			[],
-		);
+		const textContent = localizations.localize(label, {
+			element: host,
+		} as never);
 
 		for (let elementsIndex = 0; elementsIndex < elementsLength; elementsIndex += 1) {
 			const element = elements[elementsIndex];

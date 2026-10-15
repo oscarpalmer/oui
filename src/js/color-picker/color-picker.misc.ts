@@ -11,8 +11,6 @@ import {
 import {setAria} from '@oscarpalmer/toretto/aria';
 import {getAttribute} from '@oscarpalmer/toretto/attribute';
 import {setProperty} from '@oscarpalmer/toretto/property';
-import {getLocalization, localize, updateLocalizations} from '../l10n/index';
-import type {OuiLocalizations} from '../l10n/l10n.model';
 import {COLOR_PICKER_OUTPUTS, colorPickerLocalizations} from './color-picker.constants';
 import {updateColorPickerForm, updateColorPickerValidity} from './color-picker.form';
 import type {
@@ -23,7 +21,6 @@ import type {
 	OuiColorPickerValueType,
 } from './color-picker.model';
 import {updateColorPickerOutputInputs, updateColorPickerOutputLabels} from './color-picker.output';
-import {colorPickers} from './color-picker.state';
 
 // #region Functions
 
@@ -38,9 +35,7 @@ export function getColorPickerOutput(
 ): OuiColorPickerOutputType {
 	const attribute = getAttribute(element, 'output');
 
-	return COLOR_PICKER_OUTPUTS.has(attribute as OuiColorPickerOutputType)
-		? (attribute as OuiColorPickerOutputType)
-		: 'none';
+	return COLOR_PICKER_OUTPUTS.has(attribute as never) ? (attribute as never) : 'none';
 }
 
 export function getColorPickerValueType(
@@ -90,6 +85,16 @@ export function setColorPickerLocalizations(
 ): void;
 
 /**
+ * Set default localizations
+ *
+ * @param localizations Default localizations
+ */
+export function setColorPickerLocalizations(
+	localizations: Partial<OuiColorPickerLocalizations>,
+	defaults: true,
+): void;
+
+/**
  * Set localizations for one or more languages
  *
  * @param localizations Localizations for one or more languages
@@ -99,15 +104,17 @@ export function setColorPickerLocalizations(
 ): void;
 
 export function setColorPickerLocalizations(
-	first: string | Record<string, Partial<OuiColorPickerLocalizations>>,
-	second?: Partial<OuiColorPickerLocalizations>,
+	first:
+		| string
+		| Partial<OuiColorPickerLocalizations>
+		| Record<string, Partial<OuiColorPickerLocalizations>>,
+	second?: true | Partial<OuiColorPickerLocalizations>,
 ): void {
-	updateColorPickerLocalizations(
-		colorPickerLocalizations,
-		colorPickerLocalizations.values,
-		first,
-		second,
-	);
+	if (second === true) {
+		void colorPickerLocalizations.setDefaults(first as never);
+	} else {
+		void colorPickerLocalizations.setLanguages(first as never, second as never);
+	}
 }
 
 export function setColorPickerDisabled(
@@ -218,74 +225,46 @@ export function setColorPickerValues(
 
 export function updateColorPickerLabels(state: OuiColorPickerState): void {
 	const {anchor, content, host, localizations} = state.component;
-	const {component, global} = localizations;
 
 	if (anchor.toggle != null) {
 		setAria(
 			anchor.toggle,
 			'label',
-			localize(getLocalization(global, host, 'toggle', component), {}, []),
+			localizations.localize('toggle', {
+				element: host,
+			}),
 		);
 	}
 
-	content.hue.label.textContent = localize(getLocalization(global, host, 'hue', component), {}, []);
+	content.hue.label.textContent = localizations.localize('hue', {
+		element: host,
+	});
 
-	content.well.label.textContent = localize(
-		getLocalization(global, host, 'wellLabel', component),
-		{},
-		[],
-	);
+	content.well.label.textContent = localizations.localize('wellLabel', {
+		element: host,
+	});
 
 	updateColorPickerOutputLabels(state);
 	updateColorPickerWell(state);
 
 	if (content.opacity != null) {
-		content.opacity.label.textContent = localize(
-			getLocalization(global, host, 'opacity', component),
-			{},
-			[],
-		);
+		content.opacity.label.textContent = localizations.localize('opacity', {
+			element: host,
+		});
 	}
-}
-
-export function updateColorPickerLocalizations(
-	instance: OuiLocalizations<OuiColorPickerLocalizations>,
-	destination: Record<string, Partial<OuiColorPickerLocalizations>>,
-	first: string | Record<string, Partial<OuiColorPickerLocalizations>>,
-	second?: Partial<OuiColorPickerLocalizations>,
-): void {
-	updateLocalizations(
-		instance,
-		typeof first === 'string'
-			? {
-					[first]: second!,
-				}
-			: first,
-		destination,
-		() => {
-			for (const state of colorPickers) {
-				updateColorPickerLabels(state);
-			}
-		},
-	);
 }
 
 function updateColorPickerWell(state: OuiColorPickerState): void {
 	const {color, content, host, localizations} = state.component;
-	const {component, global} = localizations;
 	const {lightness, saturation} = color.value.hsl;
 
 	setAria(
 		content.well.knob,
 		'valuetext',
-		localize(
-			getLocalization(global, host, 'wellValue', component),
-			{
-				lightness,
-				saturation,
-			},
-			[lightness, saturation],
-		),
+		localizations.localize('wellValue', {
+			arguments: [lightness, saturation],
+			element: host,
+		}),
 	);
 }
 

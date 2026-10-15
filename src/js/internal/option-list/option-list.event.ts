@@ -1,14 +1,16 @@
+import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {clamp} from '@oscarpalmer/atoms/number';
-import {LISTBOX_KEYS_NAVIGATION, LISTBOX_KEYS_SELECTION} from './listbox.constants';
-import {getListboxVisibleOptions} from './listbox.misc';
-import type {OuiListboxPreview, OuiListboxState} from './listbox.model';
+import type {OuiLocalizationsValues} from '../l10n/l10n.model';
+import {LISTBOX_KEYS_NAVIGATION, OPTION_LIST_KEYS_SELECTION} from './option-list.constants';
+import {getOptionListVisibleOptions} from './option-list.misc';
+import type {OptionListPreview, OptionListState} from './option-list.model';
 
 // #region Functions
 
-export function processListboxKeydown<State extends OuiListboxState>(
-	event: KeyboardEvent,
-	state: State,
-): void {
+export function processOptionListKeydown<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(event: KeyboardEvent, state: OptionListState<State, Localizations>): void {
 	const {component, form} = state;
 	const {callbacks, disabled, readonly, type} = component;
 
@@ -48,7 +50,7 @@ export function processListboxKeydown<State extends OuiListboxState>(
 			break;
 		}
 
-		case !isSelect && LISTBOX_KEYS_SELECTION.has(event.key): {
+		case !isSelect && OPTION_LIST_KEYS_SELECTION.has(event.key): {
 			if (!ignore) {
 				callbacks.keydown.onSelection?.(state);
 			}
@@ -81,17 +83,20 @@ export function processListboxKeydown<State extends OuiListboxState>(
 	}
 }
 
-function onNavigation<State extends OuiListboxState>(event: KeyboardEvent, state: State): void {
+function onNavigation<State extends PlainObject, Localizations extends OuiLocalizationsValues>(
+	event: KeyboardEvent,
+	state: OptionListState<State, Localizations>,
+): void {
 	const {active, autocomplete, callbacks, type} = state.component;
 
 	const skip = callbacks.keydown.skipNavigation?.(state) ?? false;
-	const visible = getListboxVisibleOptions(state);
+	const visible = getOptionListVisibleOptions(state);
 
 	if (visible.length === 0) {
 		return;
 	}
 
-	let next: HTMLElement | undefined;
+	let next: Element | undefined;
 
 	if (skip || active == null) {
 		next = active ?? visible.at(event.key === 'ArrowDown' ? 0 : -1);
@@ -120,7 +125,7 @@ function onNavigation<State extends OuiListboxState>(event: KeyboardEvent, state
 		}
 	}
 
-	let preview: OuiListboxPreview;
+	let preview: OptionListPreview;
 
 	if (type === 'autocomplete' && (autocomplete.both || autocomplete.inline)) {
 		preview = 'set';

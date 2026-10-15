@@ -41,14 +41,14 @@ Object.defineProperties(OuiPopover.prototype, {
 
 // #region Functions
 
-function addPopover(element: HTMLElement): void {
+function addPopover(element: Element): void {
 	if (popovers.has(element) || element.hasAttribute(FLOATABLE_ATTRIBUTE)) {
 		return;
 	}
 
 	const anchor = element.ownerDocument.querySelector(`[popovertarget="${element.id}"]`);
 
-	if (isHTMLOrSVGElement(anchor)) {
+	if (isHTMLOrSVGElement(anchor) && isHTMLOrSVGElement(element)) {
 		popovers.set(element, getState(anchor, element));
 	}
 }
@@ -69,7 +69,7 @@ function destroyPopover(state: OuiPopoverState): void {
 	state.popover = undefined as never;
 }
 
-function getId(element: HTMLElement, value?: string): string {
+function getId(element: Element, value?: string): string {
 	let {id} = element;
 
 	if (id == null || id.trim().length === 0) {
@@ -91,7 +91,7 @@ function getOpen(this: OuiPopover): boolean {
  * @param element Element to get _OuiPopover_ for
  * @returns _OuiPopover_ instance
  */
-export function getPopover(element: HTMLElement): OuiPopover | undefined {
+export function getPopover(element: Element): OuiPopover | undefined {
 	return popovers.get(element)?.popover;
 }
 
@@ -159,7 +159,7 @@ function onPointerdown(): void {
 	ignoreFocus = true;
 }
 
-function removePopover(element: HTMLElement): void {
+function removePopover(element: Element): void {
 	const state = popovers.get(element);
 
 	if (state == null) {

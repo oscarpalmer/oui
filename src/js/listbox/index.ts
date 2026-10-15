@@ -1,18 +1,18 @@
 import {parse} from '@oscarpalmer/atoms/string';
 import {getAttribute} from '@oscarpalmer/toretto/attribute';
-import {setListboxValue, setListboxValues} from '../internal/listbox/listbox.data';
+import type {OuiLocalizations} from '../internal/l10n/l10n.model';
+import {setOptionListValue, setOptionListValues} from '../internal/option-list/option-list.data';
 import {
-	setListboxDisabled,
-	setListboxFilter,
-	setListboxLimit,
-	setListboxReadonly,
-	setListboxRequired,
-} from '../internal/listbox/listbox.misc';
-import type {OuiListboxLocalizations, OuiListboxState} from '../internal/listbox/listbox.model';
-import {attachListbox, detachListbox} from '../internal/listbox/listbox.state';
-import {LISTBOX_SYMBOL, LISTBOX_TAGNAME} from './constants.listbox';
-import {updateListboxLocalizations} from './misc.listbox';
-import {initializeListbox, listboxes, onAttachListbox, onDetachListbox} from './state.listbox';
+	setOptionListDisabled,
+	setOptionListFilter,
+	setOptionListLimit,
+	setOptionListReadonly,
+	setOptionListRequired,
+} from '../internal/option-list/option-list.misc';
+import {attachOptionList, detachOptionList} from '../internal/option-list/option-list.state';
+import {LISTBOX_SYMBOL, LISTBOX_TAGNAME} from './listbox.constants';
+import type {OuiListboxLocalizations, OuiListboxState} from './listbox.model';
+import {initializeListbox, listboxes, onAttachListbox, onDetachListbox} from './listbox.state';
 
 // #region Types
 
@@ -44,7 +44,7 @@ export class OuiListboxElement extends HTMLElement {
 	 */
 	set disabled(value: boolean) {
 		if (typeof value === 'boolean' && value !== this.disabled) {
-			setListboxDisabled(this[LISTBOX_SYMBOL], value);
+			setOptionListDisabled(this[LISTBOX_SYMBOL], value);
 		}
 	}
 
@@ -59,7 +59,7 @@ export class OuiListboxElement extends HTMLElement {
 	 * Set the filter value
 	 */
 	set filter(value: string) {
-		setListboxFilter(this[LISTBOX_SYMBOL], value);
+		setOptionListFilter(this[LISTBOX_SYMBOL], value);
 	}
 
 	/**
@@ -76,6 +76,10 @@ export class OuiListboxElement extends HTMLElement {
 		return this[LISTBOX_SYMBOL].form.internals.labels;
 	}
 
+	get localizations(): OuiLocalizations<OuiListboxLocalizations> {
+		return this[LISTBOX_SYMBOL].component?.localizations;
+	}
+
 	/**
 	 * Maximum number of selected options
 	 */
@@ -87,7 +91,7 @@ export class OuiListboxElement extends HTMLElement {
 	 * Set the maximum number of selected options
 	 */
 	set max(value: number) {
-		setListboxLimit('max', this[LISTBOX_SYMBOL], value);
+		setOptionListLimit('max', this[LISTBOX_SYMBOL], value);
 	}
 
 	/**
@@ -101,7 +105,7 @@ export class OuiListboxElement extends HTMLElement {
 	 * Set the minimum number of selected options
 	 */
 	set min(value: number) {
-		setListboxLimit('min', this[LISTBOX_SYMBOL], value);
+		setOptionListLimit('min', this[LISTBOX_SYMBOL], value);
 	}
 
 	/**
@@ -130,7 +134,7 @@ export class OuiListboxElement extends HTMLElement {
 	 */
 	set readonly(value: boolean) {
 		if (typeof value === 'boolean' && value !== this.readonly) {
-			setListboxReadonly(this[LISTBOX_SYMBOL], value);
+			setOptionListReadonly(this[LISTBOX_SYMBOL], value);
 		}
 	}
 
@@ -146,14 +150,14 @@ export class OuiListboxElement extends HTMLElement {
 	 */
 	set required(value: boolean) {
 		if (typeof value === 'boolean' && value !== this.required) {
-			setListboxRequired(this[LISTBOX_SYMBOL], value);
+			setOptionListRequired(this[LISTBOX_SYMBOL], value);
 		}
 	}
 
 	/**
 	 * Selected options
 	 */
-	get selected(): HTMLElement[] {
+	get selected(): Element[] {
 		return this[LISTBOX_SYMBOL].component?.options.selected.slice() ?? [];
 	}
 
@@ -182,7 +186,7 @@ export class OuiListboxElement extends HTMLElement {
 	 * Set the value
 	 */
 	set value(value: unknown) {
-		setListboxValue(this[LISTBOX_SYMBOL], value);
+		setOptionListValue(this[LISTBOX_SYMBOL], value);
 	}
 
 	/**
@@ -196,7 +200,7 @@ export class OuiListboxElement extends HTMLElement {
 	 * Set the values
 	 */
 	set values(values: unknown[]) {
-		setListboxValues(this[LISTBOX_SYMBOL], values);
+		setOptionListValues(this[LISTBOX_SYMBOL], values);
 	}
 
 	/**
@@ -210,7 +214,7 @@ export class OuiListboxElement extends HTMLElement {
 		super();
 
 		this[LISTBOX_SYMBOL] = {
-			component: null as never,
+			component: undefined as never,
 			form: {
 				internals: this.attachInternals(),
 			},
@@ -231,7 +235,7 @@ export class OuiListboxElement extends HTMLElement {
 
 			case 'max':
 			case 'min':
-				setListboxLimit(name, state, value);
+				setOptionListLimit(name, state, value);
 				break;
 
 			case 'value':
@@ -256,7 +260,7 @@ export class OuiListboxElement extends HTMLElement {
 	 * Clear all selected options
 	 */
 	clear(): void {
-		setListboxValues(this[LISTBOX_SYMBOL], []);
+		setOptionListValues(this[LISTBOX_SYMBOL], []);
 	}
 
 	connectedCallback(): void {
@@ -265,7 +269,7 @@ export class OuiListboxElement extends HTMLElement {
 		if (state.component == null) {
 			initializeListbox(this, state);
 		} else {
-			attachListbox(state, listboxes, onAttachListbox);
+			attachOptionList(state, listboxes, onAttachListbox);
 		}
 	}
 
@@ -273,7 +277,7 @@ export class OuiListboxElement extends HTMLElement {
 		const state = this[LISTBOX_SYMBOL];
 
 		if (state.component != null) {
-			detachListbox(state, listboxes, onDetachListbox);
+			detachOptionList(state, listboxes, onDetachListbox);
 		}
 	}
 
@@ -284,7 +288,7 @@ export class OuiListboxElement extends HTMLElement {
 	formResetCallback(): void {
 		const state = this[LISTBOX_SYMBOL];
 
-		setListboxValues(state, state.component.values.initial);
+		setOptionListValues(state, state.component.values.initial);
 	}
 
 	formStateRestoreCallback(state: string | File | FormData, reason: unknown): void {
@@ -303,7 +307,7 @@ export class OuiListboxElement extends HTMLElement {
 		if (component == null) {
 			this[LISTBOX_SYMBOL].form.restored = parsed;
 		} else {
-			setListboxValues(this[LISTBOX_SYMBOL], parsed);
+			setOptionListValues(this[LISTBOX_SYMBOL], parsed);
 		}
 	}
 
@@ -324,30 +328,6 @@ export class OuiListboxElement extends HTMLElement {
 	setCustomValidity(message: string): void {
 		this[LISTBOX_SYMBOL].form.internals.setValidity({customError: message !== ''}, message, this);
 	}
-
-	/**
-	 * Set listbox localizations for a specific language
-	 *
-	 * @param language Language code
-	 * @param localizations Localizations for language
-	 */
-	setLocalizations(language: string, localizations: Partial<OuiListboxLocalizations>): void;
-
-	/**
-	 * Set listbox localizations for one or more languages
-	 *
-	 * @param localizations Localizations for one or more languages
-	 */
-	setLocalizations(localizations: Record<string, Partial<OuiListboxLocalizations>>): void;
-
-	setLocalizations(
-		first: string | Record<string, Partial<OuiListboxLocalizations>>,
-		second?: Partial<OuiListboxLocalizations>,
-	): void {
-		const {localizations} = this[LISTBOX_SYMBOL].component;
-
-		updateListboxLocalizations(localizations.global, localizations.component, first, second);
-	}
 }
 
 // #endregion
@@ -360,6 +340,6 @@ customElements.define(LISTBOX_TAGNAME, OuiListboxElement);
 
 // #region Exports
 
-export {setListboxLocalizations} from './misc.listbox';
+export {setListboxLocalizations} from './listbox.misc';
 
 // #endregion

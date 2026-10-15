@@ -1,13 +1,15 @@
 import {filter} from '@oscarpalmer/atoms/array/filter';
+import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {setAria} from '@oscarpalmer/toretto/aria';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
-import {filterListbox} from './listbox.data';
-import {updateListboxValidity} from './listbox.form';
-import type {OuiListboxState} from './listbox.model';
+import type {OuiLocalizationsValues} from '../l10n/l10n.model';
+import {filterOptionList} from './option-list.data';
+import {updateOptionListValidity} from './option-list.form';
+import type {OptionListState} from './option-list.model';
 
 // #region Functions
 
-export function generateListboxIds(prefix: string, select: HTMLSelectElement): void {
+export function generateOptionListIds(prefix: string, select: HTMLSelectElement): void {
 	const elements = [...select.children].flatMap(child =>
 		child instanceof HTMLOptGroupElement
 			? [
@@ -30,23 +32,26 @@ export function generateListboxIds(prefix: string, select: HTMLSelectElement): v
 	}
 }
 
-export function getListboxVisibleOptions(state: OuiListboxState): HTMLElement[] {
+export function getOptionListVisibleOptions<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(state: OptionListState<State, Localizations>): Element[] {
 	return state.component.options.all.filter(option => !option.hidden);
 }
 
-export function setListboxDisabled<State extends OuiListboxState>(
-	state: State,
-	value: boolean,
-): void {
+export function setOptionListDisabled<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(state: OptionListState<State, Localizations>, value: boolean): void {
 	state.component.filter.element.readOnly = state.component.readonly || value;
 
 	setProperties('disabled', state, value);
 }
 
-export function setListboxFilter<State extends OuiListboxState>(
-	state: State,
-	value: unknown,
-): void {
+export function setOptionListFilter<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(state: OptionListState<State, Localizations>, value: unknown): void {
 	if (typeof value !== 'string') {
 		return;
 	}
@@ -58,14 +63,13 @@ export function setListboxFilter<State extends OuiListboxState>(
 
 	filter.element.value = value;
 
-	filterListbox(type, state);
+	filterOptionList(type, state);
 }
 
-export function setListboxLimit<State extends OuiListboxState>(
-	type: 'max' | 'min',
-	state: State,
-	value?: unknown,
-): void {
+export function setOptionListLimit<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(type: 'max' | 'min', state: OptionListState<State, Localizations>, value?: unknown): void {
 	const {component} = state;
 
 	let actual = value;
@@ -84,11 +88,11 @@ export function setListboxLimit<State extends OuiListboxState>(
 
 		setAttribute(component.host, type, actual);
 
-		updateListboxValidity(state);
+		updateOptionListValidity(state);
 	}
 }
 
-export function setListboxMultiple(element: HTMLElement, value: boolean): void {
+export function setOptionListMultiple(element: Element, value: boolean): void {
 	if (value) {
 		element.setAttribute('multiple', '');
 	} else {
@@ -96,9 +100,9 @@ export function setListboxMultiple(element: HTMLElement, value: boolean): void {
 	}
 }
 
-function setProperties<State extends OuiListboxState>(
+function setProperties<State extends PlainObject, Localizations extends OuiLocalizationsValues>(
 	key: 'disabled' | 'readonly' | 'required',
-	state: State,
+	state: OptionListState<State, Localizations>,
 	value: boolean,
 ): void {
 	const {component} = state;
@@ -123,10 +127,10 @@ function setProperties<State extends OuiListboxState>(
 	}
 }
 
-export function setListboxReadonly<State extends OuiListboxState>(
-	state: State,
-	value: boolean,
-): void {
+export function setOptionListReadonly<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(state: OptionListState<State, Localizations>, value: boolean): void {
 	const {disabled, filter} = state.component;
 
 	filter.element.readOnly = disabled || value;
@@ -134,12 +138,13 @@ export function setListboxReadonly<State extends OuiListboxState>(
 	setProperties('readonly', state, value);
 }
 
-export function setListboxRequired<State extends OuiListboxState>(
-	state: State,
-	value: boolean,
-): void {
+export function setOptionListRequired<
+	State extends PlainObject,
+	Localizations extends OuiLocalizationsValues,
+>(state: OptionListState<State, Localizations>, value: boolean): void {
 	setProperties('required', state, value);
-	updateListboxValidity(state);
+
+	updateOptionListValidity(state);
 }
 
 // #endregion

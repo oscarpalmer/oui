@@ -29,8 +29,8 @@ export type OuiPopover = {
 };
 
 export type OuiPopoverState = {
-	anchor: HTMLElement;
-	content: HTMLElement;
+	anchor: Element;
+	content: Element;
 	floatable: OuiFloatable;
 	focusTrap?: OuiFocusTrap;
 	listeners: RemovableEventListener[];
@@ -53,6 +53,6 @@ export const popoverFloatableOptions: OuiFloatableOptions = {
 	reusable: false,
 };
 
-export const popovers: WeakMap<HTMLElement, OuiPopoverState> = new WeakMap();
+export const popovers: WeakMap<Element, OuiPopoverState> = new WeakMap();
 
 // #endregion

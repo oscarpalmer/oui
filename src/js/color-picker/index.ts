@@ -6,17 +6,13 @@ import {
 	type RGBAColor,
 	type RGBColor,
 } from '@oscarpalmer/atoms/color';
-import {
-	COLOR_PICKER_SYMBOL,
-	COLOR_PICKER_TAGNAME,
-	colorPickerLocalizations,
-} from './color-picker.constants';
+import type {OuiLocalizations} from '../internal/l10n/l10n.model';
+import {COLOR_PICKER_SYMBOL, COLOR_PICKER_TAGNAME} from './color-picker.constants';
 import {onColorPickerInput} from './color-picker.event';
 import {
 	setColorPickerDisabled,
 	setColorPickerRequired,
 	setColorPickerValue,
-	updateColorPickerLocalizations,
 } from './color-picker.misc';
 import type {OuiColorPickerLocalizations, OuiColorPickerState} from './color-picker.model';
 import {
@@ -189,6 +185,13 @@ export class OuiColorPickerElement extends HTMLElement {
 	}
 
 	/**
+	 * Localization information for the color picker
+	 */
+	get localizations(): OuiLocalizations<OuiColorPickerLocalizations> {
+		return this[COLOR_PICKER_SYMBOL]?.component.localizations;
+	}
+
+	/**
 	 * Is the color picker readonly?
 	 */
 	get readonly(): boolean {
@@ -318,7 +321,7 @@ export class OuiColorPickerElement extends HTMLElement {
 		super();
 
 		this[COLOR_PICKER_SYMBOL] = {
-			component: null as never,
+			component: undefined as never,
 			form: {
 				internals: this.attachInternals(),
 			},
@@ -421,33 +424,6 @@ export class OuiColorPickerElement extends HTMLElement {
 			{customError: message !== ''},
 			message,
 			this,
-		);
-	}
-
-	/**
-	 * Set localizations for a specific language
-	 *
-	 * @param language Language code
-	 * @param localizations Localizations for language
-	 */
-	setLocalizations(language: string, localizations: Partial<OuiColorPickerLocalizations>): void;
-
-	/**
-	 * Set localizations for one or more languages
-	 *
-	 * @param localizations Localizations for one or more languages
-	 */
-	setLocalizations(localizations: Record<string, Partial<OuiColorPickerLocalizations>>): void;
-
-	setLocalizations(
-		first: string | Record<string, Partial<OuiColorPickerLocalizations>>,
-		second?: Partial<OuiColorPickerLocalizations>,
-	): void {
-		updateColorPickerLocalizations(
-			colorPickerLocalizations,
-			this[COLOR_PICKER_SYMBOL].component.localizations.component,
-			first,
-			second,
 		);
 	}
 }

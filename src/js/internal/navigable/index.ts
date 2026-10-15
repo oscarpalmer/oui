@@ -22,11 +22,7 @@ import {
 
 // #region Instances
 
-function OuiNavigable(
-	this: OuiNavigable,
-	element: HTMLElement,
-	options: OuiNavigableOptions,
-): void {
+function OuiNavigable(this: OuiNavigable, element: Element, options: OuiNavigableOptions): void {
 	this[NAVIGABLE_SYMBOL] = {
 		element,
 		options,
@@ -88,25 +84,25 @@ function destroyNavigable(this: OuiNavigable): void {
 	state.element = undefined as never;
 }
 
-function getItems(container: HTMLElement, selector: string): HTMLElement[] {
+function getItems(container: Element, selector: string): HTMLElement[] {
 	return filter([...container.querySelectorAll(selector)], isValidItem) as HTMLElement[];
 }
 
-export function getNavigable(element: HTMLElement, options: OuiNavigableOptions): OuiNavigable {
+export function getNavigable(element: Element, options: OuiNavigableOptions): OuiNavigable {
 	// @ts-expect-error All good, no worries :-)
 	return new OuiNavigable(element, options);
 }
 
 export function getNavigableOrientation(
-	element: HTMLElement,
+	element: Element,
 	vertical: boolean,
 	aria?: boolean,
 ): OuiNavigableOrientation {
 	const attribute =
 		(aria ?? true) ? getAria(element, 'orientation') : getAttribute(element, 'orientation');
 
-	return NAVIGABLE_ORIENTATIONS.has(attribute as OuiNavigableOrientation)
-		? (attribute as OuiNavigableOrientation)
+	return NAVIGABLE_ORIENTATIONS.has(attribute as never)
+		? (attribute as never)
 		: vertical
 			? NAVIGABLE_ORIENTATION_VERTICAL
 			: NAVIGABLE_ORIENTATION_HORIZONTAL;
@@ -129,10 +125,10 @@ function navigateWithNavigable(this: OuiNavigable, index: number, focus?: boolea
 function onClick(navigable: OuiNavigable, event: Event): void {
 	const {active, element, options} = navigable[NAVIGABLE_SYMBOL];
 
-	const item = findAncestor(event, options.selector) as HTMLElement;
+	const item = findAncestor(event, options.selector);
 	const items = getItems(element, options.selector);
 
-	const index = items.indexOf(item);
+	const index = items.indexOf(item as never);
 
 	if (index === -1) {
 		return;
@@ -144,7 +140,7 @@ function onClick(navigable: OuiNavigable, event: Event): void {
 
 	options.onActivate?.(navigable);
 
-	item.focus();
+	(item as HTMLElement)?.focus?.();
 }
 
 function onNavigate(

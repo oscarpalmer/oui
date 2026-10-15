@@ -10,7 +10,7 @@ export type CreateOuiDraggableOptions = {
 	/**
 	 * Container to hold the draggable element and restrict its movement within. Can be `body`, `document`, `window`, a _CSS_ selector, or an element. _(If not provided, the draggable element will not have any constraints)_
 	 */
-	container?: string | HTMLElement;
+	container?: string | Element;
 	/**
 	 * Direction in which the element can be dragged. _(If not provided, the element can be dragged in any direction)_
 	 */
@@ -19,36 +19,30 @@ export type CreateOuiDraggableOptions = {
 
 export type OuiDraggableDirection = 'horizontal' | 'vertical' | 'x' | 'y';
 
-export interface OuiDraggable<ExtraState extends PlainObject = PlainObject> {
-	[DRAGGABLE_SYMBOL]: OuiDraggableState & ExtraState;
-	get element(): HTMLElement;
+export interface OuiDraggable<ExtraState extends PlainObject> {
+	[DRAGGABLE_SYMBOL]: OuiDraggableState<ExtraState>;
+	get element(): Element;
 	destroy(): void;
 }
 
-export type OuiDragBegin<State extends PlainObject = PlainObject> = (
+export type OuiDragBegin<State extends PlainObject> = (
 	event: MouseEvent | TouchEvent,
-	globals: OuiDraggableGlobals,
 	item: OuiDraggableItem<State>,
-	element: HTMLElement,
-	handle: HTMLElement,
+	element: Element,
+	handle: Element,
 	position: EventPosition,
 ) => void;
 
-export type OuiDragCancel<State extends PlainObject = PlainObject> = (
-	globals: OuiDraggableGlobals,
-	item: OuiDraggableItem<State>,
-) => void;
+export type OuiDragCancel<State extends PlainObject> = (item: OuiDraggableItem<State>) => void;
 
-export type OuiDragEnd<State extends PlainObject = PlainObject> = (
+export type OuiDragEnd<State extends PlainObject> = (
 	event: MouseEvent | TouchEvent,
-	globals: OuiDraggableGlobals,
 	item: OuiDraggableItem<State>,
 	reset: () => void,
 ) => void;
 
-export type OuiDragMove<State extends PlainObject = PlainObject> = (
+export type OuiDragMove<State extends PlainObject> = (
 	event: MouseEvent | TouchEvent,
-	globals: OuiDraggableGlobals,
 	item: OuiDraggableItem<State>,
 	position: OuiDragMovePosition,
 ) => PlainObject | undefined;
@@ -62,21 +56,21 @@ export type OuiDraggableBound<
 	Property extends keyof OuiDraggableInstances = keyof OuiDraggableInstances,
 	Instance extends OuiDraggableInstances[Property] = OuiDraggableInstances[Property],
 > = {
-	constructor: new (element: HTMLElement, options?: CreateOuiDraggableOptions) => Instance;
+	constructor: new (element: Element, options?: CreateOuiDraggableOptions) => Instance;
 	property: Property;
 };
 
 export type OuiDraggableGlobals = {
 	container?: DOMRect;
 	element?: OuiDraggableGlobalsElement;
-	instances: WeakMap<HTMLElement, OuiDraggableInstances>;
+	instances: WeakMap<Element, OuiDraggableInstances>;
 	offset?: EventPosition;
 	original?: EventPosition;
-	states: WeakMap<HTMLElement, OuiDraggableStates>;
+	states: WeakMap<Element, OuiDraggableStates>;
 };
 
 export type OuiDraggableGlobalsElement = {
-	node: HTMLElement;
+	node: Element;
 	rectangle: DOMRect;
 };
 
@@ -85,87 +79,86 @@ export type OuiDraggableInstances = {
 	sortable?: OuiSortable;
 };
 
-export type OuiDraggableItem<ExtraState extends PlainObject = PlainObject> = {
+export type OuiDraggableItem<ExtraState extends PlainObject> = {
 	instance: OuiDraggable<ExtraState>;
-	state: OuiDraggableState & ExtraState;
+	state: OuiDraggableState<ExtraState>;
 };
 
-export type OuiDraggableOptions<ExtraState extends PlainObject = PlainObject> = {
+export type OuiDraggableOptions<ExtraState extends PlainObject> = {
 	container: OuiDraggableOptionsContainer<ExtraState>;
 	direction: OuiDraggableOptionsDirection<ExtraState>;
 	drag: OuiDraggableOptionsDrag<ExtraState>;
 	input?: CreateOuiDraggableOptions;
 	position: OuiDraggableOptionsPosition<ExtraState>;
-	getDragged(): HTMLElement;
-	getOrigin(): HTMLElement | undefined;
+	getDragged(): Element;
+	getOrigin(): Element | undefined;
 };
 
-export type OuiDraggableOptionsContainer<ExtraState extends PlainObject = PlainObject> = {
+export type OuiDraggableOptionsContainer<ExtraState extends PlainObject> = {
 	attribute: string;
-	map: Map<HTMLElement, Set<OuiDraggable>>;
+	map: Map<Element, Set<OuiDraggable<ExtraState>>>;
 	onDestroy?: OuiDraggableOptionsContainerOnDestroy<ExtraState>;
-	onInitialize?: OuiDraggableOptionsContainerOnInitialize;
+	onInitialize?: OuiDraggableOptionsContainerOnInitialize<ExtraState>;
 };
 
-export type OuiDraggableOptionsContainerOnDestroy<ExtraState extends PlainObject = PlainObject> = (
+export type OuiDraggableOptionsContainerOnDestroy<ExtraState extends PlainObject> = (
 	item: OuiDraggableItem<ExtraState>,
-	container: HTMLElement,
+	container: Element,
 	empty: boolean,
 ) => void;
 
-export type OuiDraggableOptionsContainerOnInitialize<ExtraState extends PlainObject = PlainObject> =
-	(item: OuiDraggableItem<ExtraState>) => void;
+export type OuiDraggableOptionsContainerOnInitialize<ExtraState extends PlainObject> = (
+	item: OuiDraggableItem<ExtraState>,
+) => void;
 
-export type OuiDraggableOptionsDirection<ExtraState extends PlainObject = PlainObject> = {
+export type OuiDraggableOptionsDirection<ExtraState extends PlainObject> = {
 	attribute: string;
 	onAfter?: OuiDraggableOptionsDirectionOnAfter<ExtraState>;
 };
 
-export type OuiDraggableOptionsDirectionOnAfter<ExtraState extends PlainObject = PlainObject> = (
+export type OuiDraggableOptionsDirectionOnAfter<ExtraState extends PlainObject> = (
 	item: OuiDraggableItem<ExtraState>,
 ) => void;
 
-export type OuiDraggableOptionsDrag<ExtraState extends PlainObject = PlainObject> = {
+export type OuiDraggableOptionsDrag<ExtraState extends PlainObject> = {
 	onBegin: OuiDragBegin<ExtraState>;
 	onCancel: OuiDragCancel<ExtraState>;
 	onEnd: OuiDragEnd<ExtraState>;
 	onMove: OuiDragMove<ExtraState>;
 };
 
-export type OuiDraggableOptionsPosition<ExtraState extends PlainObject = PlainObject> = {
+export type OuiDraggableOptionsPosition<ExtraState extends PlainObject> = {
 	getOffset: OuiDraggableOptionsPositionGetOffset<ExtraState>;
 	getOriginal: OuiDraggableOptionsPositionGetOriginal<ExtraState>;
 };
 
-export type OuiDraggableOptionsPositionGetOffset<ExtraState extends PlainObject = PlainObject> = (
-	globals: OuiDraggableGlobals,
+export type OuiDraggableOptionsPositionGetOffset<ExtraState extends PlainObject> = (
 	item: OuiDraggableItem<ExtraState>,
-	element: HTMLElement,
+	element: Element,
 	position: EventPosition,
 ) => EventPosition;
 
-export type OuiDraggableOptionsPositionGetOriginal<ExtraState extends PlainObject = PlainObject> = (
-	globals: OuiDraggableGlobals,
+export type OuiDraggableOptionsPositionGetOriginal<ExtraState extends PlainObject> = (
 	item: OuiDraggableItem<ExtraState>,
 	position: EventPosition,
 ) => EventPosition;
 
-export type OuiDraggableState = {
+export type OuiDraggableState<ExtraState extends PlainObject> = {
 	attribute: string;
-	container?: HTMLElement;
+	container?: Element;
 	destroyed: boolean;
-	element: HTMLElement;
+	element: Element;
 	hasHandles?: boolean;
 	horizontal: boolean;
 	name: keyof OuiDraggableStates;
-	options: OuiDraggableOptions;
+	options: OuiDraggableOptions<ExtraState>;
 	styling: StyleToggler;
 	vertical: boolean;
-};
+} & ExtraState;
 
 export type OuiDraggableStates = {
-	movable?: OuiDraggableState;
-	sortable?: OuiDraggableState;
+	movable?: OuiDraggableState<{}>;
+	sortable?: OuiDraggableState<{}>;
 };
 
 // #endregion

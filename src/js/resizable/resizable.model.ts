@@ -25,8 +25,8 @@ export type OuiResizableItem = {
 };
 
 export type OuiResizableState = {
-	element: HTMLElement;
-	handle: HTMLElement;
+	element: Element;
+	handle: Element;
 	height: number;
 	options: Required<CreateOuiResizableOptions>;
 	styles: StyleToggler;
@@ -63,7 +63,7 @@ export const RESIZABLE_SELECTOR_HANDLE_SCOPED: string = `:scope > ${RESIZABLE_SE
 
 export const RESIZABLE_SYMBOL: unique symbol = Symbol(RESIZABLE_ATTRIBUTE);
 
-export const resizableItems: WeakMap<HTMLElement, OuiResizableItem> = new WeakMap();
+export const resizableItems: WeakMap<Element, OuiResizableItem> = new WeakMap();
 
 export const resizableStyles = {
 	touchAction: 'none',

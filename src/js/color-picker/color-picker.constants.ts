@@ -1,6 +1,6 @@
 import {round} from '@oscarpalmer/atoms/math';
-import {createLocalizations} from '../l10n/index';
-import type {OuiLocalizations} from '../l10n/l10n.model';
+import {createDefaultLocalizations} from '../internal/l10n/index';
+import type {OuiDefaultLocalizations} from '../internal/l10n/l10n.model';
 import type {OuiColorPickerLocalizations, OuiColorPickerOutputType} from './color-picker.model';
 
 // #region Variables
@@ -14,6 +14,8 @@ export const COLOR_PICKER_ATTRIBUTE_COPY_ERROR: string = `${COLOR_PICKER_ATTRIBU
 export const COLOR_PICKER_ATTRIBUTE_COPY_SUCCESS: string = `${COLOR_PICKER_ATTRIBUTE_COPY}-success`;
 
 export const COLOR_PICKER_ATTRIBUTE_INPUT: string = `${COLOR_PICKER_TAGNAME}-input`;
+
+export const COLOR_PICKER_ATTRIBUTE_OPACITY: string = `${COLOR_PICKER_TAGNAME}-opacity`;
 
 export const COLOR_PICKER_ATTRIBUTE_OUTPUT_INPUT: string = `${COLOR_PICKER_TAGNAME}-output-input`;
 
@@ -44,6 +46,7 @@ export const COLOR_PICKER_OUTPUTS: Set<OuiColorPickerOutputType> = new Set([
 	'all',
 	'none',
 	'hsl',
+	'hwb',
 	'rgb',
 ]);
 
@@ -59,8 +62,8 @@ export const COLOR_PICKER_SELECTOR_WELL_KNOB: string = `[${COLOR_PICKER_ATTRIBUT
 
 export const COLOR_PICKER_SYMBOL: unique symbol = Symbol(COLOR_PICKER_TAGNAME);
 
-export const colorPickerLocalizations: OuiLocalizations<OuiColorPickerLocalizations> =
-	createLocalizations<OuiColorPickerLocalizations>({
+export const colorPickerLocalizations: OuiDefaultLocalizations<OuiColorPickerLocalizations> =
+	createDefaultLocalizations<OuiColorPickerLocalizations>({
 		blackness: 'Blackness',
 		blue: 'Blue',
 		copy: 'Copy',

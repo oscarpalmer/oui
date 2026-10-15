@@ -1,23 +1,16 @@
-import {updateListboxMessage, updateListboxValueLabel} from '../internal/listbox/listbox.dom';
-import type {
-	OuiListboxAutoComplete,
-	OuiListboxAutoCompleteType,
-	OuiListboxLocalizations,
-} from '../internal/listbox/listbox.model';
 import {getAttributeValue} from '../internal/misc';
-import {updateLocalizations} from '../l10n/index';
-import type {OuiLocalizations} from '../l10n/l10n.model';
+import type {
+	OptionListAutoComplete,
+	OptionListAutoCompleteType,
+	OptionListLocalizationValues,
+} from '../internal/option-list/option-list.model';
 import {COMBOBOX_AUTOCOMPLETES} from './combobox.constants';
-import {updateComboboxSelectionItems} from './combobox.dom';
-import {comboboxes, comboboxLocalizations} from './combobox.state';
+import {comboboxLocalizations} from './combobox.state';
 
 // #region Functions
 
-export function getComboboxAutoComplete(
-	element: HTMLElement,
-	select: boolean,
-): OuiListboxAutoComplete {
-	let value: OuiListboxAutoCompleteType;
+export function getComboboxAutoComplete(element: Element, select: boolean): OptionListAutoComplete {
+	let value: OptionListAutoCompleteType;
 
 	if (select) {
 		value = 'list';
@@ -40,7 +33,7 @@ export function getComboboxId(): string {
 	return `oui_combobox_${index}`;
 }
 
-export function hasTextSelection(element: HTMLElement): element is HTMLInputElement {
+export function hasTextSelection(element: Element): element is HTMLInputElement {
 	return element instanceof HTMLInputElement && element.selectionStart !== element.selectionEnd;
 }
 
@@ -52,7 +45,17 @@ export function hasTextSelection(element: HTMLElement): element is HTMLInputElem
  */
 export function setComboboxLocalizations(
 	language: string,
-	localizations: Partial<OuiListboxLocalizations>,
+	localizations: Partial<OptionListLocalizationValues>,
+): void;
+
+/**
+ * Set default combobox localizations
+ *
+ * @param localizations Default localizations
+ */
+export function setComboboxLocalizations(
+	localizations: Partial<OptionListLocalizationValues>,
+	defaults: true,
 ): void;
 
 /**
@@ -61,38 +64,21 @@ export function setComboboxLocalizations(
  * @param localizations Localizations for one or more languages
  */
 export function setComboboxLocalizations(
-	localizations: Record<string, Partial<OuiListboxLocalizations>>,
+	localizations: Record<string, Partial<OptionListLocalizationValues>>,
 ): void;
 
 export function setComboboxLocalizations(
-	first: string | Record<string, Partial<OuiListboxLocalizations>>,
-	second?: Partial<OuiListboxLocalizations>,
+	first:
+		| string
+		| Partial<OptionListLocalizationValues>
+		| Record<string, Partial<OptionListLocalizationValues>>,
+	second?: true | Partial<OptionListLocalizationValues>,
 ): void {
-	updateComboboxLocalizations(comboboxLocalizations, comboboxLocalizations.values, first, second);
-}
-
-export function updateComboboxLocalizations(
-	instance: OuiLocalizations<OuiListboxLocalizations>,
-	destination: Record<string, Partial<OuiListboxLocalizations>>,
-	first: string | Record<string, Partial<OuiListboxLocalizations>>,
-	second?: Partial<OuiListboxLocalizations>,
-): void {
-	updateLocalizations(
-		instance,
-		typeof first === 'string'
-			? {
-					[first]: second!,
-				}
-			: first,
-		destination,
-		() => {
-			for (const state of comboboxes) {
-				updateListboxMessage(state);
-				updateListboxValueLabel(state);
-				updateComboboxSelectionItems(state);
-			}
-		},
-	);
+	if (second === true) {
+		void comboboxLocalizations.setDefaults(first as never);
+	} else {
+		void comboboxLocalizations.setLanguages(first as never, second as never);
+	}
 }
 
 // #endregion

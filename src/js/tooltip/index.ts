@@ -44,8 +44,8 @@ Object.defineProperties(OuiTooltip.prototype, {
 // #region Functions
 
 function activate(event: Event, focus: boolean): void {
-	const targetAnchor = findAncestor(event, TOOLTIP_SELECTOR) as HTMLElement | null;
-	const targetContent = findAncestor(event, TOOLTIP_SELECTOR_CONTENT) as HTMLElement | null;
+	const targetAnchor = findAncestor(event, TOOLTIP_SELECTOR);
+	const targetContent = findAncestor(event, TOOLTIP_SELECTOR_CONTENT);
 
 	if (targetAnchor == null && targetContent == null) {
 		if (!focused) {
@@ -89,7 +89,7 @@ function activate(event: Event, focus: boolean): void {
 	);
 }
 
-function addTooltip(element: HTMLElement): void {
+function addTooltip(element: Element): void {
 	if (!tooltips.has(element)) {
 		createTooltip(element);
 	}
@@ -111,7 +111,7 @@ function closeTooltip(clear: boolean, tooltip?: OuiTooltip): void {
 	}
 }
 
-function createTooltip(anchor: HTMLElement): void {
+function createTooltip(anchor: Element): void {
 	const elements = getElements(anchor);
 
 	if (elements != null) {
@@ -132,13 +132,13 @@ function destroyTooltip(tooltip: OuiTooltip): void {
 	state.floatable = undefined as never;
 }
 
-function findElements(attribute?: string): HTMLElement[] | undefined {
+function findElements(attribute?: string): Element[] | undefined {
 	if (attribute == null) {
 		return;
 	}
 
 	const ids = attribute?.split(EXPRESSION_WHITESPACE) ?? [];
-	const elements: HTMLElement[] = [];
+	const elements: Element[] = [];
 
 	for (const id of ids) {
 		if (isNullableOrWhitespace(id)) {
@@ -172,7 +172,7 @@ function getContent(): HTMLElement {
 	});
 }
 
-function getElements(anchor: HTMLElement): HTMLElement[] | undefined {
+function getElements(anchor: Element): Element[] | undefined {
 	let elements = findElements(getAria(anchor, 'labelledby'));
 
 	if (elements == null || elements.length === 0) {
@@ -180,7 +180,7 @@ function getElements(anchor: HTMLElement): HTMLElement[] | undefined {
 	}
 
 	if (elements != null && elements.length > 0) {
-		return elements as HTMLElement[];
+		return elements;
 	}
 
 	let textContent = getAria(anchor, 'label');
@@ -206,7 +206,7 @@ function getOpen(this: OuiTooltip): boolean {
 	return this === activeTooltip && content.checkVisibility();
 }
 
-function getState(anchor: HTMLElement, elements: HTMLElement[]): OuiTooltipState {
+function getState(anchor: Element, elements: Element[]): OuiTooltipState {
 	return {
 		anchor,
 		elements,
@@ -220,7 +220,7 @@ function getState(anchor: HTMLElement, elements: HTMLElement[]): OuiTooltipState
  * @param element Element to get _OuiTooltip_ for
  * @returns _OuiTooltip_ instance
  */
-export function getTooltip(element: HTMLElement): OuiTooltip | undefined {
+export function getTooltip(element: Element): OuiTooltip | undefined {
 	return tooltips.get(element);
 }
 
@@ -264,7 +264,7 @@ function onToggle(event: ToggleEvent): void {
 	setAttribute(content, TOOLTIP_ATTRIBUTE_CONTENT_OPEN, event.newState === 'open' ? '' : undefined);
 }
 
-function removeTooltip(element: HTMLElement): void {
+function removeTooltip(element: Element): void {
 	const tooltip = tooltips.get(element);
 
 	if (tooltip != null) {

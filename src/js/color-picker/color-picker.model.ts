@@ -9,7 +9,7 @@ import type {
 } from '@oscarpalmer/atoms/color';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import type {OuiFloatable} from '../floatable/floatable.model';
-import type {OuiLocalizations} from '../l10n/l10n.model';
+import type {OuiLocalizations} from '../internal/l10n/l10n.model';
 import type {COLOR_PICKER_SYMBOL} from './color-picker.constants';
 
 // #region Types
@@ -52,6 +52,7 @@ export type OuiColorPickerContentOpacity = {
 	container: HTMLDivElement;
 	input: HTMLInputElement;
 	label: HTMLLabelElement;
+	range: HTMLInputElement;
 };
 
 export type OuiColorPickerContentOutput = {
@@ -192,7 +193,7 @@ export type OuiColorPickerStateComponent = {
 	input: HTMLInputElement;
 	label: OuiColorPickerLabel;
 	listeners: RemovableEventListener[];
-	localizations: OuiColorPickerStateLocalizations;
+	localizations: OuiLocalizations<OuiColorPickerLocalizations>;
 	output: OuiColorPickerOutputType;
 	readonly: boolean;
 	required: boolean;
@@ -203,11 +204,6 @@ export type OuiColorPickerStateComponent = {
 type OuiColorPickerStateForm = {
 	internals: ElementInternals;
 	restored?: string;
-};
-
-export type OuiColorPickerStateLocalizations = {
-	component: Record<string, Partial<OuiColorPickerLocalizations>>;
-	global: OuiLocalizations<OuiColorPickerLocalizations>;
 };
 
 type OuiColorPickerValue = {

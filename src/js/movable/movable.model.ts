@@ -7,7 +7,7 @@ export type OuiMovable = {
 	/**
 	 * The movable element
 	 */
-	get element(): HTMLElement;
+	get element(): Element;
 	/**
 	 * Destroy the movable
 	 */
@@ -40,7 +40,7 @@ export const MOVABLE_ATTRIBUTE_HANDLE: string = `${MOVABLE_ATTRIBUTE}-handle`;
 
 export const MOVABLE_ATTRIBUTE_MOVING: string = `${MOVABLE_ATTRIBUTE}-moving`;
 
-export const MOVABLE_CONTAINERS: Map<HTMLElement, Set<OuiMovable>> = new Map();
+export const MOVABLE_CONTAINERS: Map<Element, Set<OuiMovable>> = new Map();
 
 export const MOVABLE_MESSAGE = 'The element must be an instance of HTMLElement or SVGElement';
 

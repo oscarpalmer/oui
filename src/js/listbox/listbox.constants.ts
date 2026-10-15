@@ -1,4 +1,4 @@
-import type {OuiListboxAttributes} from '../internal/listbox/listbox.model';
+import type {OptionListAttributes} from '../internal/option-list/option-list.model';
 
 // #region Variables
 
@@ -28,7 +28,7 @@ const attributeOption = `${LISTBOX_TAGNAME}-option`;
 
 const attributeOptionActive = `${LISTBOX_TAGNAME}-option-active`;
 
-export const listboxAttributes: OuiListboxAttributes = {
+export const listboxAttributes: OptionListAttributes = {
 	active: attributeOptionActive,
 	content: attributeContent,
 	empty: attributeListEmpty,

@@ -4,6 +4,7 @@ import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createElement} from '@oscarpalmer/toretto/create';
 import {on} from '@oscarpalmer/toretto/event';
 import {createEmbeddedFloatable} from '../floatable/floatable.embedded';
+import {createLocalizations} from '../internal/l10n/index';
 import {
 	COLOR_PICKER_INPUT_TYPES,
 	COLOR_PICKER_MESSAGE_INPUT,
@@ -122,7 +123,10 @@ export function attachColorPicker(state: OuiColorPickerState): void {
 	if (content.opacity != null) {
 		listeners.push(
 			on(content.opacity.input, 'input', () => {
-				onColorPickerOpacity(state);
+				onColorPickerOpacity(state, content.opacity!.input);
+			}),
+			on(content.opacity.range, 'input', () => {
+				onColorPickerOpacity(state, content.opacity!.range);
 			}),
 		);
 	}
@@ -200,9 +204,9 @@ export function initializeColorPickerComponent(
 		throw new Error(COLOR_PICKER_MESSAGE_INPUT);
 	}
 
-	const label = element.querySelector(`label[for="${input.id}"]`) as HTMLLabelElement | null;
+	const label = element.querySelector(`label[for="${input.id}"]`);
 
-	if (label == null) {
+	if (!(label instanceof HTMLLabelElement)) {
 		throw new Error(COLOR_PICKER_MESSAGE_LABEL);
 	}
 
@@ -258,10 +262,7 @@ export function initializeColorPickerComponent(
 			id: labelId,
 		},
 		listeners: [],
-		localizations: {
-			component: {},
-			global: colorPickerLocalizations,
-		},
+		localizations: createLocalizations(colorPickerLocalizations),
 		style: createElement('style'),
 		value: {
 			current: formatted,

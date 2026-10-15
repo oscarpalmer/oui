@@ -23,7 +23,7 @@ OuiToolbar.prototype.destroy = destroyToolbar;
 
 // #region Functions
 
-function addToolbar(element: HTMLElement): void {
+function addToolbar(element: Element): void {
 	if (!toolbars.has(element)) {
 		toolbars.set(
 			element,
@@ -45,7 +45,7 @@ function destroyToolbar(this: OuiToolbar): void {
 	this[TOOLBAR_SYMBOL] = undefined as never;
 }
 
-function removeToolbar(element: HTMLElement): void {
+function removeToolbar(element: Element): void {
 	toolbars.get(element)?.destroy();
 
 	toolbars.delete(element);
