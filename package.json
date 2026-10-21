@@ -1,6 +1,6 @@
 {
 	"name": "@oscarpalmer/oui",
-	"version": "0.41.0",
+	"version": "0.42.0",
 	"description": "Styles, components, and utilities for building websites and applications.",
 	"keywords": [
 		"css",
@@ -109,7 +109,7 @@
 		"watch": "concurrently \"cd ./demo/public && php -qS localhost:4567 \" \"vp run postcss:watch\" \"vp run css:watch\" \"vp run tsdown\""
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.216",
+		"@oscarpalmer/atoms": "^0.220",
 		"@oscarpalmer/toretto": "^0.56"
 	},
 	"devDependencies": {
@@ -120,7 +120,7 @@
 		"postcss-cli": "^12",
 		"postcss-input-range": "^6",
 		"postcss-scss": "^4",
-		"sass": "^1.105",
+		"sass": "^1.106",
 		"stylelint": "^17.16",
 		"stylelint-config-standard-scss": "^17",
 		"tsdown": "^0.23",

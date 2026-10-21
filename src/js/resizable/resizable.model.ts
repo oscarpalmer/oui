@@ -19,6 +19,8 @@ export type OuiResizable = {
 	set(): void;
 };
 
+export type OuiResizableDirection = 'horizontal' | 'vertical' | 'x' | 'y';
+
 export type OuiResizableItem = {
 	instance: OuiResizable;
 	state: OuiResizableState;
@@ -28,8 +30,10 @@ export type OuiResizableState = {
 	element: Element;
 	handle: Element;
 	height: number;
+	horizontal: boolean;
 	options: Required<CreateOuiResizableOptions>;
 	styles: StyleToggler;
+	vertical: boolean;
 	width: number;
 };
 
@@ -38,6 +42,8 @@ export type OuiResizableState = {
 // #region Variables
 
 export const RESIZABLE_ATTRIBUTE = 'oui-resizable';
+
+export const RESIZABLE_ATTRIBUTE_DIRECTION: string = `${RESIZABLE_ATTRIBUTE}-direction`;
 
 export const RESIZABLE_ATTRIBUTE_HANDLE: string = `${RESIZABLE_ATTRIBUTE}-handle`;
 
@@ -63,6 +69,8 @@ export const RESIZABLE_SELECTOR_HANDLE_SCOPED: string = `:scope > ${RESIZABLE_SE
 
 export const RESIZABLE_SYMBOL: unique symbol = Symbol(RESIZABLE_ATTRIBUTE);
 
+export const resizableHorizontals: Set<OuiResizableDirection> = new Set(['horizontal', 'x']);
+
 export const resizableItems: WeakMap<Element, OuiResizableItem> = new WeakMap();
 
 export const resizableStyles = {
@@ -70,5 +78,7 @@ export const resizableStyles = {
 	userSelect: 'none',
 	webkitUserSelect: 'none',
 };
+
+export const resizableVerticals: Set<OuiResizableDirection> = new Set(['vertical', 'y']);
 
 // #endregion

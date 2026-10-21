@@ -11,6 +11,7 @@ import {supportsTouch} from '@oscarpalmer/toretto/touch';
 import {attributable} from '../internal/attributable';
 import {
 	RESIZABLE_ATTRIBUTE,
+	RESIZABLE_ATTRIBUTE_DIRECTION,
 	RESIZABLE_ATTRIBUTE_MAXIMUM,
 	RESIZABLE_ATTRIBUTE_MINIMUM,
 	RESIZABLE_MESSAGE_ELEMENT,
@@ -21,8 +22,10 @@ import {
 	RESIZABLE_SELECTOR_HANDLE,
 	RESIZABLE_SELECTOR_HANDLE_SCOPED,
 	RESIZABLE_SYMBOL,
+	resizableHorizontals,
 	resizableItems,
 	resizableStyles,
+	resizableVerticals,
 	type CreateOuiResizableOptions,
 	type OuiResizable,
 	type OuiResizableItem,
@@ -146,6 +149,20 @@ function getAndSetDimensions(
 	return [width, height];
 }
 
+function getDirections(element: Element): [boolean, boolean] {
+	const attribute = getAttribute(element, RESIZABLE_ATTRIBUTE_DIRECTION);
+
+	if (resizableHorizontals.has(attribute as never)) {
+		return [true, false];
+	}
+
+	if (resizableVerticals.has(attribute as never)) {
+		return [false, true];
+	}
+
+	return [true, true];
+}
+
 function getProperties(
 	element: Element,
 	widthProperty: 'maxWidth' | 'minWidth',
@@ -196,12 +213,15 @@ function getState(
 	const options = getValidOptions(element, input);
 
 	const [width, height] = getAndSetDimensions(element, options);
+	const [horizontal, vertical] = getDirections(element);
 
 	return {
 		element,
 		handle,
 		height,
+		horizontal,
 		options,
+		vertical,
 		width,
 		styles: toggleStyles(element, resizableStyles),
 	};
@@ -298,10 +318,18 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 		return;
 	}
 
-	const width = current.state.width + (x - (start?.x ?? 0));
-	const height = current.state.height + (y - (start?.y ?? 0));
+	let width = current.state.horizontal
+		? current.state.width + (x - (start?.x ?? 0))
+		: current.state.width;
 
-	getAndSetDimensions(current.state.element, current.state.options, {height, width});
+	let height = current.state.vertical
+		? current.state.height + (y - (start?.y ?? 0))
+		: current.state.height;
+
+	[width, height] = getAndSetDimensions(current.state.element, current.state.options, {
+		height,
+		width,
+	});
 
 	if (
 		dispatch(current.state.element, 'oui:resizable:resize', {
