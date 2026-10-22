@@ -35,9 +35,9 @@ export interface OuiColorPickerElement {
 }
 
 export class OuiColorPickerElement extends HTMLElement {
-	static formAssociated = true;
+	static readonly formAssociated = true;
 
-	static observedAttributes: string[] = ['disabled', 'required', 'value'];
+	static readonly observedAttributes: string[] = ['disabled', 'required', 'value'];
 
 	/**
 	 * Is the color picker disabled?

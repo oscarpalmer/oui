@@ -1,2 +1,6 @@
 export {createResizable as createOuiResizable} from './resizable.embedded';
-export {type CreateOuiResizableOptions, type OuiResizable} from './resizable.model';
+export {
+	OuiResizableEvent,
+	type CreateOuiResizableOptions,
+	type OuiResizable,
+} from './resizable.model';

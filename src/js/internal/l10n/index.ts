@@ -1,5 +1,8 @@
 import {isPlainObject} from '@oscarpalmer/atoms/is';
 import type {GenericCallback, PlainObject} from '@oscarpalmer/atoms/models';
+import {promises} from '@oscarpalmer/atoms/promise';
+import {isFulfilled} from '@oscarpalmer/atoms/promise/misc';
+import type {FulfilledPromise} from '@oscarpalmer/atoms/promise/models';
 import {
 	L10N_MESSAGE_DEFAULT,
 	L10N_MESSAGE_ITEM_CREATE,
@@ -121,12 +124,14 @@ function getLocalization<
 
 	const language = getLanguage(parameters);
 
-	const values =
-		defaultState == null
-			? instanceState == null
-				? []
-				: [instanceState.values, instanceState.defaults.values.languages]
-			: [defaultState.values];
+	let values: Record<string, Partial<Localizations>>[];
+
+	if (defaultState == null) {
+		values =
+			instanceState == null ? [] : [instanceState.values, instanceState.defaults.values.languages];
+	} else {
+		values = [defaultState.values];
+	}
 
 	const {length} = values;
 
@@ -246,30 +251,30 @@ async function updateLocalizationValues<Localizations extends OuiLocalizationsVa
 	from: Partial<Localizations>,
 ): Promise<number> {
 	const keys = Object.keys(from);
-	const keysLength = keys.length;
+	const {length} = keys;
 
 	const toAsPlainObject = to as PlainObject;
 
 	let count = 0;
 
-	for (let keysIndex = 0; keysIndex < keysLength; keysIndex += 1) {
-		const key = keys[keysIndex];
-		const keyValue = from[key];
+	for (let index = 0; index < length; index += 1) {
+		const key = keys[index];
+		const value = from[key];
 
-		const normalizedKey = key.toLowerCase();
+		const lowercased = key.toLowerCase();
 
-		if (!state.keys.has(normalizedKey)) {
+		if (!state.keys.has(lowercased)) {
 			throw new TypeError(L10N_MESSAGE_ITEM_UPDATE_KEY);
 		}
 
-		if (!isValidLocalization(keyValue)) {
+		if (!isValidLocalization(value)) {
 			throw new TypeError(L10N_MESSAGE_ITEM_UPDATE_VALUE);
 		}
 
-		if (state.keys.has(normalizedKey) && isValidLocalization(keyValue)) {
+		if (state.keys.has(lowercased) && isValidLocalization(value)) {
 			count += 1;
 
-			toAsPlainObject[normalizedKey] = keyValue;
+			toAsPlainObject[lowercased] = value;
 		}
 	}
 
@@ -287,26 +292,36 @@ async function updateLocalizations<Localizations extends OuiLocalizationsValues>
 	const state = localizations[L10N_SYMBOL];
 
 	const languages = Object.keys(values);
-	const languagesLength = languages.length;
+	const {length} = languages;
 
-	let count = 0;
+	const updates: Array<Promise<number>> = [];
 
-	for (let languagesIndex = 0; languagesIndex < languagesLength; languagesIndex += 1) {
-		const language = languages[languagesIndex];
-		const languageValue = values[language];
+	for (let index = 0; index < length; index += 1) {
+		const language = languages[index];
+		const value = values[language];
 
-		if (typeof languageValue !== 'object' || languageValue == null) {
+		if (typeof value !== 'object' || value == null) {
 			throw new TypeError(L10N_MESSAGE_OBJECT_UPDATE);
 		}
 
-		const normalizedLanguage = language.toLowerCase();
+		const lowercased = language.toLowerCase();
 
-		state.values[normalizedLanguage] ??= {};
+		state.values[lowercased] ??= {};
 
-		count += await updateLocalizationValues(state, state.values[normalizedLanguage], languageValue);
+		updates.push(updateLocalizationValues(state, state.values[lowercased], value));
 	}
 
-	return count > 0;
+	return promises(updates).then(results => {
+		let count = 0;
+
+		const {length} = results;
+
+		for (let index = 0; index < length; index += 1) {
+			count += isFulfilled(results[index]) ? (results[index] as FulfilledPromise<number>).value : 0;
+		}
+
+		return count > 0;
+	});
 }
 
 function validateDefaultInstance(value: unknown): asserts value is OuiDefaultLocalizations<{}> {

@@ -110,7 +110,7 @@ export class OuiColorPickerEvent extends Event {
 	}
 }
 
-type OuiColorPickerEventType = 'oui:change' | 'oui:input';
+export type OuiColorPickerEventType = 'oui-color-picker:change' | 'oui-color-picker:input';
 
 type OuiColorPickerEventValue = {
 	hex: string;

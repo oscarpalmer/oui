@@ -82,7 +82,6 @@ function OuiMenu(this: OuiMenu, element: Element, navigable: OuiNavigable): void
 				this.floatable?.update();
 
 				updateNavigableFocus(this.navigable, true);
-			} else {
 			}
 
 			setAria(this.toggle, 'expanded', expanded);

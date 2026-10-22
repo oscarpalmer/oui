@@ -93,11 +93,7 @@ export function setOptionListLimit<
 }
 
 export function setOptionListMultiple(element: Element, value: boolean): void {
-	if (value) {
-		element.setAttribute('multiple', '');
-	} else {
-		element.removeAttribute('multiple');
-	}
+	setAttribute(element, 'multiple', value ? '' : undefined);
 }
 
 function setProperties<State extends PlainObject, Localizations extends OuiLocalizationsValues>(

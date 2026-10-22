@@ -112,7 +112,7 @@ export function filterOptionList<
 	if (update) {
 		filter.value = filter.element.value;
 
-		dispatch(host, 'input');
+		dispatch(host, `${host.tagName.toLowerCase()}:input`);
 	}
 }
 
@@ -126,7 +126,7 @@ export function filterOptionListOption<
 ): HTMLElement | undefined {
 	const {options} = state.component;
 
-	const filterTextContent = textContent ?? false;
+	const filterTextContent = textContent === true;
 
 	const filter = getString(value).toLocaleLowerCase();
 

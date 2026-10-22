@@ -19,6 +19,13 @@ export type OuiResizable = {
 	set(): void;
 };
 
+export class OuiResizableEvent extends CustomEvent<OuiResizableEventDetail> {}
+
+export type OuiResizableEventDetail = {
+	height: number;
+	width: number;
+};
+
 export type OuiResizableDirection = 'horizontal' | 'vertical' | 'x' | 'y';
 
 export type OuiResizableItem = {
@@ -50,6 +57,14 @@ export const RESIZABLE_ATTRIBUTE_HANDLE: string = `${RESIZABLE_ATTRIBUTE}-handle
 export const RESIZABLE_ATTRIBUTE_MAXIMUM: string = `${RESIZABLE_ATTRIBUTE}-maximum`;
 
 export const RESIZABLE_ATTRIBUTE_MINIMUM: string = `${RESIZABLE_ATTRIBUTE}-minimum`;
+
+export const RESIZABLE_EVENT_BEGIN: string = `${RESIZABLE_ATTRIBUTE}:begin`;
+
+export const RESIZABLE_EVENT_CANCEL: string = `${RESIZABLE_ATTRIBUTE}:cancel`;
+
+export const RESIZABLE_EVENT_RESIZE: string = `${RESIZABLE_ATTRIBUTE}:resize`;
+
+export const RESIZABLE_EVENT_END: string = `${RESIZABLE_ATTRIBUTE}:end`;
 
 export const RESIZABLE_MESSAGE_ELEMENT =
 	'The element must be an instance of HTMLElement or SVGElement';

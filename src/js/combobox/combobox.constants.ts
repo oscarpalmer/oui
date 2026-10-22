@@ -20,6 +20,8 @@ export const COMBOBOX_AUTOCOMPLETES: Set<OptionListAutoCompleteType> = new Set([
 	'none',
 ]);
 
+export const COMBOBOX_SELECTOR_SELECTION_ITEM: string = `[${COMBOBOX_ATTRIBUTE_SELECTION_ITEM}]`;
+
 export const COMBOBOX_SYMBOL: unique symbol = Symbol(COMBOBOX_TAGNAME);
 
 const attributeContent = `${COMBOBOX_TAGNAME}-content`;

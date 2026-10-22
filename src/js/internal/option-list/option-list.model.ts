@@ -244,3 +244,17 @@ type OptionListValues = {
 };
 
 // #endregion
+
+// #region Variables
+
+export const OPTION_LIST_PREVIEW_NONE: OptionListPreview = 'none';
+
+export const OPTION_LIST_PREVIEW_SET: OptionListPreview = 'set';
+
+export const OPTION_LIST_PREVIEW_TYPED: OptionListPreview = 'typed';
+
+export const OPTION_LIST_TYPE_AUTOCOMPLETE: OptionListType = 'autocomplete';
+
+export const OPTION_LIST_TYPE_SELECT: OptionListType = 'select';
+
+// #endregion

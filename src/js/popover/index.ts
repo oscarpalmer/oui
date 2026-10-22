@@ -117,10 +117,8 @@ function getState(anchor: HTMLElement, content: HTMLElement): OuiPopoverState {
 					state.floatable?.update();
 
 					content.focus();
-				} else {
-					if (!ignoreFocus) {
-						anchor?.focus();
-					}
+				} else if (!ignoreFocus) {
+					anchor?.focus();
 				}
 
 				setAria(anchor, 'expanded', expanded);

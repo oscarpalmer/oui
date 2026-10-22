@@ -109,8 +109,8 @@
 		"watch": "concurrently \"cd ./demo/public && php -qS localhost:4567 \" \"vp run postcss:watch\" \"vp run css:watch\" \"vp run tsdown\""
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.220",
-		"@oscarpalmer/toretto": "^0.56"
+		"@oscarpalmer/atoms": "^0.221",
+		"@oscarpalmer/toretto": "^0.57"
 	},
 	"devDependencies": {
 		"@vitest/coverage-istanbul": "^5",
@@ -125,7 +125,7 @@
 		"stylelint-config-standard-scss": "^17",
 		"tsdown": "^0.23",
 		"typescript": "^7",
-		"vite-plus": "^1.1"
+		"vite-plus": "^1.2"
 	},
 	"packageManager": "npm@11.12.1"
 }

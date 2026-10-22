@@ -10,6 +10,7 @@ import {copyValue} from '../internal/misc';
 import {
 	COLOR_PICKER_ATTRIBUTE_COPY_ERROR,
 	COLOR_PICKER_ATTRIBUTE_COPY_SUCCESS,
+	COLOR_PICKER_EVENT_INPUT,
 	COLOR_PICKER_EXPRESSION_HEX_PREFIX,
 	COLOR_PICKER_KEYS,
 	COLOR_PICKER_SELECTOR_COPY,
@@ -163,7 +164,7 @@ export function onColorPickerInput(state: OuiColorPickerState): void {
 
 	setColorPickerValues(state, false, anchor.input.value);
 
-	dispatch(host, new OuiColorPickerEvent('oui:input', color.value, valid));
+	dispatch(host, new OuiColorPickerEvent(COLOR_PICKER_EVENT_INPUT, color.value, valid));
 }
 
 export function onColorPickerOpacity(state: OuiColorPickerState, input: HTMLInputElement): void {
@@ -409,7 +410,7 @@ function updateColorPickerCopy(copy: OuiColorPickerCopy, attribute: string): voi
 	copy.timer = setTimeout(() => {
 		copy.timer = undefined;
 
-		setAttribute(button, attribute, undefined);
+		setAttribute(button, attribute);
 	}, styleTime);
 }
 

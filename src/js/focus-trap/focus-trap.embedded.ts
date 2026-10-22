@@ -13,6 +13,7 @@ import {
 	FOCUSTRAP_ATTRIBUTE,
 	FOCUSTRAP_ATTRIBUTE_CONTAIN,
 	FOCUSTRAP_ATTRIBUTE_NOESCAPE,
+	FOCUSTRAP_EVENT_NAME,
 	FOCUSTRAP_EVENT_OPTIONS,
 	FOCUSTRAP_MESSAGE,
 	FOCUSTRAP_SELECTOR,
@@ -257,7 +258,7 @@ function onTab(event: KeyboardEvent): void {
 	if (
 		!(element instanceof HTMLElement) ||
 		instance == null ||
-		dispatch(element, 'oui:focus-trap').defaultPrevented
+		dispatch(element, FOCUSTRAP_EVENT_NAME).defaultPrevented
 	) {
 		return;
 	}
@@ -289,7 +290,7 @@ function setContain(this: OuiFocusTrap, value: unknown) {
 	if (value === true) {
 		setAttribute(element, FOCUSTRAP_ATTRIBUTE_CONTAIN, '');
 	} else if (value === false) {
-		setAttribute(element, FOCUSTRAP_ATTRIBUTE_CONTAIN, undefined);
+		setAttribute(element, FOCUSTRAP_ATTRIBUTE_CONTAIN);
 	}
 }
 
@@ -317,7 +318,7 @@ function setNoEscape(this: OuiFocusTrap, value: boolean) {
 	if (value === true) {
 		setAttribute(element, FOCUSTRAP_ATTRIBUTE_NOESCAPE, '');
 	} else if (value === false) {
-		setAttribute(element, FOCUSTRAP_ATTRIBUTE_NOESCAPE, undefined);
+		setAttribute(element, FOCUSTRAP_ATTRIBUTE_NOESCAPE);
 	}
 }
 

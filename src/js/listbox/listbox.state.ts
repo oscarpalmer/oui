@@ -34,13 +34,13 @@ function createComponentState(element: Element, state: OuiListboxState): OuiList
 	const select = element.querySelector('select');
 
 	if (!(select instanceof HTMLSelectElement)) {
-		throw new Error(listboxMessages.select);
+		throw new TypeError(listboxMessages.select);
 	}
 
 	const label = element.querySelector(`label[for="${select.id}"]`);
 
 	if (!(label instanceof HTMLLabelElement)) {
-		throw new Error(listboxMessages.label);
+		throw new TypeError(listboxMessages.label);
 	}
 
 	element.id = select.id;

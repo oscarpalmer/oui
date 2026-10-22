@@ -10,7 +10,10 @@ import {getAttributeValue, getBooleanAriaValue} from '../internal/misc';
 import {OPTION_LIST_TYPES} from '../internal/option-list/option-list.constants';
 import {setOptionListValues} from '../internal/option-list/option-list.data';
 import {generateOptionListIds} from '../internal/option-list/option-list.misc';
-import type {OptionListCallbacks} from '../internal/option-list/option-list.model';
+import {
+	OPTION_LIST_TYPE_SELECT,
+	type OptionListCallbacks,
+} from '../internal/option-list/option-list.model';
 import {initializeOptionListState} from '../internal/option-list/option-list.state';
 import {comboboxAttributes, comboboxMessages} from './combobox.constants';
 import {createComboboxAnchor, createComboboxContent} from './combobox.dom';
@@ -41,13 +44,13 @@ function createComponentState(element: Element, state: OuiComboboxState): OuiCom
 	const select = element.querySelector('select');
 
 	if (!(select instanceof HTMLSelectElement) || select.id === '') {
-		throw new Error(comboboxMessages.select);
+		throw new TypeError(comboboxMessages.select);
 	}
 
 	const label = element.querySelector(`label[for="${select.id}"]`);
 
 	if (!(label instanceof HTMLLabelElement)) {
-		throw new Error(comboboxMessages.label);
+		throw new TypeError(comboboxMessages.label);
 	}
 
 	element.id = select.id;
@@ -59,10 +62,10 @@ function createComponentState(element: Element, state: OuiComboboxState): OuiCom
 
 	const id = getComboboxId();
 	const type = multiple
-		? 'select'
-		: getAttributeValue(element, 'type', OPTION_LIST_TYPES, 'select');
+		? OPTION_LIST_TYPE_SELECT
+		: getAttributeValue(element, 'type', OPTION_LIST_TYPES, OPTION_LIST_TYPE_SELECT);
 
-	const autocomplete = getComboboxAutoComplete(element, type === 'select');
+	const autocomplete = getComboboxAutoComplete(element, type === OPTION_LIST_TYPE_SELECT);
 
 	setAttributes(element, {
 		autocomplete: autocomplete.value,
@@ -202,9 +205,7 @@ export function onDetachCombobox(state: OuiComboboxState): void {
 
 	const anchor = state.component.anchor.container ?? state.component.anchor.element;
 
-	anchor.insertAdjacentElement('beforebegin', select);
-
-	anchor.remove();
+	anchor.replaceWith(select);
 	content.remove();
 
 	label.element.htmlFor = select.id;

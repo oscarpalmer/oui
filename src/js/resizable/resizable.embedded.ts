@@ -1,5 +1,4 @@
 import {isPlainObject} from '@oscarpalmer/atoms/is';
-import type {} from '@oscarpalmer/atoms/models';
 import {getNumber} from '@oscarpalmer/atoms/number';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {dispatch, getEventPosition, on} from '@oscarpalmer/toretto/event';
@@ -10,10 +9,15 @@ import {setStyles, toggleStyles} from '@oscarpalmer/toretto/style';
 import {supportsTouch} from '@oscarpalmer/toretto/touch';
 import {attributable} from '../internal/attributable';
 import {
+	OuiResizableEvent,
 	RESIZABLE_ATTRIBUTE,
 	RESIZABLE_ATTRIBUTE_DIRECTION,
 	RESIZABLE_ATTRIBUTE_MAXIMUM,
 	RESIZABLE_ATTRIBUTE_MINIMUM,
+	RESIZABLE_EVENT_BEGIN,
+	RESIZABLE_EVENT_CANCEL,
+	RESIZABLE_EVENT_END,
+	RESIZABLE_EVENT_RESIZE,
 	RESIZABLE_MESSAGE_ELEMENT,
 	RESIZABLE_MESSAGE_HANDLE,
 	RESIZABLE_MESSAGE_HEIGHT,
@@ -59,7 +63,7 @@ function addResizable(
 			return;
 		}
 
-		const state = getState(element, handle, options);
+		const state = createState(element, handle, options);
 
 		// @ts-expect-error All good, no worries :-)
 		const instance = new OuiResizable(state);
@@ -87,7 +91,15 @@ function cancelResize(item?: OuiResizableItem): void {
 
 	resetResizableStyles();
 
-	dispatch(item.state.element, 'oui:resizable:cancel');
+	dispatch(
+		item.state.element,
+		new OuiResizableEvent(RESIZABLE_EVENT_CANCEL, {
+			detail: {
+				height: item.state.height,
+				width: item.state.width,
+			},
+		}),
+	);
 }
 
 /**
@@ -111,6 +123,30 @@ export function createResizable(
 	return addResizable(element, options ?? {})!;
 }
 
+function createState(
+	element: Element,
+	handle: Element,
+	input?: CreateOuiResizableOptions,
+): OuiResizableState {
+	setAttribute(element, RESIZABLE_ATTRIBUTE, '');
+
+	const options = getValidOptions(element, input);
+
+	const [width, height] = getAndSetDimensions(element, options);
+	const [horizontal, vertical] = getDirections(element);
+
+	return {
+		element,
+		handle,
+		height,
+		horizontal,
+		options,
+		vertical,
+		width,
+		styles: toggleStyles(element, resizableStyles),
+	};
+}
+
 function destroyResizable(this: OuiResizable): void {
 	const state = this[RESIZABLE_SYMBOL];
 
@@ -125,18 +161,20 @@ function getAndSetDimensions(
 	options: Required<CreateOuiResizableOptions>,
 	input?: Pick<DOMRect, 'height' | 'width'>,
 ): [number, number] {
+	const {maximumHeight, maximumWidth, minimumHeight, minimumWidth} = options;
+
 	let {height, width} = input ?? element.getBoundingClientRect();
 
-	if (options.maximumWidth > -1 && width > options.maximumWidth) {
-		width = options.maximumWidth;
-	} else if (options.minimumWidth > -1 && width < options.minimumWidth) {
-		width = options.minimumWidth;
+	if (maximumWidth > -1 && width > maximumWidth) {
+		width = maximumWidth;
+	} else if (minimumWidth > -1 && width < minimumWidth) {
+		width = minimumWidth;
 	}
 
-	if (options.maximumHeight > -1 && height > options.maximumHeight) {
-		height = options.maximumHeight;
-	} else if (options.minimumHeight > -1 && height < options.minimumHeight) {
-		height = options.minimumHeight;
+	if (maximumHeight > -1 && height > maximumHeight) {
+		height = maximumHeight;
+	} else if (minimumHeight > -1 && height < minimumHeight) {
+		height = minimumHeight;
 	}
 
 	if (element.checkVisibility()) {
@@ -177,15 +215,8 @@ function getRestrictions(
 	maximum: string | [unknown, unknown],
 	minimum: string | [unknown, unknown],
 ): Required<CreateOuiResizableOptions> {
-	const [maximumWidth, maximumHeight] = getXAndY.apply(
-		null,
-		typeof maximum === 'string' ? [maximum] : maximum,
-	);
-
-	const [minimumWidth, minimumHeight] = getXAndY.apply(
-		null,
-		typeof minimum === 'string' ? [minimum] : minimum,
-	);
+	const [maximumWidth, maximumHeight] = getXAndY(maximum);
+	const [minimumWidth, minimumHeight] = getXAndY(minimum);
 
 	if (maximumWidth > -1 && minimumWidth > -1 && maximumWidth <= minimumWidth) {
 		throw new Error(RESIZABLE_MESSAGE_WIDTH);
@@ -200,30 +231,6 @@ function getRestrictions(
 		maximumWidth,
 		minimumHeight,
 		minimumWidth,
-	};
-}
-
-function getState(
-	element: Element,
-	handle: Element,
-	input?: CreateOuiResizableOptions,
-): OuiResizableState {
-	setAttribute(element, RESIZABLE_ATTRIBUTE, '');
-
-	const options = getValidOptions(element, input);
-
-	const [width, height] = getAndSetDimensions(element, options);
-	const [horizontal, vertical] = getDirections(element);
-
-	return {
-		element,
-		handle,
-		height,
-		horizontal,
-		options,
-		vertical,
-		width,
-		styles: toggleStyles(element, resizableStyles),
 	};
 }
 
@@ -247,7 +254,16 @@ function getValidOptions(
 	};
 }
 
-function getXAndY(first: unknown, second?: unknown): [number, number] {
+function getXAndY(value: unknown): [number, number] {
+	let first: unknown;
+	let second: unknown;
+
+	if (Array.isArray(value)) {
+		[first, second] = value;
+	} else {
+		first = value;
+	}
+
 	const [x, y] = typeof first === 'string' && second == null ? first.split(',') : [first, second];
 
 	let xAsNumber = typeof x === 'string' ? Number.parseFloat(x) : getNumber(x);
@@ -296,7 +312,14 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		event.preventDefault();
 	}
 
-	if (dispatch(element!, 'oui:resizable:begin').defaultPrevented) {
+	const resize = new OuiResizableEvent(RESIZABLE_EVENT_BEGIN, {
+		detail: {
+			height: stored.state.height,
+			width: stored.state.width,
+		},
+	});
+
+	if (dispatch(element!, resize).defaultPrevented) {
 		return;
 	}
 
@@ -331,20 +354,31 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 		width,
 	});
 
-	if (
-		dispatch(current.state.element, 'oui:resizable:resize', {
-			detail: {
-				height,
-				width,
-			},
-		}).defaultPrevented
-	) {
+	const resize = new OuiResizableEvent(RESIZABLE_EVENT_RESIZE, {
+		detail: {
+			height,
+			width,
+		},
+	});
+
+	if (dispatch(current.state.element, resize).defaultPrevented) {
 		cancelResize(current);
 	}
 }
 
 function onPointerup(): void {
-	if (current == null || dispatch(current.state.element, 'oui:resizable:end').defaultPrevented) {
+	if (current == null) {
+		return;
+	}
+
+	const resize = new OuiResizableEvent(RESIZABLE_EVENT_END, {
+		detail: {
+			height: current.state.height,
+			width: current.state.width,
+		},
+	});
+
+	if (dispatch(current.state.element, resize).defaultPrevented) {
 		cancelResize(current);
 
 		return;

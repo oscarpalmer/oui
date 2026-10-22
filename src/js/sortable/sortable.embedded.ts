@@ -36,6 +36,8 @@ import {
 	SORTABLE_ATTRIBUTE_PLACEHOLDER_POSITION,
 	SORTABLE_ATTRIBUTE_VERTICAL,
 	SORTABLE_CONTAINERS,
+	SORTABLE_EVENT_END,
+	SORTABLE_EVENT_PLACEHOLDER,
 	SORTABLE_MESSAGE,
 	SORTABLE_SELECTOR_ITEM,
 	sortablePlaceholder,
@@ -298,12 +300,12 @@ function onEnd(
 		cancelable: true,
 	};
 
-	const dispatchedFrom = dispatch(item.instance.element, 'sortable:end', options);
+	const dispatchedFrom = dispatch(item.instance.element, SORTABLE_EVENT_END, options);
 
 	let dispatchedTo: CustomEvent | undefined;
 
 	if (item.instance !== instance && instance != null) {
-		dispatchedTo = dispatch(instance.element, 'sortable:end', options);
+		dispatchedTo = dispatch(instance.element, SORTABLE_EVENT_END, options);
 	}
 
 	setTimeout(() => {
@@ -402,7 +404,7 @@ function setPlaceholder(item: OuiDraggableItem<OuiSortableState>, origin: Elemen
 
 	updatePlaceholder(item, element);
 
-	const dispatched = dispatch(item.instance.element, 'sortable:placeholder', {
+	const dispatched = dispatch(item.instance.element, SORTABLE_EVENT_PLACEHOLDER, {
 		detail: {
 			origin,
 			parent: item.instance.element,

@@ -1,3 +1,5 @@
+import {min} from '@oscarpalmer/atoms/math';
+import {getNumber} from '@oscarpalmer/atoms/number';
 import {getAria, setAria} from '@oscarpalmer/toretto/aria';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {createElement} from '@oscarpalmer/toretto/create';
@@ -25,7 +27,7 @@ export interface OuiTabsElement {
 }
 
 export class OuiTabsElement extends HTMLElement {
-	static observedAttributes: string[] = ['active'];
+	static readonly observedAttributes: string[] = ['active'];
 
 	get active(): number {
 		return this[TABS_SYMBOL].component?.active ?? 0;
@@ -52,13 +54,8 @@ export class OuiTabsElement extends HTMLElement {
 	}
 
 	attributeChangedCallback(name: string, _: string | null, value: string | null): void {
-		switch (name) {
-			case 'active':
-				setActive(this[TABS_SYMBOL], value);
-				break;
-
-			default:
-				break;
+		if (name === 'active') {
+			setActive(this[TABS_SYMBOL], value);
 		}
 	}
 
@@ -241,10 +238,10 @@ function getActive(element: OuiTabsElement, max: number): number {
 	let index = 0;
 
 	if (attribute != null) {
-		const value = Number.parseInt(attribute, 10);
+		const value = getNumber(attribute);
 
 		if (!Number.isNaN(value) && value >= 0) {
-			index = value > max ? max : value;
+			index = min([value, max]);
 		}
 	}
 
@@ -385,12 +382,12 @@ function setActive(state: OuiTabsState, value: unknown): void {
 	let index: number | undefined;
 
 	if (typeof value === 'number' && !Number.isNaN(value) && value >= 0) {
-		index = value > max ? max : value;
+		index = min([value, max]);
 	} else if (typeof value === 'string') {
 		const parsed = Number.parseInt(value, 10);
 
 		if (!Number.isNaN(parsed) && parsed >= 0) {
-			index = parsed > max ? max : parsed;
+			index = min([parsed, max]);
 		}
 	}
 

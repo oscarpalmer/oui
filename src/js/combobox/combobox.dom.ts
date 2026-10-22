@@ -9,10 +9,13 @@ import {
 	createOptionListMessage,
 	createOptionListValueLabel,
 } from '../internal/option-list/option-list.dom';
-import type {
-	CreateOptionListContent,
-	CreateOptionListContentParameters,
-	OptionListPreview,
+import {
+	OPTION_LIST_PREVIEW_SET,
+	OPTION_LIST_PREVIEW_TYPED,
+	OPTION_LIST_TYPE_AUTOCOMPLETE,
+	type CreateOptionListContent,
+	type CreateOptionListContentParameters,
+	type OptionListPreview,
 } from '../internal/option-list/option-list.model';
 import {
 	COMBOBOX_ATTRIBUTE_ANCHOR,
@@ -51,7 +54,7 @@ export function createComboboxAnchor(parameters: CreateOptionListContentParamete
 	let element: HTMLElement;
 	let selection: OuiComboboxSelection | undefined;
 
-	if (parameters.type === 'autocomplete') {
+	if (parameters.type === OPTION_LIST_TYPE_AUTOCOMPLETE) {
 		element = createOptionListInput(parameters, select.selectedOptions[0]?.textContent ?? '');
 	} else {
 		({container, element, selection} = createComboboxButton(parameters));
@@ -265,7 +268,7 @@ export function updateComboboxAutocomplete(
 	const content = active?.textContent ?? filter.element.value;
 
 	if (
-		preview === 'typed' &&
+		preview === OPTION_LIST_PREVIEW_TYPED &&
 		!content.toLocaleLowerCase().startsWith(filter.element.value.toLocaleLowerCase())
 	) {
 		return;
@@ -275,11 +278,11 @@ export function updateComboboxAutocomplete(
 		const contentLength = content.length;
 		const filterLength = filter.element.value.length;
 
-		if (preview === 'set' || preview === 'typed') {
+		if (preview === OPTION_LIST_PREVIEW_SET || preview === OPTION_LIST_PREVIEW_TYPED) {
 			anchor.element.value = content;
 
 			anchor.element.setSelectionRange(
-				preview === 'typed' ? filterLength : contentLength,
+				preview === OPTION_LIST_PREVIEW_TYPED ? filterLength : contentLength,
 				contentLength,
 			);
 		}

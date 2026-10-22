@@ -66,7 +66,7 @@ export function onListboxFilter(
 	_: boolean,
 	active?: Element,
 ): void {
-	updateOptionListPreview(preview, state, active);
+	updateOptionListPreview(preview, state, active as HTMLElement);
 }
 
 function onListboxInput(event: InputEvent): void {

@@ -85,6 +85,8 @@ export const FOCUSTRAP_ATTRIBUTE_CONTAIN: string = `${FOCUSTRAP_ATTRIBUTE}-conta
 
 export const FOCUSTRAP_ATTRIBUTE_NOESCAPE: string = `${FOCUSTRAP_ATTRIBUTE}-noescape`;
 
+export const FOCUSTRAP_EVENT_NAME: string = `${FOCUSTRAP_ATTRIBUTE}:focus`;
+
 export const FOCUSTRAP_EVENT_OPTIONS: AddEventListenerOptions = {
 	capture: true,
 	passive: false,

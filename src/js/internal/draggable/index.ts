@@ -22,6 +22,7 @@ import {
 	draggableStyles,
 	draggableStyleToggler,
 	draggableVerticals,
+	OuiDraggableEvent,
 	type CreateOuiDraggableOptions,
 	type OuiDraggable,
 	type OuiDraggableBound,
@@ -62,11 +63,14 @@ function cancelDrag(item?: OuiDraggableItem<{}>): void {
 
 	item.state.options.drag.onCancel?.(item);
 
-	dispatch(item.state.element, `oui:${item.state.name}:cancel`, {
-		detail: {
-			element: item.state.options.getOrigin(),
-		},
-	});
+	dispatch(
+		item.state.element,
+		new OuiDraggableEvent(`oui-${item.state.name}:cancel`, {
+			detail: {
+				element: item.state.options.getOrigin()!,
+			},
+		}),
+	);
 
 	reset();
 }
@@ -246,7 +250,7 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 	if (!isMovable) {
 		element = findAncestor(event, DRAGGABLE_SELECTOR_SORTABLE_ITEM);
 
-		if (element == null || element.parentElement !== container) {
+		if (element?.parentElement !== container) {
 			return;
 		}
 	}
@@ -280,14 +284,16 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 	draggableGlobals.offset = item.state.options.position.getOffset(item, element, position);
 	draggableGlobals.original = item.state.options.position.getOriginal(item, position);
 
-	if (
-		dispatch(item.state.element, `oui:${item.state.name}:begin`, {
-			detail: {
-				element,
-				position: {...draggableGlobals.original},
+	const dispatched = new OuiDraggableEvent(`oui-${item.state.name}:begin`, {
+		detail: {
+			element,
+			position: {
+				original: {...draggableGlobals.original},
 			},
-		}).defaultPrevented
-	) {
+		},
+	});
+
+	if (dispatch(item.state.element, dispatched).defaultPrevented) {
 		item.state.options.drag.onCancel?.(item);
 
 		reset();
@@ -326,16 +332,17 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 		setStyle(draggableGlobals.element.node, 'inset', `${next.y}px auto auto ${next.x}px`);
 	}
 
-	const detail = current.state.options.drag.onMove(event, current, {
-		calculated: next,
-		original: position,
+	const dispatched = new OuiDraggableEvent(`oui-${current.state.name}:move`, {
+		detail: {
+			element: current.state.options.getOrigin()!,
+			position: {
+				next,
+				original: position,
+			},
+		},
 	});
 
-	if (
-		dispatch(current.state.element, `oui:${current.state.name}:move`, {
-			detail,
-		}).defaultPrevented
-	) {
+	if (dispatch(current.state.element, dispatched).defaultPrevented) {
 		cancelDrag(current);
 	}
 }

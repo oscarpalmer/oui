@@ -207,7 +207,7 @@ export function initializeColorPickerComponent(
 	const label = element.querySelector(`label[for="${input.id}"]`);
 
 	if (!(label instanceof HTMLLabelElement)) {
-		throw new Error(COLOR_PICKER_MESSAGE_LABEL);
+		throw new TypeError(COLOR_PICKER_MESSAGE_LABEL);
 	}
 
 	element.id = input.id;

@@ -47,6 +47,10 @@ export const SORTABLE_ATTRIBUTE_VERTICAL: string = `${SORTABLE_ATTRIBUTE}-vertic
 
 export const SORTABLE_CONTAINERS: Map<HTMLElement, Set<OuiSortable>> = new Map();
 
+export const SORTABLE_EVENT_END: string = `${SORTABLE_ATTRIBUTE}:end`;
+
+export const SORTABLE_EVENT_PLACEHOLDER: string = `${SORTABLE_ATTRIBUTE}:placeholder`;
+
 export const SORTABLE_MESSAGE = 'The element must be an instance of HTMLElement or SVGElement';
 
 export const SORTABLE_SELECTOR: string = `[${SORTABLE_ATTRIBUTE}]`;

@@ -35,7 +35,7 @@ export function updateOptionListForm<
 	updateOptionListValidity(state);
 
 	if (emit ?? true) {
-		dispatch(host, 'oui:change');
+		dispatch(host, `${host.tagName.toLowerCase()}:change`);
 	}
 }
 

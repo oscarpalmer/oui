@@ -1,7 +1,7 @@
 import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {clamp} from '@oscarpalmer/atoms/number';
 import type {OuiLocalizationsValues} from '../l10n/l10n.model';
-import {LISTBOX_KEYS_NAVIGATION, OPTION_LIST_KEYS_SELECTION} from './option-list.constants';
+import {OPTION_LIST_KEYS_NAVIGATION, OPTION_LIST_KEYS_SELECTION} from './option-list.constants';
 import {getOptionListVisibleOptions} from './option-list.misc';
 import type {OptionListPreview, OptionListState} from './option-list.model';
 
@@ -58,7 +58,7 @@ export function processOptionListKeydown<
 			break;
 		}
 
-		case LISTBOX_KEYS_NAVIGATION.has(event.key): {
+		case OPTION_LIST_KEYS_NAVIGATION.has(event.key): {
 			if (!disabled) {
 				onNavigation(event, state);
 			}
@@ -133,7 +133,7 @@ function onNavigation<State extends PlainObject, Localizations extends OuiLocali
 		preview = 'none';
 	}
 
-	callbacks.keydown.onNavigation(preview, state, next ?? active ?? visible[0]);
+	callbacks.keydown.onNavigation(preview, state, (next ?? active ?? visible[0]) as HTMLElement);
 }
 
 // #endregion

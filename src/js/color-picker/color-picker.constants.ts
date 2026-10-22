@@ -1,7 +1,11 @@
 import {round} from '@oscarpalmer/atoms/math';
 import {createDefaultLocalizations} from '../internal/l10n/index';
 import type {OuiDefaultLocalizations} from '../internal/l10n/l10n.model';
-import type {OuiColorPickerLocalizations, OuiColorPickerOutputType} from './color-picker.model';
+import type {
+	OuiColorPickerEventType,
+	OuiColorPickerLocalizations,
+	OuiColorPickerOutputType,
+} from './color-picker.model';
 
 // #region Variables
 
@@ -22,6 +26,10 @@ export const COLOR_PICKER_ATTRIBUTE_OUTPUT_INPUT: string = `${COLOR_PICKER_TAGNA
 export const COLOR_PICKER_ATTRIBUTE_WELL: string = `${COLOR_PICKER_TAGNAME}-well`;
 
 export const COLOR_PICKER_ATTRIBUTE_WELL_KNOB: string = `${COLOR_PICKER_TAGNAME}-well-knob`;
+
+export const COLOR_PICKER_EVENT_CHANGE: OuiColorPickerEventType = `${COLOR_PICKER_TAGNAME}:change`;
+
+export const COLOR_PICKER_EVENT_INPUT: OuiColorPickerEventType = `${COLOR_PICKER_TAGNAME}:input`;
 
 export const COLOR_PICKER_EXPRESSION_HEX_PREFIX: RegExp = /^#/;
 

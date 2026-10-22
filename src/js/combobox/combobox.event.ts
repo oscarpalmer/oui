@@ -12,9 +12,13 @@ import {
 } from '../internal/option-list/option-list.data';
 import {updateOptionListPreview} from '../internal/option-list/option-list.dom';
 import {processOptionListKeydown} from '../internal/option-list/option-list.event';
-import type {OptionListPreview} from '../internal/option-list/option-list.model';
 import {
-	COMBOBOX_ATTRIBUTE_SELECTION_ITEM,
+	OPTION_LIST_PREVIEW_SET,
+	OPTION_LIST_TYPE_SELECT,
+	type OptionListPreview,
+} from '../internal/option-list/option-list.model';
+import {
+	COMBOBOX_SELECTOR_SELECTION_ITEM,
 	COMBOBOX_SYMBOL,
 	COMBOBOX_TAGNAME,
 	comboboxSelectors,
@@ -59,7 +63,7 @@ export function onComboboxClickContent(event: PointerEvent, state: OuiComboboxSt
 	if (!(option instanceof HTMLElement)) {
 		filter.element.focus();
 	} else if (readonly) {
-		onComboboxPreview('set', state, option);
+		onComboboxPreview(OPTION_LIST_PREVIEW_SET, state, option);
 	} else {
 		toggleOptionListOption(state, option);
 	}
@@ -79,46 +83,52 @@ function onComboboxClickDocument(event: PointerEvent): void {
 		return;
 	}
 
-	const {disabled, floatable, options, readonly} = state.component;
-
 	const label = findAncestor(event, 'label');
 
 	if (label != null) {
-		if (label === state.component.label.element && combobox.type === 'select') {
-			state.component.anchor.element.focus();
-
-			if (!disabled) {
-				floatable.show();
-			}
-		}
+		onComboboxClickLabel(state, label);
 
 		return;
 	}
 
-	const selection = findAncestor(event, `[${COMBOBOX_ATTRIBUTE_SELECTION_ITEM}]`);
+	const selection = findAncestor(event, COMBOBOX_SELECTOR_SELECTION_ITEM);
 
 	if (selection != null) {
-		const option = options.selected.find(
-			option => option.id === getData(selection, 'option', false),
-		);
-
-		if (disabled) {
-			state.component.anchor.element.focus();
-		} else if (readonly) {
-			updateComboboxTabindices(state, option);
-		} else {
-			toggleOptionListOption(state, option);
-		}
+		onComboboxClickSelection(state, selection);
 
 		return;
 	}
 
 	const anchor = findAncestor(event, comboboxSelectors.anchor);
 
-	if (anchor != null && !disabled) {
-		floatable.show();
+	if (anchor != null && !state.component.disabled) {
+		state.component.floatable.show();
+	}
+}
 
-		return;
+function onComboboxClickLabel(state: OuiComboboxState, target: HTMLLabelElement): void {
+	const {anchor, disabled, floatable, label, type} = state.component;
+
+	if (target === label.element && type === OPTION_LIST_TYPE_SELECT) {
+		anchor.element.focus();
+
+		if (!disabled) {
+			floatable.show();
+		}
+	}
+}
+
+function onComboboxClickSelection(state: OuiComboboxState, selection: Element): void {
+	const {disabled, options, readonly} = state.component;
+
+	const option = options.selected.find(option => option.id === getData(selection, 'option', false));
+
+	if (disabled) {
+		state.component.anchor.element.focus();
+	} else if (readonly) {
+		updateComboboxTabindices(state, option);
+	} else {
+		toggleOptionListOption(state, option);
 	}
 }
 
@@ -154,7 +164,7 @@ export function onComboboxFilter(
 			emit: (emit ?? true) && update,
 		});
 	} else {
-		updateOptionListPreview(preview, state, active);
+		updateOptionListPreview(preview, state, active as HTMLElement);
 	}
 }
 
@@ -170,7 +180,7 @@ export function onComboboxFocusout(event: FocusEvent): void {
 			component == null ||
 			component.disabled ||
 			component.readonly ||
-			component.type === 'select' ||
+			component.type === OPTION_LIST_TYPE_SELECT ||
 			component.host === document.activeElement ||
 			component.host.contains(document.activeElement)
 		) {
@@ -192,7 +202,7 @@ export function onComboboxInput(event: InputEvent): void {
 	const combobox = findAncestor(event, COMBOBOX_TAGNAME);
 	const state = combobox?.[COMBOBOX_SYMBOL];
 
-	if (combobox != null && state != null && event.target === state.component.filter.element) {
+	if (combobox != null && event.target === state?.component.filter.element) {
 		filterOptionList(event.inputType, state);
 	}
 }
@@ -307,7 +317,7 @@ export function onComboboxNavigation(
 	state: OuiComboboxState,
 	active?: Element,
 ): void {
-	updateOptionListPreview(preview, state, active);
+	updateOptionListPreview(preview, state, active as HTMLElement);
 }
 
 export function onComboboxSelection(state: OuiComboboxState, hasSelection?: boolean): void {
@@ -364,15 +374,8 @@ export function skipComboboxNavigation(state: OuiComboboxState): boolean {
 // #region Initialization
 
 on(document, 'click', onComboboxClickDocument);
-
 on(document, 'focusout', onComboboxFocusout);
-
-on(document, 'input', onComboboxInput, {
-	passive: false,
-});
-
-on(document, 'keydown', onComboboxKeydown, {
-	passive: false,
-});
+on(document, 'input', onComboboxInput, {passive: false});
+on(document, 'keydown', onComboboxKeydown, {passive: false});
 
 // #endregion

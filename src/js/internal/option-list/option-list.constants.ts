@@ -9,7 +9,7 @@ export const OPTION_LIST_KEYS_ACTIVATION: Set<string> = new Set([
 	'Enter',
 ]);
 
-export const LISTBOX_KEYS_NAVIGATION: Set<string> = new Set([
+export const OPTION_LIST_KEYS_NAVIGATION: Set<string> = new Set([
 	'ArrowDown',
 	'ArrowUp',
 	'PageDown',

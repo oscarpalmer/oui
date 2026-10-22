@@ -42,6 +42,8 @@ export const MOVABLE_ATTRIBUTE_MOVING: string = `${MOVABLE_ATTRIBUTE}-moving`;
 
 export const MOVABLE_CONTAINERS: Map<Element, Set<OuiMovable>> = new Map();
 
+export const MOVABLE_EVENT_END: string = `${MOVABLE_ATTRIBUTE}:end`;
+
 export const MOVABLE_MESSAGE = 'The element must be an instance of HTMLElement or SVGElement';
 
 export const MOVABLE_MOVED: Set<OuiMovable> = new Set();

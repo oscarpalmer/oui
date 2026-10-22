@@ -41,6 +41,18 @@ export type OuiDragEnd<State extends PlainObject> = (
 	reset: () => void,
 ) => void;
 
+export class OuiDraggableEvent extends CustomEvent<OuiDraggableEventDetail> {}
+
+export type OuiDraggableEventDetail = {
+	element: Element;
+	position?: OuiDraggableEventDetailPosition;
+};
+
+type OuiDraggableEventDetailPosition = {
+	next?: EventPosition;
+	original: EventPosition;
+};
+
 export type OuiDragMove<State extends PlainObject> = (
 	event: MouseEvent | TouchEvent,
 	item: OuiDraggableItem<State>,

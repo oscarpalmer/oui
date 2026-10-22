@@ -28,9 +28,9 @@ export interface OuiListboxElement {
 }
 
 export class OuiListboxElement extends HTMLElement {
-	static formAssociated = true;
+	static readonly formAssociated = true;
 
-	static observedAttributes: string[] = ['max', 'min', 'required', 'value'];
+	static readonly observedAttributes: string[] = ['max', 'min', 'required', 'value'];
 
 	/**
 	 * Is the listbox disabled?

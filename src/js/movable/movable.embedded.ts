@@ -29,6 +29,7 @@ import {
 	MOVABLE_ATTRIBUTE_DIRECTION,
 	MOVABLE_ATTRIBUTE_MOVING,
 	MOVABLE_CONTAINERS,
+	MOVABLE_EVENT_END,
 	MOVABLE_MESSAGE,
 	MOVABLE_MOVED,
 	MOVABLE_SELECTOR_HANDLE,
@@ -204,7 +205,7 @@ function onEnd(
 	}
 
 	if (
-		dispatch(state.element, 'oui:movable:end', {
+		dispatch(state.element, MOVABLE_EVENT_END, {
 			detail: {
 				from: {...draggableGlobals.original},
 				to: getEventPosition(event),
