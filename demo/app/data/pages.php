@@ -19,6 +19,7 @@ $pages = [
 	'content' => getPage('content', 'Content'),
 	'dialog' => getPage('dialog', 'Dialog'),
 	'form' => getPage('form', 'Form'),
+	'grid' => getPage('grid', 'Grid'),
 	'icon' => getPage('icon', 'Icon'),
 	'listbox' => getPage('listbox', 'Listbox'),
 	'menus' => getPage('menus', 'Menus'),

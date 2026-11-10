@@ -6,11 +6,10 @@ import {findAncestor} from '@oscarpalmer/toretto/find';
 import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {toggleStyles} from '@oscarpalmer/toretto/style';
 import {supportsTouch} from '@oscarpalmer/toretto/touch';
-import {copyValue} from '../internal/misc';
+import {copyValue, ignoreEvent} from '../internal/misc';
 import {
 	COLOR_PICKER_ATTRIBUTE_COPY_ERROR,
 	COLOR_PICKER_ATTRIBUTE_COPY_SUCCESS,
-	COLOR_PICKER_EVENT_INPUT,
 	COLOR_PICKER_EXPRESSION_HEX_PREFIX,
 	COLOR_PICKER_KEYS,
 	COLOR_PICKER_SELECTOR_COPY,
@@ -164,7 +163,7 @@ export function onColorPickerInput(state: OuiColorPickerState): void {
 
 	setColorPickerValues(state, false, anchor.input.value);
 
-	dispatch(host, new OuiColorPickerEvent(COLOR_PICKER_EVENT_INPUT, color.value, valid));
+	dispatch(host, new OuiColorPickerEvent('input', color.value, valid));
 }
 
 export function onColorPickerOpacity(state: OuiColorPickerState, input: HTMLInputElement): void {
@@ -325,15 +324,7 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 function onPointerdown(event: MouseEvent | TouchEvent): void {
-	if (
-		event.altKey ||
-		event.ctrlKey ||
-		event.metaKey ||
-		event.shiftKey ||
-		(supportsTouch.value
-			? event.type === 'mousedown'
-			: event.type === 'touchstart' || (event as MouseEvent).button !== 0)
-	) {
+	if (ignoreEvent(event, supportsTouch.value)) {
 		return;
 	}
 

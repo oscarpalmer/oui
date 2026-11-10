@@ -384,7 +384,7 @@ function setActive(state: OuiTabsState, value: unknown): void {
 	if (typeof value === 'number' && !Number.isNaN(value) && value >= 0) {
 		index = min([value, max]);
 	} else if (typeof value === 'string') {
-		const parsed = Number.parseInt(value, 10);
+		const parsed = getNumber(value);
 
 		if (!Number.isNaN(parsed) && parsed >= 0) {
 			index = min([parsed, max]);

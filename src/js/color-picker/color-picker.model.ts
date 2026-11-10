@@ -88,7 +88,7 @@ export class OuiColorPickerEvent extends Event {
 	readonly value: OuiColorPickerEventValue;
 
 	constructor(
-		type: OuiColorPickerEventType,
+		type: 'change' | 'input',
 		color: Color,
 		readonly valid: boolean,
 	) {
@@ -109,8 +109,6 @@ export class OuiColorPickerEvent extends Event {
 		};
 	}
 }
-
-export type OuiColorPickerEventType = 'oui-color-picker:change' | 'oui-color-picker:input';
 
 type OuiColorPickerEventValue = {
 	hex: string;

@@ -8,6 +8,7 @@ import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {setStyle, setStyles, toggleStyles} from '@oscarpalmer/toretto/style';
 import {supportsTouch} from '@oscarpalmer/toretto/touch';
 import {MOVABLE_ATTRIBUTE} from '../../movable/movable.model';
+import {ignoreEvent} from '../misc';
 import {
 	DRAGGABLE_KEY_ESCAPE,
 	DRAGGABLE_SELECTOR,
@@ -205,15 +206,7 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 function onPointerdown(event: MouseEvent | TouchEvent): void {
-	if (
-		event.altKey ||
-		event.ctrlKey ||
-		event.metaKey ||
-		event.shiftKey ||
-		(supportsTouch.value
-			? event.type === 'mousedown'
-			: event.type === 'touchstart' || (event as MouseEvent).button !== 0)
-	) {
+	if (ignoreEvent(event, supportsTouch.value)) {
 		return;
 	}
 

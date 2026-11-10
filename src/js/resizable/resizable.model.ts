@@ -7,15 +7,19 @@ export type CreateOuiResizableOptions = {
 	maximumWidth?: number;
 	minimumHeight?: number;
 	minimumWidth?: number;
+	onBegin?: (element: Element, size: OuiResizableEventDetail, event: OuiResizableEvent) => void;
+	onCancel?: (element: Element, size: OuiResizableEventDetail, event: OuiResizableEvent) => void;
+	onEnd?: (element: Element, size: OuiResizableEventDetail, event: OuiResizableEvent) => void;
+	onResize?: (element: Element, size: OuiResizableEventDetail, event: OuiResizableEvent) => void;
+	stepHeight?: number;
+	stepWidth?: number;
 };
 
 export type OuiResizable = {
 	[RESIZABLE_SYMBOL]: OuiResizableState;
-
+	configure(options: CreateOuiResizableOptions): void;
 	destroy(): void;
-
 	reset(): void;
-
 	set(): void;
 };
 
@@ -57,6 +61,8 @@ export const RESIZABLE_ATTRIBUTE_HANDLE: string = `${RESIZABLE_ATTRIBUTE}-handle
 export const RESIZABLE_ATTRIBUTE_MAXIMUM: string = `${RESIZABLE_ATTRIBUTE}-maximum`;
 
 export const RESIZABLE_ATTRIBUTE_MINIMUM: string = `${RESIZABLE_ATTRIBUTE}-minimum`;
+
+export const RESIZABLE_ATTRIBUTE_STEP: string = `${RESIZABLE_ATTRIBUTE}-step`;
 
 export const RESIZABLE_EVENT_BEGIN: string = `${RESIZABLE_ATTRIBUTE}:begin`;
 

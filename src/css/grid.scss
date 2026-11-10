@@ -1,0 +1,44 @@
+oui-grid {
+	&:defined {
+		:where(&) {
+			flex: 1;
+			flex-basis: auto;
+			position: relative;
+		}
+	}
+
+	:where(&:not(:defined)) {
+		display: flex;
+		flex-flow: row wrap;
+	}
+}
+
+[oui-grid-item] {
+	:where(&) {
+		min-height: fit-content;
+		display: inline-flex;
+		position: absolute;
+	}
+
+	:where(&[oui-grid-item-active]) {
+		opacity: 0.9;
+	}
+
+	:where(& > [oui-resizable-handle]) {
+		width: 1em;
+		height: 1em;
+		position: absolute;
+		inset: auto 0 0 auto;
+		cursor: nwse-resize;
+	}
+}
+
+:where([oui-grid-item-handle]) {
+	cursor: move;
+}
+
+:where([oui-grid-sorting] > :not([oui-grid-placeholder]):hover) {
+	outline: 2px solid blue;
+	outline-offset: 2px;
+	z-index: 10;
+}

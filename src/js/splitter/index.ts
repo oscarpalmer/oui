@@ -9,6 +9,7 @@ import {getEventPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {setStyle} from '@oscarpalmer/toretto/style';
 import {supportsTouch} from '@oscarpalmer/toretto/touch';
+import {ignoreEvent} from '../internal/misc';
 import {
 	SPLITTER_ATTRIBUTE_ACTIVE,
 	SPLITTER_ATTRIBUTE_HANDLE,
@@ -420,8 +421,8 @@ function onObservation(entries: ResizeObserverEntry[]): void {
 	});
 }
 
-function onPointerdown(event: Event): void {
-	if (supportsTouch.value ? event.type === 'mousedown' : event.type === 'touchstart') {
+function onPointerdown(event: MouseEvent | TouchEvent): void {
+	if (ignoreEvent(event, supportsTouch.value)) {
 		return;
 	}
 

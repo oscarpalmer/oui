@@ -10,6 +10,7 @@ export * from './sortable/sortable.standalone';
 export * from './color-picker/index';
 export * from './combobox/index';
 export * from './dialog/index';
+export * from './grid/index';
 export * from './listbox/index';
 export * from './popover/index';
 export * from './splitter/index';

@@ -1,5 +1,6 @@
 import {filter} from '@oscarpalmer/atoms/array/filter';
 import type {PlainObject} from '@oscarpalmer/atoms/models';
+import {getNumber} from '@oscarpalmer/atoms/number';
 import {setAria} from '@oscarpalmer/toretto/aria';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import type {OuiLocalizationsValues} from '../l10n/l10n.model';
@@ -75,7 +76,7 @@ export function setOptionListLimit<
 	let actual = value;
 
 	if (typeof actual === 'string') {
-		actual = Number.parseInt(actual, 10);
+		actual = getNumber(actual);
 	}
 
 	const updateLimit =

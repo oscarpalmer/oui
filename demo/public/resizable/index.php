@@ -15,7 +15,7 @@ $titles = ['Any direction', 'Horizontal', 'Vertical'];
 foreach ($directions as $index => $direction) {
 	$title = $titles[$index];
 ?>
-	<div oui-resizable <?php echo $direction ? "oui-resizable-direction=\"$direction\"" : ""; ?> oui-resizable-maximum="500,500" oui-resizable-minimum="100,100">
+	<div oui-resizable <?php echo $direction ? "oui-resizable-direction=\"$direction\"" : ""; ?> oui-resizable-maximum="500,500" oui-resizable-minimum="100,100" oui-resizable-step="25,">
 		<span><?php echo $title; ?></span>
 		<span oui-resizable-handle>Resize me!</span>
 	</div>

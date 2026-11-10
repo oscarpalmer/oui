@@ -33,6 +33,18 @@ export function getBooleanAriaValue(element: Element, attribute: AnyAriaBooleanA
 	return value === true || value === 'true';
 }
 
+export function ignoreEvent(event: MouseEvent | TouchEvent, supportsTouch: boolean): boolean {
+	return (
+		event.altKey ||
+		event.ctrlKey ||
+		event.metaKey ||
+		event.shiftKey ||
+		(supportsTouch
+			? event.type === 'mousedown'
+			: event.type === 'touchstart' || (event as MouseEvent).button !== 0)
+	);
+}
+
 // #endregion
 
 // #region Variables

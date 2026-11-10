@@ -112,7 +112,7 @@ export function filterOptionList<
 	if (update) {
 		filter.value = filter.element.value;
 
-		dispatch(host, `${host.tagName.toLowerCase()}:input`);
+		dispatch(host, 'input');
 	}
 }
 

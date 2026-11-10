@@ -1,0 +1,29 @@
+.grid__item {
+	display: flex;
+	flex-flow: column nowrap;
+	background: var(--oui-absolute);
+	border-radius: 0.5rem;
+	box-shadow: 0 1px 2px 0 rgb(0 0 0 / 12.5%);
+}
+
+.grid__item header {
+	padding: 1em;
+	border-bottom: 1px solid #ddd;
+}
+
+.grid__item header h2 {
+	font-size: 0.75em;
+	font-weight: bold;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+
+.grid__item section {
+	padding: var(--spacing);
+	flex: 1;
+}
+
+.grid__item__resizer {
+	border: 1px solid #ddd;
+	border-width: 1px 0 0 1px;
+}

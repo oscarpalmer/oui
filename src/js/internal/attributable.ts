@@ -17,7 +17,7 @@ export function attributable(
 				if (entry.target.hasAttribute(attribute)) {
 					handleAdded(attribute, [entry.target], add);
 				} else {
-					handleRemoved([entry.target], remove);
+					remove(entry.target);
 				}
 			} else if (entry.type === 'childList') {
 				handleAdded(attribute, entry.addedNodes, add);
@@ -67,6 +67,11 @@ function handleRemoved(nodes: Node[] | NodeList, remove: (element: Element) => v
 
 	for (let index = 0; index < length; index += 1) {
 		const element = elements[index];
+
+		// Moved, not removed
+		if (element.isConnected) {
+			continue;
+		}
 
 		remove(element);
 

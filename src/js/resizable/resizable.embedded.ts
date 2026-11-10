@@ -1,4 +1,6 @@
+import {noop} from '@oscarpalmer/atoms/function';
 import {isPlainObject} from '@oscarpalmer/atoms/is';
+import {round} from '@oscarpalmer/atoms/math';
 import {getNumber} from '@oscarpalmer/atoms/number';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {dispatch, getEventPosition, on} from '@oscarpalmer/toretto/event';
@@ -8,12 +10,14 @@ import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {setStyles, toggleStyles} from '@oscarpalmer/toretto/style';
 import {supportsTouch} from '@oscarpalmer/toretto/touch';
 import {attributable} from '../internal/attributable';
+import {ignoreEvent} from '../internal/misc';
 import {
 	OuiResizableEvent,
 	RESIZABLE_ATTRIBUTE,
 	RESIZABLE_ATTRIBUTE_DIRECTION,
 	RESIZABLE_ATTRIBUTE_MAXIMUM,
 	RESIZABLE_ATTRIBUTE_MINIMUM,
+	RESIZABLE_ATTRIBUTE_STEP,
 	RESIZABLE_EVENT_BEGIN,
 	RESIZABLE_EVENT_CANCEL,
 	RESIZABLE_EVENT_END,
@@ -32,6 +36,7 @@ import {
 	resizableVerticals,
 	type CreateOuiResizableOptions,
 	type OuiResizable,
+	type OuiResizableEventDetail,
 	type OuiResizableItem,
 	type OuiResizableState,
 } from './resizable.model';
@@ -42,6 +47,7 @@ function OuiResizable(this: OuiResizable, state: OuiResizableState): void {
 	this[RESIZABLE_SYMBOL] = state;
 }
 
+OuiResizable.prototype.configure = configureResizable;
 OuiResizable.prototype.destroy = destroyResizable;
 OuiResizable.prototype.reset = resetResizable;
 OuiResizable.prototype.set = setResizable;
@@ -91,15 +97,32 @@ function cancelResize(item?: OuiResizableItem): void {
 
 	resetResizableStyles();
 
-	dispatch(
-		item.state.element,
-		new OuiResizableEvent(RESIZABLE_EVENT_CANCEL, {
-			detail: {
-				height: item.state.height,
-				width: item.state.width,
-			},
-		}),
-	);
+	const detail = {
+		height: item.state.height,
+		width: item.state.width,
+	};
+
+	const cancel = new OuiResizableEvent(RESIZABLE_EVENT_CANCEL, {detail});
+
+	item.state.options.onCancel(item.state.element, detail, cancel);
+
+	dispatch(item.state.element, cancel);
+}
+
+function configureResizable(this: OuiResizable, options: CreateOuiResizableOptions): void {
+	const state = this[RESIZABLE_SYMBOL];
+
+	const keys = Object.keys(options) as (keyof CreateOuiResizableOptions)[];
+
+	for (const key of keys) {
+		const value = options[key];
+
+		if (typeof value === typeof state.options[key]) {
+			state.options[key] = value as never;
+		}
+	}
+
+	this.set();
 }
 
 /**
@@ -211,10 +234,19 @@ function getProperties(
 	return [computed[widthProperty], computed[heightProperty]];
 }
 
+export function getResizable(element: HTMLElement): OuiResizable | undefined {
+	return resizableItems.get(element)?.instance;
+}
+
 function getRestrictions(
 	maximum: string | [unknown, unknown],
 	minimum: string | [unknown, unknown],
-): Required<CreateOuiResizableOptions> {
+): Required<
+	Pick<
+		CreateOuiResizableOptions,
+		'maximumHeight' | 'maximumWidth' | 'minimumHeight' | 'minimumWidth'
+	>
+> {
 	const [maximumWidth, maximumHeight] = getXAndY(maximum);
 	const [minimumWidth, minimumHeight] = getXAndY(minimum);
 
@@ -240,6 +272,12 @@ function getValidOptions(
 ): Required<CreateOuiResizableOptions> {
 	const original = isPlainObject(input) ? input : {};
 
+	const [stepWidth, stepHeight] = getXAndY(
+		input == null
+			? getAttribute(element, RESIZABLE_ATTRIBUTE_STEP)
+			: [original.stepWidth, original.stepHeight],
+	);
+
 	return {
 		...getRestrictions(
 			input == null
@@ -251,6 +289,12 @@ function getValidOptions(
 						getProperties(element, 'minWidth', 'minHeight'))
 				: [original.minimumWidth, original.minimumHeight],
 		),
+		onBegin: typeof original.onBegin === 'function' ? original.onBegin : noop,
+		onCancel: typeof original.onCancel === 'function' ? original.onCancel : noop,
+		onEnd: typeof original.onEnd === 'function' ? original.onEnd : noop,
+		onResize: typeof original.onResize === 'function' ? original.onResize : noop,
+		stepHeight,
+		stepWidth,
 	};
 }
 
@@ -264,7 +308,7 @@ function getXAndY(value: unknown): [number, number] {
 		first = value;
 	}
 
-	const [x, y] = typeof first === 'string' && second == null ? first.split(',') : [first, second];
+	const [x, y] = typeof first === 'string' && second == null ? splitXAndY(first) : [first, second];
 
 	let xAsNumber = typeof x === 'string' ? Number.parseFloat(x) : getNumber(x);
 	let yAsNumber = typeof y === 'string' ? Number.parseFloat(y) : getNumber(y);
@@ -287,15 +331,7 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 function onPointerdown(event: MouseEvent | TouchEvent): void {
-	if (
-		event.altKey ||
-		event.ctrlKey ||
-		event.metaKey ||
-		event.shiftKey ||
-		(supportsTouch.value
-			? event.type === 'mousedown'
-			: event.type === 'touchstart' || (event as MouseEvent).button !== 0)
-	) {
+	if (ignoreEvent(event, supportsTouch.value)) {
 		return;
 	}
 
@@ -312,18 +348,25 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 		event.preventDefault();
 	}
 
-	const resize = new OuiResizableEvent(RESIZABLE_EVENT_BEGIN, {
-		detail: {
-			height: stored.state.height,
-			width: stored.state.width,
-		},
-	});
+	const detail = {
+		height: stored.state.height,
+		width: stored.state.width,
+	};
 
-	if (dispatch(element!, resize).defaultPrevented) {
+	const begin = new OuiResizableEvent(RESIZABLE_EVENT_BEGIN, {detail});
+
+	stored.state.options.onBegin(stored.state.element, detail, begin);
+
+	dispatch(element!, begin);
+
+	if (begin.defaultPrevented) {
 		return;
 	}
 
+	event.stopPropagation();
+
 	current = stored;
+	last = {height: stored.state.height, width: stored.state.width};
 	start = position;
 
 	current.state.styles.set();
@@ -341,27 +384,45 @@ function onPointermove(event: MouseEvent | TouchEvent): void {
 		return;
 	}
 
-	let width = current.state.horizontal
-		? current.state.width + (x - (start?.x ?? 0))
-		: current.state.width;
+	const {stepHeight, stepWidth} = current.state.options;
 
-	let height = current.state.vertical
-		? current.state.height + (y - (start?.y ?? 0))
-		: current.state.height;
+	let deltaX = current.state.horizontal ? x - (start?.x ?? 0) : 0;
+	let deltaY = current.state.vertical ? y - (start?.y ?? 0) : 0;
+
+	if (stepWidth > -1) {
+		deltaX = round(deltaX / stepWidth) * stepWidth;
+	}
+
+	if (stepHeight > -1) {
+		deltaY = round(deltaY / stepHeight) * stepHeight;
+	}
+
+	let width = current.state.width + deltaX;
+	let height = current.state.height + deltaY;
 
 	[width, height] = getAndSetDimensions(current.state.element, current.state.options, {
 		height,
 		width,
 	});
 
-	const resize = new OuiResizableEvent(RESIZABLE_EVENT_RESIZE, {
-		detail: {
-			height,
-			width,
-		},
-	});
+	if (last?.height === height && last?.width === width) {
+		return;
+	}
 
-	if (dispatch(current.state.element, resize).defaultPrevented) {
+	last = {height, width};
+
+	const detail = {
+		height,
+		width,
+	};
+
+	const resize = new OuiResizableEvent(RESIZABLE_EVENT_RESIZE, {detail});
+
+	current.state.options.onResize(current.state.element, detail, resize);
+
+	dispatch(current.state.element, resize);
+
+	if (resize.defaultPrevented) {
 		cancelResize(current);
 	}
 }
@@ -371,14 +432,18 @@ function onPointerup(): void {
 		return;
 	}
 
-	const resize = new OuiResizableEvent(RESIZABLE_EVENT_END, {
-		detail: {
-			height: current.state.height,
-			width: current.state.width,
-		},
-	});
+	const detail = {
+		height: last?.height ?? current.state.height,
+		width: last?.width ?? current.state.width,
+	};
 
-	if (dispatch(current.state.element, resize).defaultPrevented) {
+	const end = new OuiResizableEvent(RESIZABLE_EVENT_END, {detail});
+
+	current.state.options.onEnd(current.state.element, detail, end);
+
+	dispatch(current.state.element, end);
+
+	if (end.defaultPrevented) {
 		cancelResize(current);
 
 		return;
@@ -410,6 +475,7 @@ function resetResizableStyles(): void {
 	styleToggler.remove();
 
 	current = undefined;
+	last = undefined;
 	start = undefined;
 }
 
@@ -422,6 +488,12 @@ function setResizable(this: OuiResizable): void {
 	state.height = height;
 }
 
+function splitXAndY(value: string): [string, string] {
+	const parts = value.split(',');
+
+	return [parts[0], parts.length > 1 ? parts[1] : parts[0]];
+}
+
 // #endregion
 
 // #region Variables
@@ -429,6 +501,8 @@ function setResizable(this: OuiResizable): void {
 const styleToggler = toggleStyles(document.body, resizableStyles);
 
 let current: OuiResizableItem | undefined;
+
+let last: OuiResizableEventDetail | undefined;
 
 let start: EventPosition | undefined;
 
