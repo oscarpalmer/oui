@@ -1,3 +1,4 @@
+import {promises} from '@oscarpalmer/atoms/promise';
 import {getAria, setAria} from '@oscarpalmer/toretto/aria';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {on} from '@oscarpalmer/toretto/event';
@@ -135,9 +136,9 @@ function getState(element: HTMLDialogElement): OuiDialogState {
 
 					element.focus();
 
-					setTimeout(() => {
-						state.resizable?.set();
-					}, 500);
+					void promises(element.getAnimations().map(animation => animation.finished)).then(() =>
+						state.resizable?.set(),
+					);
 				} else {
 					setAttribute(element, DIALOG_ATTRIBUTE_OPEN);
 					setAria(element, 'modal', state.modal);

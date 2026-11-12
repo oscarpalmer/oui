@@ -9,18 +9,21 @@ import {ignoreEvent} from '../internal/misc';
 import {getResizable} from '../resizable/resizable.embedded';
 import type {OuiResizableEventDetail} from '../resizable/resizable.model';
 import {
-	getGridElements,
+	getGridItems,
 	getGridPlaceholder,
+	toggleGridResizable,
+	toggleGridSortable,
 	updateGridPositions,
 	updateGridResizables,
 } from './grid.dom';
 import {endGridSort} from './grid.misc';
 import {
-	GRID_ATTRIBUTE_COLUMNS,
-	GRID_ATTRIBUTE_GAP,
+	GRID_ATTRIBUTE_COLUMN_SPAN,
 	GRID_ATTRIBUTE_ITEM_ACTIVE,
+	GRID_ATTRIBUTE_RESIZABLE,
+	GRID_ATTRIBUTE_ROW_SPAN,
+	GRID_ATTRIBUTE_SORTABLE,
 	GRID_ATTRIBUTE_SORTING,
-	GRID_ATTRIBUTE_SPAN,
 	GRID_EVENT_RESIZE_BEGIN,
 	GRID_EVENT_RESIZE_CANCEL,
 	GRID_EVENT_RESIZE_END,
@@ -55,11 +58,7 @@ export function onBeginResizeGridItem(
 		return;
 	}
 
-	const {columns} = state;
-
-	if (columns == null) {
-		return;
-	}
+	const {columns, rows} = state;
 
 	const resizable = getResizable(element as HTMLElement);
 
@@ -67,15 +66,29 @@ export function onBeginResizeGridItem(
 		return;
 	}
 
-	state.active = element as HTMLElement;
+	if (columns == null && rows == null) {
+		// A released axis leaves the resizable with a stale start size, so re-read the real one
+		resizable.set();
 
-	const step = columns.width + state.gap.value;
+		return;
+	}
 
-	// Step, min and max follow the current column width, so refresh them per drag
+	const gap = state.gap.value;
+
 	resizable.configure({
-		maximumWidth: columns.count * step - state.gap.value,
-		minimumWidth: columns.width,
-		stepWidth: step,
+		...(columns == null
+			? {stepWidth: -1}
+			: {
+					maximumWidth: columns.count * (columns.width + gap) - gap,
+					minimumWidth: columns.width,
+					stepWidth: columns.width + gap,
+				}),
+		...(rows == null
+			? {stepHeight: -1}
+			: {
+					minimumHeight: rows.height,
+					stepHeight: rows.height + gap,
+				}),
 	});
 }
 
@@ -84,8 +97,18 @@ export function onGridAttributeChanged(state: GridState, name: string): void {
 		return;
 	}
 
-	if (name === GRID_ATTRIBUTE_COLUMNS || name === GRID_ATTRIBUTE_GAP) {
-		updateGridPositions(state);
+	switch (true) {
+		case name === GRID_ATTRIBUTE_RESIZABLE:
+			toggleGridResizable(state);
+			break;
+
+		case name === GRID_ATTRIBUTE_SORTABLE:
+			toggleGridSortable(state);
+			break;
+
+		case true:
+			updateGridPositions(state);
+			break;
 	}
 }
 
@@ -106,18 +129,19 @@ export function onGridItemResized(
 		return;
 	}
 
-	const {columns} = state;
+	const {columns, rows} = state;
+	const gap = state.gap.value;
 
 	if (columns != null) {
-		const span = max([
-			1,
-			min([
-				round((size.width + state.gap.value) / (columns.width + state.gap.value)),
-				columns.count,
-			]),
-		]);
+		const span = max([1, min([round((size.width + gap) / (columns.width + gap)), columns.count])]);
 
-		setAttribute(element, GRID_ATTRIBUTE_SPAN, getString(span));
+		setAttribute(element, GRID_ATTRIBUTE_COLUMN_SPAN, getString(span));
+	}
+
+	if (rows != null) {
+		const span = max([1, round((size.height + gap) / (rows.height + gap))]);
+
+		setAttribute(element, GRID_ATTRIBUTE_ROW_SPAN, getString(span));
 	}
 
 	updateGridPositions(state);
@@ -128,7 +152,7 @@ export function onGridItemResized(
 }
 
 export function onGridMutation(state: GridState): void {
-	state.elements = getGridElements(state);
+	state.items = getGridItems(state);
 
 	updateGridPositions(state);
 	updateGridResizables(state);
@@ -207,7 +231,7 @@ function onPointerdown(event: MouseEvent | TouchEvent): void {
 	sort = {
 		item,
 		state,
-		index: state.elements.indexOf(item),
+		index: state.items.indexOf(item),
 		offset: {
 			x: position.x - rectangle.left,
 			y: position.y - rectangle.top,

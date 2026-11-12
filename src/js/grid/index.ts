@@ -1,12 +1,14 @@
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {RESIZABLE_SELECTOR_HANDLE_SCOPED} from '../resizable/resizable.model';
-import {getGridColumns, setGridColumns} from './grid.dom';
 import {onGridAttributeChanged} from './grid.event';
 import {connectGrid, createGridState, disconnectGrid, updateGrid} from './grid.misc';
 import {
 	GRID_ATTRIBUTE_COLUMNS,
 	GRID_ATTRIBUTE_GAP,
+	GRID_ATTRIBUTE_MIN_HEIGHT,
+	GRID_ATTRIBUTE_MIN_WIDTH,
 	GRID_ATTRIBUTE_RESIZABLE,
+	GRID_ATTRIBUTE_SORTABLE,
 	GRID_SYMBOL,
 	GRID_TAGNAME,
 	type GridGap,
@@ -27,14 +29,21 @@ export interface OuiGridElement {
 }
 
 export class OuiGridElement extends HTMLElement {
-	static readonly observedAttributes: string[] = [GRID_ATTRIBUTE_COLUMNS, GRID_ATTRIBUTE_GAP];
+	static readonly observedAttributes: string[] = [
+		GRID_ATTRIBUTE_COLUMNS,
+		GRID_ATTRIBUTE_GAP,
+		GRID_ATTRIBUTE_MIN_HEIGHT,
+		GRID_ATTRIBUTE_MIN_WIDTH,
+		GRID_ATTRIBUTE_RESIZABLE,
+		GRID_ATTRIBUTE_SORTABLE,
+	];
 
-	get columns(): [number, number | undefined] | undefined {
-		return getGridColumns(this[GRID_SYMBOL]);
+	get columns(): number | undefined {
+		return this[GRID_SYMBOL].columns?.count;
 	}
 
-	set columns(value: number | [number, number | undefined] | undefined) {
-		setGridColumns(this[GRID_SYMBOL], value);
+	set columns(value: number | null | undefined) {
+		setAttribute(this, GRID_ATTRIBUTE_COLUMNS, typeof value === 'number' ? value : undefined);
 	}
 
 	get gap(): GridGap {
@@ -43,6 +52,38 @@ export class OuiGridElement extends HTMLElement {
 
 	set gap(value: number) {
 		setAttribute(this, GRID_ATTRIBUTE_GAP, typeof value === 'number' ? value : undefined);
+	}
+
+	get minHeight(): number | undefined {
+		return this[GRID_SYMBOL].rows?.height;
+	}
+
+	set minHeight(value: number | null | undefined) {
+		setAttribute(this, GRID_ATTRIBUTE_MIN_HEIGHT, typeof value === 'number' ? value : undefined);
+	}
+
+	get minWidth(): number | undefined {
+		return this[GRID_SYMBOL].columns?.width;
+	}
+
+	set minWidth(value: number | null | undefined) {
+		setAttribute(this, GRID_ATTRIBUTE_MIN_WIDTH, typeof value === 'number' ? value : undefined);
+	}
+
+	get resizable(): boolean {
+		return this[GRID_SYMBOL].resizable;
+	}
+
+	set resizable(value: boolean | null | undefined) {
+		setAttribute(this, GRID_ATTRIBUTE_RESIZABLE, value == null || value === false ? undefined : '');
+	}
+
+	get sortable(): boolean {
+		return this[GRID_SYMBOL].sortable;
+	}
+
+	set sortable(value: boolean | null | undefined) {
+		setAttribute(this, GRID_ATTRIBUTE_SORTABLE, value == null || value === false ? undefined : '');
 	}
 
 	constructor() {
@@ -72,10 +113,10 @@ export class OuiGridElement extends HTMLElement {
 			return;
 		}
 
-		const {length} = this[GRID_SYMBOL].elements;
+		const {length} = this[GRID_SYMBOL].items;
 
 		for (let index = 0; index < length; index += 1) {
-			const element = this[GRID_SYMBOL].elements[index];
+			const element = this[GRID_SYMBOL].items[index];
 
 			const handle = element.querySelector(RESIZABLE_SELECTOR_HANDLE_SCOPED);
 

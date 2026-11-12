@@ -1,30 +1,40 @@
 import '/assets/js/index.mjs';
 
-function addItem() {
-	if (grid == null) {
-		return;
-	}
-
-	const item = document.createElement('div');
-
-	item.className = 'oui-card grid__item';
-	item.textContent = 'Item';
-
-	grid.append(item);
-}
-
-function updateResizer(_, handle) {
-	handle.className = 'grid__item__resizer';
-	handle.textContent = '';
-}
-
 const grid = document.querySelector('oui-grid');
 
-grid?.addEventListener('resize:handle', event => {
-	console.log(event);
-	updateResizer(null, event.detail.handle);
-});
+let checkboxes = document.querySelectorAll('input.toggle-attribute');
 
-grid?.updateResizers(updateResizer);
+for (const checkbox of checkboxes) {
+	checkbox.addEventListener('change', () => {
+		if (checkbox.checked) {
+			grid.setAttribute(checkbox.id, '');
+		} else {
+			grid.removeAttribute(checkbox.id);
+		}
+	});
+}
 
-window.add = addItem;
+checkboxes = document.querySelectorAll('input.toggle-input');
+
+for (const checkbox of checkboxes) {
+	const input = document.querySelector(`#${checkbox.id.replace('_checkbox', '')}`);
+	const attribute = input.id.replace('_', '-');
+
+	checkbox.addEventListener('change', () => {
+		input.readOnly = !checkbox.checked;
+
+		if (checkbox.checked) {
+			grid.setAttribute(attribute, input.value);
+		} else {
+			grid.removeAttribute(attribute);
+		}
+	});
+
+	input.addEventListener('input', () => {
+		if (checkbox.checked) {
+			grid.setAttribute(attribute, input.value);
+		}
+	});
+}
+
+document.querySelector('.grid__toolbar').hidden = false;

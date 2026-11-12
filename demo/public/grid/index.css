@@ -1,9 +1,7 @@
 .grid__item {
 	display: flex;
+	padding: 0;
 	flex-flow: column nowrap;
-	background: var(--oui-absolute);
-	border-radius: 0.5rem;
-	box-shadow: 0 1px 2px 0 rgb(0 0 0 / 12.5%);
 }
 
 .grid__item header {
@@ -26,4 +24,12 @@
 .grid__item__resizer {
 	border: 1px solid #ddd;
 	border-width: 1px 0 0 1px;
+}
+
+.grid__toolbar {
+	padding: var(--spacing);
+	margin: calc(-1 * var(--spacing));
+	margin-bottom: 0;
+	border-bottom: 1px solid light-dark(var(--oui-stone-2), var(--oui-slate-2));
+	font-size: 0.875rem;
 }

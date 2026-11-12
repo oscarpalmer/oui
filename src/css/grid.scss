@@ -17,7 +17,10 @@ oui-grid {
 	:where(&) {
 		min-height: fit-content;
 		display: inline-flex;
+		outline: 4px solid transparent;
+		outline-offset: 2px;
 		position: absolute;
+		transition: outline 0.125s ease-in-out;
 	}
 
 	:where(&[oui-grid-item-active]) {
@@ -33,12 +36,11 @@ oui-grid {
 	}
 }
 
-:where([oui-grid-item-handle]) {
+:where(oui-grid[sortable] [oui-grid-item-handle]) {
 	cursor: move;
 }
 
 :where([oui-grid-sorting] > :not([oui-grid-placeholder]):hover) {
-	outline: 2px solid blue;
-	outline-offset: 2px;
+	outline-color: color-mix(in oklab, var(--oui-blue-6), transparent 62.5%);
 	z-index: 10;
 }

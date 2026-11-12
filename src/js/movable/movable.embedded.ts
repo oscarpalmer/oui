@@ -236,40 +236,47 @@ function onMove(
 function onResize(entries: ResizeObserverEntry[]): void {
 	const {length} = entries;
 
+	const movables: OuiMovable[] = [];
+
 	for (let index = 0; index < length; index += 1) {
-		const entry = entries[index];
-		const set = MOVABLE_CONTAINERS.get(entry.target);
+		const set = MOVABLE_CONTAINERS.get(entries[index].target);
 
-		if (set == null) {
-			continue;
-		}
-
-		for (const movable of set) {
-			reposition(movable);
+		if (set != null) {
+			movables.push(...set);
 		}
 	}
+
+	reposition(movables);
 }
 
 function onScroll(): void {
-	for (const moved of MOVABLE_MOVED) {
-		reposition(moved);
-	}
+	reposition(MOVABLE_MOVED);
 }
 
-function reposition(movable: OuiMovable): void {
-	const state = getDraggableStates(movable.element)
-		?.movable as unknown as OuiDraggableState<OuiMovableState>;
+function reposition(movables: Iterable<OuiMovable>): void {
+	const updates: {element: Element; x: number; y: number}[] = [];
 
-	if (state == null || !state.moved || state.container == null) {
-		return;
+	// All rectangles are read before any write, as an inset write invalidates layout
+	for (const movable of movables) {
+		const state = getDraggableStates(movable.element)
+			?.movable as unknown as OuiDraggableState<OuiMovableState>;
+
+		if (state == null || !state.moved || state.container == null) {
+			continue;
+		}
+
+		const container = state.container.getBoundingClientRect();
+
+		updates.push({
+			element: state.element,
+			x: container.left + (state.offset?.x ?? 0),
+			y: container.top + (state.offset?.y ?? 0),
+		});
 	}
 
-	const container = state.container.getBoundingClientRect();
-
-	const x = container.left + (state.offset?.x ?? 0);
-	const y = container.top + (state.offset?.y ?? 0);
-
-	setStyle(state.element, 'inset', `${y}px auto auto ${x}px`);
+	for (const {element, x, y} of updates) {
+		setStyle(element, 'inset', `${y}px auto auto ${x}px`);
+	}
 }
 
 function setOffset(state: OuiDraggableState<OuiMovableState>, container: DOMRect): void {

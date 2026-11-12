@@ -5,23 +5,29 @@ import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {createElement} from '@oscarpalmer/toretto/create';
 import {dispatch} from '@oscarpalmer/toretto/event';
 import {getStyle} from '@oscarpalmer/toretto/style';
+import {getPixelSize} from '../internal/misc';
 import {createResizable} from '../resizable/resizable.embedded';
 import {
 	RESIZABLE_ATTRIBUTE_HANDLE,
 	RESIZABLE_SELECTOR_HANDLE_SCOPED,
 } from '../resizable/resizable.model';
 import {
+	GRID_ATTRIBUTE_COLUMN_SPAN,
 	GRID_ATTRIBUTE_COLUMNS,
 	GRID_ATTRIBUTE_GAP,
 	GRID_ATTRIBUTE_ITEM,
+	GRID_ATTRIBUTE_MIN_HEIGHT,
+	GRID_ATTRIBUTE_MIN_WIDTH,
 	GRID_ATTRIBUTE_PLACEHOLDER,
 	GRID_ATTRIBUTE_RESIZABLE,
-	GRID_ATTRIBUTE_SPAN,
+	GRID_ATTRIBUTE_ROW_SPAN,
+	GRID_ATTRIBUTE_SORTABLE,
 	GRID_SELECTOR_ITEM_SCOPED,
 	OuiGridResizeHandlerEvent,
 	type GridColumns,
 	type GridGap,
 	type GridItem,
+	type GridRows,
 	type GridState,
 } from './grid.model';
 
@@ -98,71 +104,42 @@ function findFreeSpot(
 	}
 }
 
-function getColumns(host: HTMLElement, gap: number, attribute?: string): GridColumns | undefined {
-	const value = attribute ?? getAttribute(host, GRID_ATTRIBUTE_COLUMNS) ?? '';
+function getColumns(state: GridState, gap: number): GridColumns | undefined {
+	const columnsAttribute = getAttribute(state.host, GRID_ATTRIBUTE_COLUMNS) ?? '';
+	const minWidthAttribute = getAttribute(state.host, GRID_ATTRIBUTE_MIN_WIDTH) ?? '';
 
-	const [first, second] = value.split(',');
+	const columns = Number.parseInt(columnsAttribute ?? '', 10);
+	const minWidth = Number.parseFloat(minWidthAttribute ?? '');
 
-	const preferred = Number.parseInt(first ?? '', 10);
-	const minimum = Number.parseFloat(second ?? '');
+	const hasMinWidth = minWidth > 0;
+	const hasColumns = columns > 0;
 
-	const hasMinimum = minimum > 0;
-	const hasPreferred = preferred > 0;
-
-	if (!hasMinimum && !hasPreferred) {
+	if (!hasMinWidth && !hasColumns) {
 		return undefined;
 	}
 
-	const {clientWidth} = host;
+	const {clientWidth} = state.host;
 
 	const count = max([
 		1,
 		min([
-			hasPreferred ? preferred : Number.POSITIVE_INFINITY,
-			hasMinimum ? floor((clientWidth + gap) / (minimum + gap)) : Number.POSITIVE_INFINITY,
+			hasColumns ? columns : Number.POSITIVE_INFINITY,
+			hasMinWidth ? floor((clientWidth + gap) / (minWidth + gap) + 1e-9) : Number.POSITIVE_INFINITY,
 		]),
 	]);
 
 	return {
 		count,
-		attribute: [preferred, Number.isNaN(minimum) ? undefined : minimum],
 		width: (clientWidth - gap * (count - 1)) / count,
 	};
 }
 
-export function getGridElements(state: GridState): HTMLElement[] {
-	const previous = new Set(state.elements.splice(0));
-
-	const next = [...state.host.querySelectorAll(GRID_SELECTOR_ITEM_SCOPED)] as HTMLElement[];
-	const {length} = next;
-
-	for (let index = 0; index < length; index++) {
-		const element = next[index];
-
-		if (previous.has(element)) {
-			previous.delete(element);
-		}
-
-		setAttribute(element, GRID_ATTRIBUTE_ITEM, '');
-	}
-
-	if (state.active != null) {
-		previous.delete(state.active);
-	}
-
-	for (const element of previous) {
-		setAttribute(element, GRID_ATTRIBUTE_ITEM);
-	}
-
-	return next;
-}
-
-function getGap(host: HTMLElement, input?: string): GridGap {
+function getGap(state: GridState): GridGap {
 	let attribute: number | undefined;
 	let style: string | undefined;
 	let value: number | undefined;
 
-	input ??= getAttribute(host, GRID_ATTRIBUTE_GAP);
+	const input = getAttribute(state.host, GRID_ATTRIBUTE_GAP);
 
 	if (input != null) {
 		attribute = getNumber(input);
@@ -175,10 +152,10 @@ function getGap(host: HTMLElement, input?: string): GridGap {
 	}
 
 	if (value == null) {
-		style = getStyle(host, 'gap', true);
+		style = getStyle(state.host, 'gap', true);
 
 		if (style != null) {
-			value = getNumber(style.endsWith('px') ? style.slice(0, -2) : style);
+			value = getPixelSize(style);
 		}
 	}
 
@@ -189,8 +166,31 @@ function getGap(host: HTMLElement, input?: string): GridGap {
 	};
 }
 
-export function getGridColumns(state: GridState): [number, number | undefined] | undefined {
-	return state.columns?.attribute;
+export function getGridItems(state: GridState): HTMLElement[] {
+	const previous = new Set(state.items.splice(0));
+
+	const next = [...state.host.querySelectorAll(GRID_SELECTOR_ITEM_SCOPED)] as HTMLElement[];
+	const {length} = next;
+
+	for (let index = 0; index < length; index += 1) {
+		const item = next[index];
+
+		if (previous.has(item)) {
+			previous.delete(item);
+		}
+
+		setAttribute(item, GRID_ATTRIBUTE_ITEM, '');
+	}
+
+	if (state.active != null) {
+		previous.delete(state.active);
+	}
+
+	for (const item of previous) {
+		resetItem(state, item);
+	}
+
+	return next;
 }
 
 export function getGridPlaceholder(original?: HTMLElement): HTMLElement {
@@ -208,7 +208,17 @@ export function getGridPlaceholder(original?: HTMLElement): HTMLElement {
 		return placeholder;
 	}
 
-	setAttribute(placeholder, GRID_ATTRIBUTE_SPAN, getAttribute(original, GRID_ATTRIBUTE_SPAN));
+	setAttribute(
+		placeholder,
+		GRID_ATTRIBUTE_COLUMN_SPAN,
+		getAttribute(original, GRID_ATTRIBUTE_COLUMN_SPAN),
+	);
+
+	setAttribute(
+		placeholder,
+		GRID_ATTRIBUTE_ROW_SPAN,
+		getAttribute(original, GRID_ATTRIBUTE_ROW_SPAN),
+	);
 
 	placeholder.style.width = `${original.offsetWidth}px`;
 	placeholder.style.height = `${original.offsetHeight}px`;
@@ -217,11 +227,104 @@ export function getGridPlaceholder(original?: HTMLElement): HTMLElement {
 	return placeholder;
 }
 
-function getSpan(element: HTMLElement, count: number): number {
-	const span = getNumber(getAttribute(element, GRID_ATTRIBUTE_SPAN));
+function getRows(state: GridState): GridRows | undefined {
+	const height = getNumber(getAttribute(state.host, GRID_ATTRIBUTE_MIN_HEIGHT));
+
+	return Number.isNaN(height)
+		? undefined
+		: {
+				height: max([height, 0]),
+			};
+}
+
+// Each axis is in units (columns, rows) or pixels, independently.
+// Pixel axes carry one trailing gap, and the container gets one extra
+function getSizes(
+	items: HTMLElement[],
+	columns: GridColumns | undefined,
+	rows: GridRows | undefined,
+	gap: number,
+	containerWidth: number,
+): Pick<GridItem, 'height' | 'width'>[] {
+	const {length} = items;
+
+	const sizes: Pick<GridItem, 'height' | 'width'>[] = [];
+
+	for (let index = 0; index < length; index += 1) {
+		const item = items[index];
+
+		sizes.push({
+			height: rows == null ? item.offsetHeight + gap : getSpan(item, GRID_ATTRIBUTE_ROW_SPAN),
+			width:
+				columns == null
+					? min([item.offsetWidth + gap, containerWidth + gap])
+					: getSpan(item, GRID_ATTRIBUTE_COLUMN_SPAN, columns.count),
+		});
+	}
+
+	return sizes;
+}
+
+function getSpan(item: HTMLElement, attribute: string, maximum?: number): number {
+	const span = floor(getNumber(getAttribute(item, attribute)) + 1e-9);
 
 	// Clamped here, never written back, so a span survives narrow layouts
-	return min([span > 0 ? span : 1, count]);
+	return min([span > 0 ? span : 1, maximum ?? Number.POSITIVE_INFINITY]);
+}
+
+function holdSize(state: GridState, item: HTMLElement, property: 'height' | 'width'): void {
+	const size = state.size.get(item) ?? {};
+
+	if (size[property] === undefined) {
+		size[property] = item.style[property];
+
+		state.size.set(item, size);
+	}
+}
+
+function resetItem(state: GridState, item: HTMLElement): void {
+	resetSize(state, item, 'height');
+	resetSize(state, item, 'width');
+
+	item.style.transform = '';
+
+	setAttribute(item, GRID_ATTRIBUTE_ITEM);
+
+	state.size.delete(item);
+}
+
+function resetSize(state: GridState, item: HTMLElement, property: 'height' | 'width'): void {
+	const size = state.size.get(item);
+
+	if (size?.[property] !== undefined) {
+		item.style[property] = size[property];
+
+		size[property] = undefined;
+	}
+}
+
+function resetSizes(state: GridState, property: 'height' | 'width'): void {
+	const {items} = state;
+	const {length} = items;
+
+	for (let index = 0; index < length; index += 1) {
+		resetSize(state, items[index], property);
+	}
+}
+
+function setColumnWidths(state: GridState, columns: GridColumns, gap: number): void {
+	const {items} = state;
+	const {length} = items;
+
+	const step = columns.width + gap;
+
+	for (let index = 0; index < length; index += 1) {
+		const span = getSpan(items[index], GRID_ATTRIBUTE_COLUMN_SPAN, columns.count);
+
+		holdSize(state, items[index], 'width');
+
+		items[index].style.width = `${span * step - gap}px`;
+	}
 }
 
 export function setGridColumns(state: GridState, value: unknown): void {
@@ -244,53 +347,106 @@ export function setGridColumns(state: GridState, value: unknown): void {
 	);
 }
 
+function setRowHeights(state: GridState, rows: GridRows, gap: number): void {
+	const {items} = state;
+	const {length} = items;
+
+	const step = rows.height + gap;
+
+	for (let index = 0; index < length; index += 1) {
+		const span = getSpan(items[index], GRID_ATTRIBUTE_ROW_SPAN);
+
+		holdSize(state, items[index], 'height');
+
+		items[index].style.height = `${span * step - gap}px`;
+	}
+}
+
+// The grid only writes an axis it owns, so free axes stay with CSS, content and the resizable.
+// An axis is restored once, when it changes from owned to not owned
+function setSizes(
+	state: GridState,
+	previous: Pick<GridState, 'columns' | 'rows'>,
+	columns: GridColumns | undefined,
+	rows: GridRows | undefined,
+	gap: number,
+): void {
+	if (columns != null) {
+		setColumnWidths(state, columns, gap);
+	} else if (previous.columns != null) {
+		resetSizes(state, 'width');
+	}
+
+	if (rows != null) {
+		setRowHeights(state, rows, gap);
+	} else if (previous.rows != null) {
+		resetSizes(state, 'height');
+	}
+}
+
+export function toggleGridResizable(state: GridState): void {
+	state.resizable = state.host.hasAttribute(GRID_ATTRIBUTE_RESIZABLE);
+
+	const {items} = state;
+	const {length} = items;
+
+	for (let index = 0; index < length; index += 1) {
+		const item = items[index];
+		const resizer = item.querySelector(RESIZABLE_SELECTOR_HANDLE_SCOPED) as HTMLElement | null;
+
+		if (resizer != null) {
+			resizer.hidden = !state.resizable;
+		}
+	}
+}
+
+export function toggleGridSortable(state: GridState): void {
+	state.sortable = state.host.hasAttribute(GRID_ATTRIBUTE_SORTABLE);
+}
+
 export function updateGridPositions(state: GridState): void {
-	const {elements: items} = state;
+	const {items} = state;
 	const {length} = items;
 
 	const bottoms = [0];
 	const width = state.host.clientWidth;
 
-	const gap = getGap(state.host);
-	const columns = getColumns(state.host, gap.value);
+	const gap = getGap(state);
+	const columns = getColumns(state, gap.value);
+	const rows = getRows(state);
+
+	const previous = {columns: state.columns, rows: state.rows};
 
 	state.columns = columns;
 	state.gap = gap;
+	state.rows = rows;
 
-	// Items are only checked against earlier ones, so DOM order is the layout
+	const columnStep = columns == null ? 0 : columns.width + gap.value;
+	const rowStep = rows == null ? 0 : rows.height + gap.value;
+
+	// A size write invalidates layout, so all of them go first and the reads below share one layout
+	setSizes(state, previous, columns, rows, gap.value);
+
+	const sizes = getSizes(items, columns, rows, gap.value, width);
+
+	// Items are only checked against earlier ones, so DOM order is the layout.
+	// Only transforms from here on, and they do not invalidate layout
 	const placed: GridItem[] = [];
 
 	for (let index = 0; index < length; index += 1) {
-		const item = items[index];
-
-		// Column mode runs x and width in columns, y and height in pixels.
-		// Pixel axes carry one trailing gap, and the container gets one extra
-		const spot = findFreeSpot(
-			{
-				height: item.offsetHeight + gap.value,
-				width:
-					columns == null
-						? min([item.offsetWidth + gap.value, width + gap.value])
-						: getSpan(item, columns.count),
-			},
-			placed,
-			columns?.count ?? width + gap.value,
-		);
+		const spot = findFreeSpot(sizes[index], placed, columns?.count ?? width + gap.value);
 
 		bottoms.push(spot.y + spot.height);
 		placed.push(spot);
 
-		if (columns == null) {
-			item.style.transform = `translate3d(${spot.x}px, ${spot.y}px, 0)`;
-		} else {
-			const step = columns.width + gap.value;
+		const x = columns == null ? spot.x : spot.x * columnStep;
+		const y = rows == null ? spot.y : spot.y * rowStep;
 
-			item.style.transform = `translate3d(${spot.x * step}px, ${spot.y}px, 0)`;
-			item.style.width = `${spot.width * step - gap.value}px`;
-		}
+		items[index].style.transform = `translate3d(${x}px, ${y}px, 0)`;
 	}
 
-	const height = max([0, max(bottoms) - gap.value]);
+	const bottom = max(bottoms);
+	const height = max([0, (rows == null ? bottom : bottom * rowStep) - gap.value]);
 
 	if (height !== state.height) {
 		state.height = height;
@@ -302,24 +458,24 @@ export function updateGridPositions(state: GridState): void {
 }
 
 export function updateGridResizables(state: GridState): void {
-	if (!state.host.hasAttribute(GRID_ATTRIBUTE_RESIZABLE)) {
-		return;
-	}
-
-	const {length} = state.elements;
+	const {length} = state.items;
 
 	for (let index = 0; index < length; index += 1) {
-		const element = state.elements[index];
+		const element = state.items[index];
 
 		if (element.hasAttribute(GRID_ATTRIBUTE_PLACEHOLDER)) {
 			continue;
 		}
 
-		const resizer = element.querySelector(RESIZABLE_SELECTOR_HANDLE_SCOPED);
+		let resizer = element.querySelector(RESIZABLE_SELECTOR_HANDLE_SCOPED) as HTMLElement | null;
 
 		if (resizer == null) {
-			element.append(createResizeHandle(state, element));
+			resizer = createResizeHandle(state, element);
+
+			element.append(resizer);
 		}
+
+		resizer.hidden = !state.resizable;
 
 		createResizable(element, {
 			onBegin: state.callbacks.onResizeBegin,

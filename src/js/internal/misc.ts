@@ -1,4 +1,5 @@
 import {noop} from '@oscarpalmer/atoms/function';
+import {getNumber} from '@oscarpalmer/atoms/number';
 import {attempt} from '@oscarpalmer/atoms/result';
 import {getAria} from '@oscarpalmer/toretto/aria';
 import {getAttribute} from '@oscarpalmer/toretto/attribute';
@@ -31,6 +32,22 @@ export function getBooleanAriaValue(element: Element, attribute: AnyAriaBooleanA
 	const value = getAria(element, attribute);
 
 	return value === true || value === 'true';
+}
+
+export function getPixelSize(value: unknown): number {
+	if (typeof value === 'number') {
+		return value;
+	}
+
+	if (typeof value !== 'string') {
+		return 0;
+	}
+
+	if (value.endsWith('px')) {
+		return getNumber(value.slice(0, -2));
+	}
+
+	return 0;
 }
 
 export function ignoreEvent(event: MouseEvent | TouchEvent, supportsTouch: boolean): boolean {

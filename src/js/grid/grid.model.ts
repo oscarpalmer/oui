@@ -5,7 +5,6 @@ import type {OuiResizableEventDetail} from '../resizable/resizable.model';
 // #region Types
 
 export type GridColumns = {
-	attribute: [number, number | undefined];
 	count: number;
 	width: number;
 };
@@ -16,11 +15,20 @@ export type GridGap = {
 	value: number;
 };
 
+export type GridOriginalSize = {
+	height?: string;
+	width?: string;
+};
+
 export type GridItem = {
 	height: number;
 	width: number;
 	x: number;
 	y: number;
+};
+
+export type GridRows = {
+	height: number;
 };
 
 export type GridSort = {
@@ -41,11 +49,14 @@ export type GridState = {
 	active?: HTMLElement;
 	callbacks: GridStateCallbacks;
 	columns?: GridColumns;
-	elements: HTMLElement[];
+	items: HTMLElement[];
 	gap: GridGap;
 	height?: number;
 	host: HTMLElement;
 	mutationObserver: MutationObserver;
+	resizable: boolean;
+	rows?: GridRows;
+	size: WeakMap<HTMLElement, GridOriginalSize>;
 	sortable: boolean;
 };
 
@@ -86,6 +97,8 @@ export type OuiGridEventSortDetail = {
 
 export const GRID_TAGNAME = 'oui-grid';
 
+export const GRID_ATTRIBUTE_COLUMN_SPAN: string = `${GRID_TAGNAME}-column-span`;
+
 export const GRID_ATTRIBUTE_COLUMNS = 'columns';
 
 export const GRID_ATTRIBUTE_GAP = 'gap';
@@ -96,15 +109,19 @@ export const GRID_ATTRIBUTE_ITEM_ACTIVE: string = `${GRID_ATTRIBUTE_ITEM}-active
 
 export const GRID_ATTRIBUTE_ITEM_HANDLE: string = `${GRID_ATTRIBUTE_ITEM}-handle`;
 
+export const GRID_ATTRIBUTE_MIN_HEIGHT = 'min-height';
+
+export const GRID_ATTRIBUTE_MIN_WIDTH = 'min-width';
+
 export const GRID_ATTRIBUTE_PLACEHOLDER: string = `${GRID_TAGNAME}-placeholder`;
 
 export const GRID_ATTRIBUTE_RESIZABLE = 'resizable';
 
+export const GRID_ATTRIBUTE_ROW_SPAN: string = `${GRID_TAGNAME}-row-span`;
+
 export const GRID_ATTRIBUTE_SORTABLE = 'sortable';
 
 export const GRID_ATTRIBUTE_SORTING: string = `${GRID_TAGNAME}-sorting`;
-
-export const GRID_ATTRIBUTE_SPAN: string = `${GRID_TAGNAME}-span`;
 
 export const GRID_EVENT_RESIZE_BEGIN = 'resize:begin';
 

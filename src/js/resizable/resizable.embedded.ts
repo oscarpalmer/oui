@@ -1,7 +1,6 @@
 import {noop} from '@oscarpalmer/atoms/function';
 import {isPlainObject} from '@oscarpalmer/atoms/is';
 import {round} from '@oscarpalmer/atoms/math';
-import {getNumber} from '@oscarpalmer/atoms/number';
 import {getAttribute, setAttribute} from '@oscarpalmer/toretto/attribute';
 import {dispatch, getEventPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
@@ -10,7 +9,7 @@ import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {setStyles, toggleStyles} from '@oscarpalmer/toretto/style';
 import {supportsTouch} from '@oscarpalmer/toretto/touch';
 import {attributable} from '../internal/attributable';
-import {ignoreEvent} from '../internal/misc';
+import {getPixelSize, ignoreEvent} from '../internal/misc';
 import {
 	OuiResizableEvent,
 	RESIZABLE_ATTRIBUTE,
@@ -310,8 +309,8 @@ function getXAndY(value: unknown): [number, number] {
 
 	const [x, y] = typeof first === 'string' && second == null ? splitXAndY(first) : [first, second];
 
-	let xAsNumber = typeof x === 'string' ? Number.parseFloat(x) : getNumber(x);
-	let yAsNumber = typeof y === 'string' ? Number.parseFloat(y) : getNumber(y);
+	let xAsNumber = getPixelSize(x);
+	let yAsNumber = getPixelSize(y);
 
 	if (Number.isNaN(xAsNumber) || xAsNumber <= 0) {
 		xAsNumber = -1;

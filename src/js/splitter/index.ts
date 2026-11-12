@@ -403,7 +403,7 @@ function onObservation(entries: ResizeObserverEntry[]): void {
 					: undefined;
 
 			if (splitter == null) {
-				return;
+				continue;
 			}
 
 			splitter.types = getTypes(splitter, entry.contentRect.width, entry.contentRect.height);

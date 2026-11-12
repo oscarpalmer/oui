@@ -45,6 +45,12 @@ import {
 	type OuiSortableState,
 } from './sortable.model';
 
+// #region Types
+
+type Insertion = 'append' | 'insert' | 'prepend' | undefined;
+
+// #endregion
+
 // #region Instances
 
 function OuiSortable(
@@ -100,7 +106,7 @@ Object.defineProperties(OuiSortable.prototype, {
 // #region Functions
 
 function afterEnd(
-	insert: 'append' | 'insert' | 'prepend' | undefined,
+	insert: Insertion,
 	from: OuiDraggableItem<OuiSortableState>,
 	events: [CustomEvent, CustomEvent | undefined],
 	elements: {origin?: Element; target: Element},
@@ -164,6 +170,14 @@ function getDragPlaceholder(): Element {
 	sortablePlaceholder.drag.default ??= createElement('div');
 
 	return sortablePlaceholder.drag.custom ?? sortablePlaceholder.drag.default;
+}
+
+function getInsertion(element?: Element | null): Insertion {
+	if (element == null) {
+		return undefined;
+	}
+
+	return element.children.length === 0 ? 'append' : 'prepend';
 }
 
 function getInstance(element?: Element | null): OuiSortable | undefined {
@@ -265,11 +279,9 @@ function onEnd(
 
 	if (element == null) {
 		element = findAncestor(target, SORTABLE_SELECTOR_ITEM);
-
+		insert = getInsertion(element);
 		instance = getInstance(element);
 		state = getState(element);
-
-		insert = element == null ? undefined : element.children.length === 0 ? 'append' : 'prepend';
 	} else {
 		instance = getInstance(element.parentElement);
 		state = getState(element.parentElement);
@@ -353,21 +365,25 @@ function onMove(
 		return;
 	}
 
+	// Read before the placeholder writes below, so both reads share one layout
+	const rectangle =
+		toElement != null && toElement !== fromElement ? toElement.getBoundingClientRect() : undefined;
+
 	const placeholder = getPositionPlaceholder(item);
 
-	if (toElement != null && toElement !== fromElement) {
-		const {height, top} = toElement.getBoundingClientRect();
+	if (toElement != null && rectangle != null) {
+		const {height, top} = rectangle;
 
 		let place: 'after' | 'before';
 
 		if (position.calculated.y < top + height / 2) {
 			place = 'before';
 
-			toElement.insertAdjacentElement('beforebegin', placeholder);
+			toElement.before(placeholder);
 		} else {
 			place = 'after';
 
-			toElement.insertAdjacentElement('afterend', placeholder);
+			toElement.after(placeholder);
 		}
 
 		setAttribute(placeholder, SORTABLE_ATTRIBUTE_PLACEHOLDER_POSITION, place);
@@ -434,6 +450,13 @@ function setPlaceholder(item: OuiDraggableItem<OuiSortableState>, origin: Elemen
 		}
 
 		document.body.append(sortablePlaceholder.drag.custom ?? sortablePlaceholder.drag.default ?? '');
+
+		const {custom} = sortablePlaceholder.drag;
+
+		// A custom placeholder was detached when created, so its rectangle was empty until now
+		if (custom != null && draggableGlobals.element?.node === custom) {
+			draggableGlobals.element.rectangle = custom.getBoundingClientRect();
+		}
 	});
 }
 

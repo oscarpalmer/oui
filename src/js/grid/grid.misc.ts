@@ -1,7 +1,7 @@
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {dispatch} from '@oscarpalmer/toretto/event';
 import {
-	getGridElements,
+	getGridItems,
 	getGridPlaceholder,
 	updateGridPositions,
 	updateGridResizables,
@@ -14,11 +14,12 @@ import {
 } from './grid.event';
 import {
 	GRID_ATTRIBUTE_ITEM_ACTIVE,
+	GRID_ATTRIBUTE_RESIZABLE,
 	GRID_ATTRIBUTE_SORTABLE,
 	GRID_ATTRIBUTE_SORTING,
 	GRID_EVENT_RESIZE_CANCEL,
-	GRID_EVENT_RESIZE_END,
 	GRID_EVENT_RESIZE_CHANGE,
+	GRID_EVENT_RESIZE_END,
 	GRID_EVENT_SORT_CANCEL,
 	GRID_EVENT_SORT_END,
 	gridStyling,
@@ -30,7 +31,7 @@ import {
 // #region Functions
 
 export function connectGrid(state: GridState): void {
-	state.elements = getGridElements(state);
+	state.items = getGridItems(state);
 
 	state.mutationObserver.observe(state.host, mutationOptions);
 	resizeObserver.observe(state.host);
@@ -50,11 +51,13 @@ export function createGridState(host: HTMLElement): GridState {
 			onResizeUpdate: (element, size) =>
 				onGridItemResized(GRID_EVENT_RESIZE_CHANGE, state, element, size),
 		},
-		elements: [],
+		items: [],
 		gap: {
 			value: 0,
 		},
+		size: new WeakMap(),
 		mutationObserver: new MutationObserver(() => onGridMutation(state)),
+		resizable: host.hasAttribute(GRID_ATTRIBUTE_RESIZABLE),
 		sortable: host.hasAttribute(GRID_ATTRIBUTE_SORTABLE),
 	} satisfies GridState;
 
@@ -97,7 +100,7 @@ export function endGridSort(sort: GridSort, target?: HTMLElement): undefined {
 		if (dispatch(sort.state.host, event).defaultPrevented) {
 			placeholder?.replaceWith(sort.item);
 		} else {
-			const next = sort.state.elements.indexOf(target);
+			const next = sort.state.items.indexOf(target);
 
 			if (sort.index < next) {
 				target?.after(sort.item);
