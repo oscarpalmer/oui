@@ -40,6 +40,12 @@ export type OuiDialogState = {
 	modal: boolean;
 	movable?: OuiMovable;
 	resizable?: OuiResizable;
+	tab?: OuiDialogTab;
+};
+
+export type OuiDialogTab = {
+	element: HTMLElement;
+	movable: OuiMovable;
 };
 
 // #endregion
@@ -51,6 +57,8 @@ export const DIALOG_ATTRIBUTE = 'oui-dialog';
 export const DIALOG_ATTRIBUTE_CONTAINER: string = `${DIALOG_ATTRIBUTE}-container`;
 
 export const DIALOG_ATTRIBUTE_OPEN: string = `${DIALOG_ATTRIBUTE}-open`;
+
+export const DIALOG_ATTRIBUTE_TABBED: string = `${DIALOG_ATTRIBUTE}-tabbed`;
 
 export const DIALOG_MESSAGE = 'The element must be an instance of HTMLDialogElement';
 

@@ -8,23 +8,6 @@ import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {setStyle} from '@oscarpalmer/toretto/style';
 import {attributable} from '../internal/attributable';
 import {
-	DRAGGABLE_SYMBOL,
-	draggableGlobals,
-	type CreateOuiDraggableOptions,
-	type OuiDraggableBound,
-	type OuiDraggableItem,
-	type OuiDraggableState,
-	type OuiDragMovePosition,
-} from '../internal/draggable/draggable.model';
-import {
-	addDraggable,
-	destroyDraggable,
-	getDraggableElement,
-	getDraggableStates,
-	initializeDraggable,
-	removeDraggable,
-} from '../internal/draggable/index';
-import {
 	SORTABLE_ATTRIBUTE,
 	SORTABLE_ATTRIBUTE_ACTIVE,
 	SORTABLE_ATTRIBUTE_CONNECTIONS,
@@ -42,6 +25,7 @@ import {
 	SORTABLE_SELECTOR_ITEM,
 	sortablePlaceholder,
 	type OuiSortable,
+	type OuiSortableOptions,
 	type OuiSortableState,
 } from './sortable.model';
 
@@ -56,40 +40,9 @@ type Insertion = 'append' | 'insert' | 'prepend' | undefined;
 function OuiSortable(
 	this: OuiSortable,
 	element: Element,
-	options?: CreateOuiDraggableOptions,
+	options?: OuiSortableOptions,
 ): void {
-	this[DRAGGABLE_SYMBOL] = initializeDraggable(
-		this,
-		'sortable',
-		'sort',
-		SORTABLE_ATTRIBUTE,
-		element,
-		{
-			container: {
-				attribute: SORTABLE_ATTRIBUTE_CONTAINER,
-				map: SORTABLE_CONTAINERS,
-			},
-			direction: {
-				attribute: SORTABLE_ATTRIBUTE_DIRECTION,
-			},
-			drag: {
-				onBegin,
-				onCancel,
-				onEnd,
-				onMove,
-			},
-			input: options,
-			position: {
-				getOffset: getOffsetPosition,
-				getOriginal: getOriginalPosition,
-			},
-			getDragged: getDragPlaceholder,
-			getOrigin: () => getState(element)?.origin,
-		},
-		{
-			connections: getAttribute(element, SORTABLE_ATTRIBUTE_CONNECTIONS),
-		},
-	);
+	this[SORTABLE_SYMBOL] = {};
 }
 
 OuiSortable.prototype.destroy = destroySortable;

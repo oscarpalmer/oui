@@ -1,88 +1,47 @@
-import {noop} from '@oscarpalmer/atoms/function';
-import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
-import {dispatch, getEventPosition, on} from '@oscarpalmer/toretto/event';
-import {isHTMLOrSVGElement} from '@oscarpalmer/toretto/is';
-import type {EventPosition} from '@oscarpalmer/toretto/models';
-import {getStyles, setStyle, setStyles} from '@oscarpalmer/toretto/style';
+import {getStyles} from '@oscarpalmer/toretto/style';
 import {attributable} from '../internal/attributable';
-import {
-	DRAGGABLE_SYMBOL,
-	draggableGlobals,
-	type CreateOuiDraggableOptions,
-	type OuiDraggableBound,
-	type OuiDraggableItem,
-	type OuiDraggableState,
-	type OuiDragMovePosition,
-} from '../internal/draggable/draggable.model';
-import {
-	addDraggable,
-	destroyDraggable,
-	getDraggableElement,
-	getDraggableStates,
-	initializeDraggable,
-	removeDraggable,
-} from '../internal/draggable/index';
+import {initializeMovableEvents} from './movable.event';
+import {setMovableContainer, setMovableDirection, unsetMovableContainer} from './movable.misc';
 import {
 	MOVABLE_ATTRIBUTE,
 	MOVABLE_ATTRIBUTE_CONTAINER,
 	MOVABLE_ATTRIBUTE_DIRECTION,
-	MOVABLE_ATTRIBUTE_MOVING,
-	MOVABLE_CONTAINERS,
-	MOVABLE_EVENT_END,
 	MOVABLE_MESSAGE,
-	MOVABLE_MOVED,
-	MOVABLE_SELECTOR_HANDLE,
+	MOVABLE_SYMBOL,
+	movables,
+	movableStyleToggler,
 	type OuiMovable,
-	type OuiMovableState,
+	type OuiMovableOptions,
 } from './movable.model';
 
 // #region Instances
 
-function OuiMovable(this: OuiMovable, element: Element, options?: CreateOuiDraggableOptions): void {
+function OuiMovable(this: OuiMovable, element: Element, options?: OuiMovableOptions): void {
 	const style = getStyles(element, ['inset', 'position']);
 
-	this[DRAGGABLE_SYMBOL] = initializeDraggable(
-		this,
-		'movable',
-		'move',
-		MOVABLE_ATTRIBUTE,
+	this[MOVABLE_SYMBOL] = {
 		element,
-		{
-			container: {
-				attribute: MOVABLE_ATTRIBUTE_CONTAINER,
-				map: MOVABLE_CONTAINERS,
-				onDestroy: destroyContainer,
-				onInitialize: initializeContainer,
-			},
-			direction: {
-				attribute: MOVABLE_ATTRIBUTE_DIRECTION,
-				onAfter: afterDirection,
-			},
-			drag: {
-				onCancel,
-				onEnd,
-				onMove,
-				onBegin: noop,
-			},
-			input: options,
-			position: {
-				getOffset: getOffsetPosition,
-				getOriginal: getOriginalPosition,
-			},
-			getDragged() {
-				return element;
-			},
-			getOrigin() {
-				return element;
-			},
+		container: {
+			attribute: MOVABLE_ATTRIBUTE_CONTAINER,
 		},
-		{
-			style,
-			hasHandles: element.querySelector(MOVABLE_SELECTOR_HANDLE) != null,
-			moved: false,
+		direction: {
+			attribute: MOVABLE_ATTRIBUTE_DIRECTION,
+			horizontal: true,
+			vertical: true,
 		},
-	);
+		moved: false,
+		options: options ?? {},
+		style: {
+			original: style,
+			toggler: movableStyleToggler,
+		},
+	};
+
+	setMovableContainer(this[MOVABLE_SYMBOL], options?.container);
+	setMovableDirection(this[MOVABLE_SYMBOL], options?.direction);
+
+	setAttribute(element, MOVABLE_ATTRIBUTE, '');
 }
 
 OuiMovable.prototype.destroy = destroyMovable;
@@ -90,7 +49,7 @@ OuiMovable.prototype.destroy = destroyMovable;
 Object.defineProperties(OuiMovable.prototype, {
 	element: {
 		enumerable: true,
-		get: getDraggableElement,
+		get: getMovableElement,
 	},
 });
 
@@ -98,218 +57,67 @@ Object.defineProperties(OuiMovable.prototype, {
 
 // #region Functions
 
-function afterDirection(item: OuiDraggableItem<OuiMovableState>): void {
-	const container = item.state.container?.getBoundingClientRect();
-
-	if (container != null) {
-		setOffset(item.state, container);
+function addMovable(element: Element): void {
+	if (!movables.has(element)) {
+		createMovable(element);
 	}
 }
 
-/**
- * Creates _(or retrieves)_ a _OuiMovable_ instance for an element
- *
- * @param element Element to make movable
- * @returns _OuiMovable_ instance
- */
-export function createMovable(element: Element, options?: CreateOuiDraggableOptions): OuiMovable {
-	if (!isHTMLOrSVGElement(element)) {
+export function createMovable(element: Element, options?: OuiMovableOptions): OuiMovable {
+	if (!(element instanceof Element)) {
 		throw new TypeError(MOVABLE_MESSAGE);
 	}
 
-	return addMovable(element, options) as OuiMovable;
-}
+	let movable = movables.get(element);
 
-function destroyContainer(
-	_: OuiDraggableItem<OuiMovableState>,
-	container: Element,
-	empty: boolean,
-): void {
-	if (empty) {
-		resizer.unobserve(container);
+	if (movable == null) {
+		// @ts-expect-error All good, no worries :-)
+		movable = new OuiMovable(element, options) as OuiMovable;
+
+		movables.set(element, movable);
 	}
+
+	return movable;
 }
 
 function destroyMovable(this: OuiMovable): void {
-	const {element, style} = this[DRAGGABLE_SYMBOL];
-
-	MOVABLE_MOVED.delete(this);
-
-	setStyles(element, style);
-
-	destroyDraggable(this);
+	setAttribute(this[MOVABLE_SYMBOL].element, MOVABLE_ATTRIBUTE);
 }
 
-function getOffsetPosition(
-	_: OuiDraggableItem<OuiMovableState>,
-	__: Element,
-	position: EventPosition,
-): EventPosition {
-	const {element} = draggableGlobals;
-
-	return {
-		x: position.x - (element?.rectangle.left ?? 0),
-		y: position.y - (element?.rectangle.top ?? 0),
-	};
+function getMovableElement(this: OuiMovable): Element {
+	return this[MOVABLE_SYMBOL].element;
 }
 
-function getOriginalPosition(): EventPosition {
-	const {element} = draggableGlobals;
+function removeMovable(element: Element): void {
+	const movable = movables.get(element);
 
-	return {
-		x: element?.rectangle.left ?? 0,
-		y: element?.rectangle.top ?? 0,
-	};
-}
-
-function initializeContainer(item: OuiDraggableItem<OuiMovableState>): void {
-	resizer.observe(item.state.container!);
-}
-
-function onCancel(item: OuiDraggableItem<OuiMovableState>): void {
-	const {element, moved, style} = item.state;
-
-	const {x, y} = draggableGlobals.original ?? {x: 0, y: 0};
-
-	if (moved) {
-		setStyle(element, 'inset', `${y}px auto auto ${x}px`);
-	} else {
-		setStyles(element, style);
+	if (movable == null) {
+		return;
 	}
 
-	element.removeAttribute(MOVABLE_ATTRIBUTE_MOVING);
-}
+	movables.delete(element);
 
-function onEnd(
-	event: MouseEvent | TouchEvent,
-	item: OuiDraggableItem<OuiMovableState>,
-	reset: () => void,
-): void {
-	const movable = item.instance;
-	const state = item.state;
+	const state = movable[MOVABLE_SYMBOL];
 
-	state.element.removeAttribute(MOVABLE_ATTRIBUTE_MOVING);
+	unsetMovableContainer(state, state.container.element);
 
-	if (!state.moved) {
-		state.moved = true;
-
-		if (state.container != null) {
-			MOVABLE_MOVED.add(movable);
-		}
-	}
-
-	const container = state.container?.getBoundingClientRect();
-
-	if (container != null) {
-		setOffset(state, container);
-	}
-
-	if (
-		dispatch(state.element, MOVABLE_EVENT_END, {
-			detail: {
-				from: {...draggableGlobals.original},
-				to: getEventPosition(event),
-			},
-		}).defaultPrevented
-	) {
-		onCancel(item);
-	}
-
-	reset();
-}
-
-function onMove(
-	_: MouseEvent | TouchEvent,
-	__: OuiDraggableItem<OuiMovableState>,
-	position: OuiDragMovePosition,
-): PlainObject | undefined {
-	const {element, original} = draggableGlobals;
-
-	setAttribute(element?.node as never, MOVABLE_ATTRIBUTE_MOVING, '');
-
-	return {
-		from: {...original},
-		to: {...position.calculated},
-	};
-}
-
-function onResize(entries: ResizeObserverEntry[]): void {
-	const {length} = entries;
-
-	const movables: OuiMovable[] = [];
-
-	for (let index = 0; index < length; index += 1) {
-		const set = MOVABLE_CONTAINERS.get(entries[index].target);
-
-		if (set != null) {
-			movables.push(...set);
-		}
-	}
-
-	reposition(movables);
-}
-
-function onScroll(): void {
-	reposition(MOVABLE_MOVED);
-}
-
-function reposition(movables: Iterable<OuiMovable>): void {
-	const updates: {element: Element; x: number; y: number}[] = [];
-
-	// All rectangles are read before any write, as an inset write invalidates layout
-	for (const movable of movables) {
-		const state = getDraggableStates(movable.element)
-			?.movable as unknown as OuiDraggableState<OuiMovableState>;
-
-		if (state == null || !state.moved || state.container == null) {
-			continue;
-		}
-
-		const container = state.container.getBoundingClientRect();
-
-		updates.push({
-			element: state.element,
-			x: container.left + (state.offset?.x ?? 0),
-			y: container.top + (state.offset?.y ?? 0),
-		});
-	}
-
-	for (const {element, x, y} of updates) {
-		setStyle(element, 'inset', `${y}px auto auto ${x}px`);
-	}
-}
-
-function setOffset(state: OuiDraggableState<OuiMovableState>, container: DOMRect): void {
-	state.offset = {};
-
-	const element = state.element.getBoundingClientRect();
-
-	state.offset.y = element.top - container.top;
-	state.offset.x = element.left - container.left;
+	state.container.element = undefined;
+	state.element = undefined as never;
+	state.offset = undefined;
+	state.options = undefined as never;
+	state.style = undefined as never;
 }
 
 // #endregion
 
 // #region Variables
 
-const bound: OuiDraggableBound = {
-	// @ts-expect-error All good, no worries :-)
-	constructor: OuiMovable,
-	property: 'movable',
-};
-
-const resizer = new ResizeObserver(onResize);
-
-const addMovable = addDraggable.bind(bound);
-
-const removeMovable = removeDraggable.bind(bound);
-
 // #endregion
 
 // #region Initialization
 
-on(document, 'scroll', onScroll);
-
 attributable(MOVABLE_ATTRIBUTE, addMovable, removeMovable);
+
+initializeMovableEvents();
 
 // #endregion
